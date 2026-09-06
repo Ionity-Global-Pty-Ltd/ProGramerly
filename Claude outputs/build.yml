@@ -37,8 +37,12 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           foreach ($f in Get-ChildItem scripts -Filter *.ps1) {
+            # Both must exist before [ref] takes them - pwsh on Linux refuses
+            # to make a reference to a variable that was never assigned.
+            $tokens = $null
+            $errs = $null
             [void][System.Management.Automation.Language.Parser]::ParseFile(
-              $f.FullName, [ref]$null, [ref]$errs)
+              $f.FullName, [ref]$tokens, [ref]$errs)
             if ($errs) { $errs; throw "syntax errors in $($f.Name)" }
           }
       - name: Bash syntax check
