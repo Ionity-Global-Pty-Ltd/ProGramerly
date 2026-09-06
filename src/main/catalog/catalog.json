@@ -377,6 +377,40 @@
       }
     },
     {
+      "id": "openssh",
+      "name": "OpenSSH (client + agent)",
+      "group": "shells",
+      "desc": "The ssh client, ssh-keygen and ssh-add, plus the ssh-agent service enabled so a passphrase-protected key is typed once per boot instead of once per push.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "platforms": [
+        "win",
+        "mac"
+      ],
+      "elevate": true,
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "$c = Get-WindowsCapability -Online -Name 'OpenSSH.Client*' | Where-Object { $_.State -ne 'Installed' }; if ($c) { Add-WindowsCapability -Online -Name $c.Name | Out-Null }; (Get-Command ssh -ErrorAction Stop).Source"
+          },
+          {
+            "type": "shell",
+            "cmd": "Set-Service ssh-agent -StartupType Automatic; Start-Service ssh-agent; Write-Output \"ssh-agent: $((Get-Service ssh-agent).Status)\"",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "brew": [
+          "openssh"
+        ]
+      }
+    },
+    {
       "id": "nushell",
       "name": "Nushell",
       "group": "shells",
