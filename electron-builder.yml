@@ -1,0 +1,74 @@
+# ProGramerly packaging
+# Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+appId: com.ionity.programerly
+productName: ProGramerly
+copyright: (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - All rights reserved - TM2
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - src/**/*
+  - build/icon.*
+  - package.json
+  - "!**/*.map"
+
+# ------------------------------------------------------------------ Windows
+win:
+  icon: build/icon.ico
+  requestedExecutionLevel: asInvoker   # app self-elevates only when installing
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+    - target: portable
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false                    # no admin needed to install ProGramerly itself
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ProGramerly
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  artifactName: ProGramerly-Setup-${version}-${arch}.${ext}
+
+portable:
+  artifactName: ProGramerly-Portable-${version}.${ext}
+
+# -------------------------------------------------------------------- macOS
+mac:
+  icon: build/icon.icns
+  category: public.app-category.developer-tools
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+
+dmg:
+  title: ProGramerly ${version}
+  artifactName: ProGramerly-${version}-${arch}.${ext}
+  contents:
+    - x: 140
+      y: 200
+      type: file
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+
+# -------------------------------------------------------------------- Linux
+linux:
+  icon: build/icon.png
+  category: Development
+  target:
+    - AppImage
+    - deb

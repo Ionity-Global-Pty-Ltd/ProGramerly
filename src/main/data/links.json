@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "title": "AEDI - Ionity Global - Official Links & Identity Assets",
+    "documentId": "DOC-2026-07-001",
+    "version": "1.1",
+    "governance": "Policy 986 AED",
+    "author": "Johan Wilhelm van Antwerp",
+    "organisation": "Ionity (Pty) Ltd | Antwerp Designs | AEDI",
+    "classification": "PUBLIC"
+  },
+  "groups": [
+    {
+      "id": "ionity",
+      "label": "Ionity / AEDI",
+      "links": [
+        { "name": "Ionity (main)", "url": "https://www.ionity.co.za" },
+        { "name": "Ionity Today (ecosystem)", "url": "https://www.ionity.today" },
+        { "name": "Ionity World (profile & links)", "url": "https://www.ionity.world" },
+        { "name": "Ionity Earth Shop", "url": "https://ionityearth.shop" },
+        { "name": "Ionity Earth (WordPress)", "url": "https://ionityearth.wordpress.com" },
+        { "name": "Ionity Global on GitHub", "url": "https://github.com/Ionity-Global" },
+        { "name": "ionity-assets repository", "url": "https://github.com/Ionity-Global/ionity-assets-ionity-global-ionity-today" }
+      ]
+    },
+    {
+      "id": "sources",
+      "label": "Package sources",
+      "links": [
+        { "name": "winget manifests", "url": "https://cdn.winget.microsoft.com/cache" },
+        { "name": "Chocolatey community feed", "url": "https://community.chocolatey.org/api/v2/" },
+        { "name": "Homebrew", "url": "https://formulae.brew.sh" },
+        { "name": "npm registry", "url": "https://registry.npmjs.org" },
+        { "name": "PyPI", "url": "https://pypi.org/simple/" },
+        { "name": "GitHub API", "url": "https://api.github.com" },
+        { "name": "GitHub Releases", "url": "https://objects.githubusercontent.com" }
+      ]
+    },
+    {
+      "id": "ai",
+      "label": "AI endpoints",
+      "links": [
+        { "name": "Anthropic API", "url": "https://api.anthropic.com" },
+        { "name": "Claude", "url": "https://claude.ai" },
+        { "name": "Ollama registry", "url": "https://registry.ollama.ai" },
+        { "name": "Hugging Face", "url": "https://huggingface.co" },
+        { "name": "OpenAI API", "url": "https://api.openai.com" },
+        { "name": "Google AI", "url": "https://generativelanguage.googleapis.com" }
+      ]
+    },
+    {
+      "id": "cloud",
+      "label": "Cloud & edge",
+      "links": [
+        { "name": "Cloudflare", "url": "https://www.cloudflare.com" },
+        { "name": "Cloudflare trace", "url": "https://www.cloudflare.com/cdn-cgi/trace" },
+        { "name": "Azure", "url": "https://management.azure.com" },
+        { "name": "AWS", "url": "https://aws.amazon.com" },
+        { "name": "Google Cloud", "url": "https://cloud.google.com" }
+      ]
+    }
+  ]
+}

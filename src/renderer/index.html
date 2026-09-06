@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'" />
+  <title>ProGramerly - Basic Coding Software for All</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="nodefield" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="assets/logo.png" alt="Ionity" class="brand-mark" />
+      <div class="brand-text">
+        <h1>ProGramerly</h1>
+        <p>Basic Coding Software for All <span class="sep">·</span> <span id="appVersion">v1.1.0</span></p>
+      </div>
+    </div>
+
+    <nav class="tabs" id="tabs" aria-label="Sections">
+      <button class="tab active" data-tab="software">Software</button>
+      <button class="tab" data-tab="monitor">Monitor</button>
+      <button class="tab" data-tab="network">Network</button>
+      <button class="tab" data-tab="ai">AI</button>
+      <button class="tab" data-tab="projects">Projects</button>
+      <button class="tab" data-tab="terminals">Terminals</button>
+      <button class="tab" data-tab="hardware">Hardware</button>
+      <button class="tab" data-tab="maintenance">Maintenance</button>
+      <button class="tab" data-tab="doctor">Doctor</button>
+      <button class="tab" data-tab="updates">Updates<span class="tabdot" id="updateDot" hidden></span></button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </nav>
+
+    <div class="badges">
+      <span class="badge" id="osBadge">detecting…</span>
+      <span class="badge" id="privBadge">…</span>
+      <button class="badge badge-btn" id="elevateBtn" hidden>Restart as Administrator</button>
+    </div>
+  </header>
+
+  <!-- ========================== SOFTWARE / PICK ========================= -->
+  <main id="pickView" class="view">
+    <section class="profiles" id="profiles" aria-label="Install profiles"></section>
+    <div class="workarea">
+      <nav class="groupnav" id="groupNav" aria-label="Categories"></nav>
+      <section class="items" id="items" aria-label="Software list"></section>
+    </div>
+  </main>
+
+  <!-- ============================== RUN ================================ -->
+  <main id="runView" class="view" hidden>
+    <section class="runhead">
+      <div class="runtitle">
+        <h2 id="runCurrent">Preparing…</h2>
+        <p id="runCounter">0 of 0</p>
+      </div>
+      <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+      <ul class="tally">
+        <li><span class="dot ok"></span><b id="tallyOk">0</b> done</li>
+        <li><span class="dot warn"></span><b id="tallyPartial">0</b> partial</li>
+        <li><span class="dot err"></span><b id="tallyFail">0</b> failed</li>
+        <li><span class="dot skip"></span><b id="tallySkip">0</b> skipped</li>
+      </ul>
+    </section>
+    <div class="runbody">
+      <aside class="queue" id="queue" aria-label="Queue"></aside>
+      <section class="console" id="console" aria-live="polite" aria-label="Installation log"></section>
+    </div>
+  </main>
+
+  <!-- ============================ MONITOR ============================== -->
+  <main id="monitorView" class="view pad" hidden>
+    <div class="cardgrid">
+      <section class="card gaugecard">
+        <h3>CPU</h3>
+        <div class="bigring" id="mCpuRing"><span id="mCpuVal">--</span><small>load</small></div>
+        <p class="cardnote" id="mCpuModel">—</p>
+      </section>
+      <section class="card gaugecard">
+        <h3>Temperature</h3>
+        <div class="bigring" id="mTempRing"><span id="mTempVal">--</span><small id="mTempUnit">°C</small></div>
+        <p class="cardnote" id="mTempSrc">reading…</p>
+      </section>
+      <section class="card gaugecard">
+        <h3>Memory</h3>
+        <div class="bigring" id="mMemRing"><span id="mMemVal">--</span><small>used</small></div>
+        <p class="cardnote" id="mMemNote">—</p>
+      </section>
+      <section class="card">
+        <h3>Network</h3>
+        <div class="netnow">
+          <div><span class="arrow down">↓</span><b id="mRx">—</b><label>download</label></div>
+          <div><span class="arrow up">↑</span><b id="mTx">—</b><label>upload</label></div>
+          <div><span class="arrow ping">◈</span><b id="mPing">—</b><label>ping</label></div>
+        </div>
+        <canvas id="netChart" height="72"></canvas>
+        <p class="cardnote" id="mIface">—</p>
+      </section>
+    </div>
+
+    <section class="card wide">
+      <h3>Drives</h3>
+      <div id="driveList" class="drivelist"></div>
+    </section>
+
+    <section class="card wide">
+      <h3>Machine</h3>
+      <dl class="kv" id="machineKv"></dl>
+    </section>
+  </main>
+
+  <!-- ============================ NETWORK ============================== -->
+  <main id="networkView" class="view pad" hidden>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Global sweep</h3>
+        <div class="cardactions">
+          <span class="muted" id="geoLine">locating…</span>
+          <button class="btn ghost" id="speedBtn">Speed test</button>
+          <button class="btn" id="sweepBtn">Run sweep</button>
+          <button class="btn ghost" id="sweepCancel" hidden>Stop</button>
+        </div>
+      </div>
+      <p class="cardnote">
+        Five seconds per region against Cloudflare, Google and a regional host.
+        These are TCP handshakes to the live service port, not ICMP — and both
+        Cloudflare and Google are anycast, so a country target answers from the
+        nearest edge that serves it.
+      </p>
+      <div class="regiongrid" id="regionGrid"></div>
+    </section>
+
+    <section class="card wide" id="speedCard">
+      <div class="cardhead"><h3>Throughput</h3><span class="muted" id="speedServer"></span></div>
+      <div class="speedgrid">
+        <div class="speedcell"><b id="spDown">—</b><label>download Mb/s</label></div>
+        <div class="speedcell"><b id="spUp">—</b><label>upload Mb/s</label></div>
+        <div class="speedcell"><b id="spLat">—</b><label>latency ms</label></div>
+        <div class="speedcell"><b id="spJit">—</b><label>jitter ms</label></div>
+      </div>
+      <div class="bar"><div class="bar-fill" id="speedBar"></div></div>
+      <p class="cardnote" id="speedPhase">idle</p>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>Official links</h3>
+        <div class="cardactions">
+          <span class="muted">checked on every sync</span>
+          <button class="btn ghost" id="linksCheckBtn">Check now</button>
+        </div>
+      </div>
+      <div id="linkList" class="linklist"></div>
+    </section>
+  </main>
+
+  <!-- ========================== MAINTENANCE ============================ -->
+  <main id="maintView" class="view pad" hidden>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Registry repair</h3>
+        <div class="cardactions">
+          <button class="btn ghost" id="regBackupsBtn">Backups</button>
+          <button class="btn ghost" id="regEditorBtn">Open Registry Editor</button>
+          <button class="btn ghost" id="regScanBtn">Rescan</button>
+          <button class="btn" id="regApplyBtn" disabled>Apply selected</button>
+        </div>
+      </div>
+      <p class="cardnote">
+        Only values Microsoft documents as correct are written. Nothing is deleted
+        unless Microsoft's own guidance names that value as the fault — and even
+        then only with the box below ticked. Every key is exported to a .reg file
+        before the first change.
+      </p>
+      <label class="check" id="removalWrap">
+        <input type="checkbox" id="allowRemovals" />
+        <span>Allow the Microsoft-flagged removals (two entries below)</span>
+      </label>
+      <div id="regList" class="reglist"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>System tools</h3></div>
+      <div id="toolList" class="toolgrid"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>Output</h3></div>
+      <div class="console short" id="maintConsole"></div>
+    </section>
+  </main>
+
+  <!-- =============================== AI ================================ -->
+  <main id="aiView" class="view pad" hidden>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Local AI services</h3>
+        <div class="cardactions"><button class="btn ghost" id="aiRefreshBtn">Rescan</button></div>
+      </div>
+      <p class="cardnote">
+        Twelve inference and vector services, probed on their default ports. A service
+        moved to another port will not be found — which is honest, and better than
+        calling it absent when it is merely elsewhere.
+      </p>
+      <div class="epgrid" id="aiEndpoints"><p class="empty">Scanning…</p></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Ollama models</h3>
+        <div class="cardactions"><button class="btn ghost" id="aiModelsBtn">Refresh</button></div>
+      </div>
+      <div id="aiLoaded" class="loadedstrip" hidden></div>
+      <div id="aiModelList" class="modellist"><p class="empty">Not checked yet.</p></div>
+
+      <div class="rule"></div>
+      <h4 class="subhead">Download a model</h4>
+      <div class="row2">
+        <select id="aiCurated"></select>
+        <input type="text" id="aiModelName" placeholder="or type any tag, e.g. qwen2.5-coder:32b" />
+        <button class="btn" id="aiPullBtn">Pull</button>
+      </div>
+      <p class="cardnote" id="aiCuratedNote"></p>
+      <div class="pullbar" id="aiPullBar" hidden><div class="pullfill" id="aiPullFill"></div><span id="aiPullText"></span></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>LLM console</h3>
+        <div class="cardactions">
+          <select id="aiTarget"><option value="">No live model found — rescan</option></select>
+          <button class="btn ghost" id="aiTargetsBtn">Rescan</button>
+          <button class="btn ghost" id="aiBenchBtn" disabled>Benchmark</button>
+        </div>
+      </div>
+      <div id="aiGpu" class="gpustrip" hidden></div>
+      <div class="chatlog" id="aiChatLog"><p class="empty">Pick a model above and ask it something. Everything stays on this machine.</p></div>
+      <div class="chatrow">
+        <textarea id="aiPrompt" rows="2" placeholder="Ask the model… (Ctrl+Enter to send)"></textarea>
+        <div class="chatbtns">
+          <button class="btn" id="aiSendBtn" disabled>Send</button>
+          <button class="btn ghost" id="aiExplainBtn" disabled title="Treat the text as an error or log excerpt and explain it">Explain this</button>
+          <button class="btn ghost" id="aiChatClearBtn">Clear</button>
+        </div>
+      </div>
+      <p class="cardnote" id="aiStats"></p>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Environments</h3>
+        <div class="cardactions"><button class="btn ghost" id="aiEnvBtn">Rescan</button></div>
+      </div>
+      <p class="cardnote">
+        Virtual environments are found by their <code>pyvenv.cfg</code> marker, which is
+        exactly what a venv is — so this finds every one and nothing else, rather than
+        guessing from folder names. Conda environments come from conda itself.
+      </p>
+      <div id="aiEnvList" class="envlist"><p class="empty">Not scanned yet.</p></div>
+      <div id="aiNodeList" class="kvmini" hidden></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Output</h3>
+        <div class="cardactions"><button class="btn ghost" id="aiClearBtn">Clear</button></div>
+      </div>
+      <div class="console short" id="aiConsole"></div>
+    </section>
+  </main>
+
+  <!-- ============================= PROJECTS ============================= -->
+  <main id="projectsView" class="view pad" hidden>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Projects</h3>
+        <div class="cardactions">
+          <button class="btn ghost" id="projFolderBtn">Dev folder</button>
+          <button class="btn ghost" id="projFetchAllBtn">Fetch all</button>
+          <button class="btn" id="projScanBtn">Rescan</button>
+        </div>
+      </div>
+      <p class="cardnote">
+        Every git repository under the development folder, two levels deep. Branch, uncommitted
+        work, ahead/behind the remote, last commit, and what it is built with — read from the
+        marker files a stack leaves behind, not guessed from the folder name. Dirty repositories
+        sort to the top. Read-only apart from <b>Fetch</b>, which changes nothing in a working tree.
+      </p>
+      <div class="docsummary" id="projSummary" hidden></div>
+      <div id="projList" class="projlist"><p class="empty">Not scanned yet.</p></div>
+    </section>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Output</h3>
+        <div class="cardactions"><button class="btn ghost" id="projClearBtn">Clear</button></div>
+      </div>
+      <div class="console short" id="projConsole"></div>
+    </section>
+  </main>
+
+  <!-- ============================ TERMINALS ============================= -->
+  <main id="terminalsView" class="view pad" hidden>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Terminals</h3>
+        <div class="cardactions">
+          <button class="btn ghost" id="termRefreshBtn">Rescan</button>
+          <button class="btn ghost" id="termFolderBtn">Dev folder</button>
+        </div>
+      </div>
+      <p class="cardnote">
+        Every shell found on this machine, opened in your development folder. Nothing is
+        emulated in this window — a terminal inside an Electron app is a worse terminal
+        than the one already installed, so this opens the real one and lets go of it.
+        Where Windows Terminal exists, console shells are hosted in it.
+      </p>
+      <div class="termgrid" id="termList"><p class="empty">Looking…</p></div>
+      <div id="termWsl" class="kvmini" hidden></div>
+    </section>
+  </main>
+
+  <!-- ============================ HARDWARE ============================== -->
+  <main id="hardwareView" class="view pad" hidden>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Sensors</h3>
+        <div class="cardactions">
+          <label class="check inline"><input type="checkbox" id="hwAuto" /><span>Live</span></label>
+          <button class="btn ghost" id="hwSensorsBtn">Read</button>
+        </div>
+      </div>
+      <div id="hwSensors"><p class="empty">Not read yet.</p></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>Fan control</h3></div>
+      <p class="cardnote">
+        Setting a fan curve means writing to the Super&nbsp;IO or embedded controller, and on
+        Windows that needs a signed kernel-mode driver — which is exactly what FanControl and
+        LibreHardwareMonitor ship, and why they exist. ProGramerly does not ship a kernel
+        driver, and an app that claimed to set your curve without one would be lying to you.
+        So it installs them, launches them, and reads their sensors above. The curve is set in
+        the tool that owns the driver. That is the correct division of labour.
+      </p>
+      <div class="toolbox" id="hwTools"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>RGB lighting</h3>
+        <div class="cardactions"><button class="btn ghost" id="rgbRefreshBtn">Connect</button></div>
+      </div>
+      <p class="cardnote">
+        A full implementation of the OpenRGB network protocol, spoken over TCP to a running
+        OpenRGB server (127.0.0.1:6742 — switch it on in OpenRGB under
+        <b>Settings → General → Start server</b>). That reaches motherboard 12&nbsp;V headers,
+        5&nbsp;V addressable headers, GPU, RAM, AIO pumps, fan controllers and peripherals,
+        because OpenRGB already carries the per-vendor work and reimplementing it would be
+        worse in every way.
+      </p>
+      <div class="row2 rgbrow">
+        <input type="color" id="rgbColor" value="#00c6ff" />
+        <div class="swatches" id="rgbSwatches"></div>
+        <button class="btn" id="rgbApplyAllBtn" disabled>Apply to everything</button>
+      </div>
+      <div id="rgbDevices"><p class="empty">Not connected.</p></div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Memory and cache</h3>
+        <div class="cardactions"><button class="btn ghost" id="hwMemBtn">Refresh</button></div>
+      </div>
+      <div class="membar"><div class="memfill" id="hwMemFill"></div></div>
+      <p class="cardnote" id="hwMemText">—</p>
+      <div class="row2">
+        <button class="btn ghost" id="hwFlushBtn">RAM flush</button>
+        <button class="btn ghost" id="hwStandbyBtn">Purge standby list</button>
+        <button class="btn ghost" id="hwTempBtn">Clear temp cache</button>
+      </div>
+      <p class="cardnote">
+        <b>RAM flush</b> calls <code>EmptyWorkingSet</code> on every reachable process — pages go to
+        the standby list, where Windows can still reuse them. <b>Purge standby list</b> is the
+        <code>NtSetSystemInformation</code> call RAMMap makes, which actually returns them to free;
+        it needs administrator rights. Free memory is measured before and after both, so the
+        number reported is measured, not claimed. <b>Clear temp cache</b> empties the OS
+        temporary folder and nothing else — not browser caches, not package caches, not
+        anything in a project.
+      </p>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Output</h3>
+        <div class="cardactions"><button class="btn ghost" id="hwClearBtn">Clear</button></div>
+      </div>
+      <div class="console short" id="hwConsole"></div>
+    </section>
+  </main>
+
+  <!-- ============================= DOCTOR ============================== -->
+  <main id="doctorView" class="view pad" hidden>
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>System Doctor</h3>
+        <div class="cardactions">
+          <button class="btn ghost" id="docOpenFolderBtn">Reports folder</button>
+          <button class="btn ghost" id="docReportBtn">Full report</button>
+          <button class="btn ghost" id="docFixAllBtn">Fix everything safe</button>
+          <button class="btn" id="docScanBtn">Run diagnostics</button>
+        </div>
+      </div>
+      <p class="cardnote">
+        Diagnosing never changes anything. A <b>Fix</b> button only appears on a check
+        that actually failed, and it always says what it ran. Anything needing
+        administrator rights, a restart, or a judgement call stays a deliberate
+        click and is left out of <b>Fix everything safe</b>.
+      </p>
+      <div class="docsummary" id="docSummary" hidden></div>
+      <div id="docList" class="doclist">
+        <p class="empty">Nothing has been checked yet. <b>Run diagnostics</b> takes a few seconds.</p>
+      </div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>Toolbox</h3></div>
+      <div class="toolbox">
+
+        <div class="tbx">
+          <h4>Environment report</h4>
+          <p>Machine, GPU, disks and the version of every development tool it can find — written into the report folder as Markdown and JSON.</p>
+          <button class="btn ghost" id="docEnvBtn">Collect</button>
+          <div class="kvmini" id="docEnvOut" hidden></div>
+        </div>
+
+        <div class="tbx">
+          <h4>Disk cleanup</h4>
+          <p>Measures first, deletes second. Caches are re-downloaded when they are next needed; nothing here is state you cannot lose.</p>
+          <button class="btn ghost" id="docCleanScanBtn">Measure</button>
+          <button class="btn" id="docCleanRunBtn" hidden disabled>Reclaim selected</button>
+          <div id="docCleanList" class="cleanlist"></div>
+        </div>
+
+        <div class="tbx">
+          <h4>Port inspector</h4>
+          <p>What is holding a port. The answer to <code>EADDRINUSE</code> without opening a terminal.</p>
+          <div class="row2">
+            <input type="number" id="docPort" min="1" max="65535" placeholder="3000" />
+            <button class="btn ghost" id="docPortBtn">Check</button>
+          </div>
+          <button class="btn ghost" id="docPortScanBtn">Scan the usual ports</button>
+          <div class="kvmini" id="docPortOut" hidden></div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Output</h3>
+        <div class="cardactions"><button class="btn ghost" id="docClearBtn">Clear</button></div>
+      </div>
+      <div class="console short" id="docConsole"></div>
+    </section>
+  </main>
+
+  <!-- ============================ UPDATES ============================== -->
+  <main id="updatesView" class="view pad" hidden>
+    <section class="card wide" id="appUpdateCard">
+      <div class="cardhead">
+        <h3>ProGramerly</h3>
+        <div class="cardactions">
+          <button class="btn ghost" id="checkUpdateBtn">Check GitHub</button>
+          <button class="btn" id="getUpdateBtn" hidden>Download update</button>
+          <button class="btn" id="installUpdateBtn" hidden>Install and restart</button>
+        </div>
+      </div>
+      <p id="updateState" class="cardnote">Updates come straight from the GitHub release feed — no store, no background installer service. You decide when it lands.</p>
+      <div class="bar" id="updateBarWrap" hidden><div class="bar-fill" id="updateBar"></div></div>
+      <pre class="notes" id="updateNotes" hidden></pre>
+    </section>
+
+    <section class="card wide" id="publishCard">
+      <div class="cardhead">
+        <h3>Push &amp; Release <span class="muted">— maintainer</span></h3>
+        <div class="cardactions">
+          <button class="btn ghost" id="publishRefreshBtn">Refresh status</button>
+          <button class="btn ghost" id="publishInstallGhBtn" hidden>Install GitHub CLI</button>
+          <button class="btn primary" id="publishRunBtn" disabled>Push &amp; Release</button>
+        </div>
+      </div>
+      <p class="cardnote" id="publishNote">
+        Pushes this source to GitHub, tags it, and lets GitHub's own runners build the
+        Windows installer and the macOS launcher and publish them together as a Release —
+        nothing here fakes a Mac build on a machine that cannot make one.
+      </p>
+      <dl class="kv" id="publishStatusKv"></dl>
+      <div class="row2">
+        <label class="field"><span>Repo owner</span>
+          <input type="text" id="publishOwner" placeholder="Ionity-Global-Pty-Ltd" /></label>
+        <label class="field"><span>Repo name</span>
+          <input type="text" id="publishRepo" placeholder="ProGramerly" /></label>
+        <label class="field wide2"><span>GitHub token — only used to create the repo if it doesn't exist yet; the push itself always uses your system's own git sign-in</span>
+          <input type="password" id="publishToken" placeholder="stored encrypted · leave blank to keep the current one" autocomplete="off" /></label>
+      </div>
+      <div class="cardactions left">
+        <button class="btn ghost" id="publishSaveTokenBtn">Save token</button>
+        <button class="btn ghost" id="publishClearTokenBtn">Clear stored token</button>
+      </div>
+      <div class="console short" id="publishConsole"></div>
+      <p class="cardnote" id="publishResult" hidden></p>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead">
+        <h3>Keep everything in sync</h3>
+        <div class="cardactions">
+          <span class="muted" id="syncNext">—</span>
+          <button class="btn ghost" id="syncReportBtn">Report only</button>
+          <button class="btn" id="syncNowBtn">Sync now</button>
+        </div>
+      </div>
+      <div class="switches">
+        <label class="check">
+          <input type="checkbox" id="keepInSync" />
+          <span><b>Keep the installed code base in sync</b><em>Scans at 08:00 and 20:00, every day.</em></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="autoInstallUpdates" />
+          <span><b>Install the updates it finds</b><em>Untick and nothing is touched — every program stays exactly where it is and the scan becomes a report.</em></span>
+        </label>
+      </div>
+      <div class="scopegrid" id="scopeGrid"></div>
+      <div class="console short" id="syncConsole"></div>
+    </section>
+  </main>
+
+  <!-- ============================ SETTINGS ============================= -->
+  <main id="settingsView" class="view pad" hidden>
+    <section class="card wide" id="profileCard">
+      <div class="cardhead">
+        <h3>Profile</h3>
+        <div class="cardactions"><button class="btn ghost" id="profileSaveBtn">Save</button></div>
+      </div>
+      <div class="row2">
+        <input type="text" id="profName" placeholder="Your name" />
+        <input type="text" id="profEmail" placeholder="you@example.com" />
+        <input type="text" id="profRole" placeholder="Role, e.g. Embedded / IoT" />
+      </div>
+      <div class="row2">
+        <input type="text" id="profOrg" placeholder="Organisation" />
+        <select id="profDefaultProfile">
+          <option value="full">Default install profile: Full Stack</option>
+          <option value="ai">Default install profile: AI Dev</option>
+          <option value="minimal">Default install profile: Minimal</option>
+          <option value="custom">Default install profile: Custom</option>
+        </select>
+      </div>
+      <div class="rule"></div>
+      <dl class="kv" id="profileKv"></dl>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>Startup and tray</h3></div>
+      <div class="switches" id="uiSwitches"></div>
+      <div class="cardactions left">
+        <button class="btn ghost" id="shortcutBtn">Create desktop shortcut</button>
+        <button class="btn ghost" id="trayBtn">Minimise to tray now</button>
+      </div>
+      <p class="cardnote" id="shortcutNote"></p>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>Schedule</h3></div>
+      <div class="row2">
+        <label class="field"><span>Sync times (local, comma separated)</span>
+          <input type="text" id="syncTimes" placeholder="08:00, 20:00" /></label>
+        <label class="field"><span>Monitor refresh (seconds)</span>
+          <input type="number" id="metricsInterval" min="1" max="60" /></label>
+        <label class="field"><span>Probe seconds per region</span>
+          <input type="number" id="probeSeconds" min="1" max="30" /></label>
+        <label class="field"><span>Update channel</span>
+          <select id="updateChannel">
+            <option value="stable">Stable releases</option>
+            <option value="prerelease">Include pre-releases</option>
+          </select></label>
+        <label class="field wide2"><span>GitHub repository</span>
+          <input type="text" id="updateRepo" placeholder="Ionity-Global-Pty-Ltd/ProGramerly" /></label>
+      </div>
+    </section>
+
+    <section class="card wide">
+      <div class="cardhead"><h3>About</h3>
+        <div class="cardactions"><button class="btn ghost" id="resetBtn">Reset settings</button></div>
+      </div>
+      <dl class="kv" id="aboutKv"></dl>
+    </section>
+  </main>
+
+  <!-- ============================ SUMMARY ============================== -->
+  <div class="sheet" id="summarySheet" hidden>
+    <div class="sheet-card">
+      <h2 id="summaryTitle">Finished</h2>
+      <p id="summaryBody"></p>
+      <div id="rebootNote" class="note" hidden>
+        WSL was installed. Restart Windows to finish setting it up.
+      </div>
+      <div class="sheet-actions">
+        <button class="btn ghost" id="summaryLog">Open log file</button>
+        <button class="btn ghost" id="summaryRoot">Open dev folder</button>
+        <button class="btn" id="summaryClose">Back to list</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bottombar">
+    <div class="foot-meta">
+      <span id="selCount">0 selected</span>
+      <span class="sep">·</span>
+      <span id="selSize">—</span>
+      <span class="sep">·</span>
+      <span class="muted">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd</span>
+    </div>
+    <div class="foot-actions">
+      <button class="btn ghost" id="openRootBtn">Dev folder</button>
+      <button class="btn ghost" id="logBtn">Log</button>
+      <button class="btn ghost" id="cancelBtn" hidden>Stop</button>
+      <button class="btn primary" id="installBtn" disabled>Install</button>
+    </div>
+  </footer>
+
+  <script src="nodes.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'" />
+  <title>ProGramerly monitor</title>
+  <link rel="stylesheet" href="hud.css" />
+</head>
+<body>
+  <div class="hud">
+    <header>
+      <span class="dot"></span>
+      <b>ProGramerly</b>
+      <span class="host" id="host"></span>
+    </header>
+
+    <div class="gauges">
+      <div class="gauge">
+        <div class="ring" id="cpuRing"><span id="cpuVal">--</span></div>
+        <label>CPU load</label>
+      </div>
+      <div class="gauge">
+        <div class="ring" id="tempRing"><span id="tempVal">--</span></div>
+        <label>CPU temp</label>
+      </div>
+      <div class="gauge">
+        <div class="ring" id="memRing"><span id="memVal">--</span></div>
+        <label>Memory</label>
+      </div>
+    </div>
+
+    <div class="net">
+      <div class="netcol"><span class="arrow down">↓</span><b id="rx">—</b><label>download</label></div>
+      <div class="netcol"><span class="arrow up">↑</span><b id="tx">—</b><label>upload</label></div>
+      <div class="netcol"><span class="arrow ping">◈</span><b id="ping">—</b><label>ping</label></div>
+    </div>
+
+    <div class="drives" id="drives"></div>
+
+    <footer id="foot">Policy 986 AED · Ionity (Pty) Ltd</footer>
+  </div>
+  <script src="hud.js"></script>
+</body>
+</html>

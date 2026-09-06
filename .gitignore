@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+release/
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*
+*.p12
+*.mobileprovision

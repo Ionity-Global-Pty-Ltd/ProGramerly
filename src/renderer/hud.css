@@ -1,0 +1,61 @@
+/* ProGramerly - tray hover panel
+   Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED */
+
+:root{
+  --cyan:#00c6ff; --ok:#33d69f; --warn:#ffb340; --err:#ff5d6c;
+  --text:#e6f1fb; --dim:#8fa6bd; --faint:#5d7186;
+  --mono:"Cascadia Code","JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{width:100%; height:100%; background:transparent; overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif; font-size:12px; color:var(--text); user-select:none}
+
+.hud{
+  height:100%;
+  margin:8px;
+  padding:12px 14px 10px;
+  border-radius:14px;
+  border:1px solid rgba(0,198,255,.24);
+  background:linear-gradient(180deg, rgba(17,29,46,.97), rgba(7,13,22,.97));
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.85), inset 0 0 60px rgba(0,198,255,.04);
+  display:flex; flex-direction:column; gap:10px;
+}
+header{display:flex; align-items:center; gap:7px; font-size:11.5px}
+header b{letter-spacing:.4px}
+.dot{width:7px; height:7px; border-radius:99px; background:var(--cyan); box-shadow:0 0 10px var(--cyan)}
+.host{margin-left:auto; color:var(--faint); font-family:var(--mono); font-size:10.5px}
+
+.gauges{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.gauge{display:flex; flex-direction:column; align-items:center; gap:5px}
+.gauge label{font-size:9.5px; letter-spacing:.7px; text-transform:uppercase; color:var(--faint)}
+.ring{
+  --pct:0; --col:var(--cyan);
+  width:62px; height:62px; border-radius:99px;
+  display:grid; place-items:center;
+  background:conic-gradient(var(--col) calc(var(--pct)*1%), rgba(255,255,255,.07) 0);
+  position:relative;
+}
+.ring::before{
+  content:""; position:absolute; inset:5px; border-radius:99px;
+  background:#0a1320;
+}
+.ring span{position:relative; font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums}
+
+.net{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; text-align:center;
+  padding:8px 0; border-top:1px solid rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.06)}
+.netcol{display:flex; flex-direction:column; gap:2px}
+.netcol b{font-family:var(--mono); font-size:12.5px; font-variant-numeric:tabular-nums}
+.netcol label{font-size:9px; letter-spacing:.7px; text-transform:uppercase; color:var(--faint)}
+.arrow{font-size:11px}
+.arrow.down{color:var(--cyan)} .arrow.up{color:var(--ok)} .arrow.ping{color:var(--warn)}
+
+.drives{display:flex; flex-direction:column; gap:5px; max-height:112px; overflow:hidden}
+.drive{display:grid; grid-template-columns:44px 1fr auto; gap:7px; align-items:center}
+.drive .nm{font-family:var(--mono); font-size:10.5px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.drive .track{height:5px; border-radius:99px; background:rgba(255,255,255,.07); overflow:hidden}
+.drive .track i{display:block; height:100%; border-radius:99px; background:var(--cyan)}
+.drive .free{font-family:var(--mono); font-size:10px; color:var(--dim); font-variant-numeric:tabular-nums}
+.drive.low .track i{background:var(--err)}
+.drive.mid .track i{background:var(--warn)}
+
+footer{font-size:9px; color:var(--faint); text-align:center; letter-spacing:.2px}

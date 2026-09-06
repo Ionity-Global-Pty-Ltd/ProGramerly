@@ -1,0 +1,53 @@
+ProGramerly - Basic Coding Software for All
+===========================================
+
+Copyright (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd
+Author: Johan Wilhelm van Antwerp
+All rights reserved. TM2
+
+GOVERNANCE
+----------
+This software is governed by Policy 986 AED. Where a Creative Commons licence
+is stated, it applies subject to and beneath Policy 986 AED.
+
+LICENCE
+-------
+Released under Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International (CC BY-NC-SA 4.0), governed by Policy 986 AED.
+
+You are free to:
+  * Share    - copy and redistribute the material in any medium or format
+  * Adapt    - remix, transform, and build upon the material
+
+Under the following terms:
+  * Attribution  - You must credit "Johan Wilhelm van Antwerp / Antwerp Designs
+                   | Ionity (Pty) Ltd" and link to https://www.ionity.today
+  * NonCommercial - Not for commercial use without a business relations licence
+                   (AED 900 Hardware & Software licence - contact ai@ionity.today)
+  * ShareAlike   - Distribute contributions under the same licence
+
+Full text: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+TRADEMARKS AND BRAND ASSETS
+---------------------------
+The Ionity, AEDI and Antwerp Designs names, logos, eagle mark and all brand
+assets bundled in `build/` and `src/renderer/assets/` remain the exclusive
+property of Ionity (Pty) Ltd. They are licensed for use in this application
+only and may not be reused in third-party work.
+
+THIRD-PARTY SOFTWARE
+--------------------
+ProGramerly installs software published by third parties. It does not
+redistribute that software; it invokes the official package managers
+(winget, Chocolatey, Homebrew, npm, pip) which download from vendor sources.
+Each installed package remains subject to its own licence and terms. You are
+responsible for accepting those terms.
+
+NO WARRANTY
+-----------
+Provided "as is", without warranty of any kind, express or implied. The author
+is not liable for any claim, damage or other liability arising from the use of
+this software.
+
+Contact: ai@ionity.today | https://www.ionity.today
+Anything is Possible with God.

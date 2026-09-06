@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="ionity-dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ProGramerly — Basic Coding Software for All</title>
+<meta name="description" content="One free desktop app that provisions a complete development environment on Windows and macOS, keeps it in sync, and watches the machine from the tray. Ionity (Pty) Ltd — Building Tomorrow, Today." />
+<meta name="author" content="Johan Wilhelm van Antwerp | Ionity (Pty) Ltd | AEDI" />
+<meta property="og:title" content="ProGramerly — Basic Coding Software for All" />
+<meta property="og:description" content="A complete development environment, installed for you. Free, open, and built by Ionity." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://ionity-global.github.io/ProGramerly/" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF; --bg-rgb:255,255,255;
+  --surface:#F3F4F6; --surface-2:#FFFFFF;
+  --text:#111827; --text-sub:#4B5563; --text-faint:#6B7280;
+  --line:rgba(0,0,0,.08); --line-soft:rgba(0,0,0,.05);
+  --accent:#2952E3; --accent-soft:rgba(41,82,227,.10);
+  --btn-bg:#111827; --btn-fg:#FFFFFF;
+  --glass:rgba(255,255,255,.82);
+  --shadow:0 4px 14px rgba(0,0,0,.10); --shadow-lg:0 10px 34px rgba(0,0,0,.14);
+}
+[data-theme="ionity-dark"]{
+  --bg:#1A1A1A; --bg-rgb:26,26,26;
+  --surface:#242424; --surface-2:#1F1F1F;
+  --text:#FFFFFF; --text-sub:#9CA3AF; --text-faint:#7A8291;
+  --line:rgba(255,255,255,.12); --line-soft:rgba(255,255,255,.07);
+  --accent:#3366FF; --accent-soft:rgba(51,102,255,.16);
+  --btn-bg:#3366FF; --btn-fg:#FFFFFF;
+  --glass:rgba(36,36,36,.80);
+  --shadow:0 4px 16px rgba(0,0,0,.45); --shadow-lg:0 14px 40px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100%;
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg); color:var(--text);
+  transition:background-color .45s ease,color .45s ease;
+  -webkit-font-smoothing:antialiased;
+}
+#backdrop{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.veil{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 42%,transparent 0%,transparent 38%,rgba(var(--bg-rgb),.55) 72%,rgba(var(--bg-rgb),.88) 100%);
+}
+.page{position:relative;z-index:2}
+
+/* ---------------------------------------------------------------- chrome */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px clamp(16px,4vw,40px);
+  pointer-events:none;
+}
+.topbar > *{pointer-events:auto}
+.wordmark{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:16px}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--line);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  color:var(--text);font-size:13px;font-weight:600;cursor:pointer;
+  transition:transform .2s,border-color .2s,opacity .2s;
+}
+.chip:hover{transform:translateY(-1px);border-color:var(--accent)}
+
+/* ------------------------------------------------------------------ hero */
+.hero{
+  min-height:100svh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:120px clamp(20px,5vw,32px) 80px;
+}
+.badge{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:7px 16px 7px 9px;margin-bottom:30px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--line);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  font-size:14px;font-weight:600;letter-spacing:-.01em;box-shadow:var(--shadow);
+}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 var(--accent);animation:pulse 3.6s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--accent-soft)}70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+h1{
+  font-size:clamp(2.35rem,6.2vw,4.6rem);font-weight:800;line-height:1.08;
+  letter-spacing:-.038em;max-width:15ch;margin-bottom:22px;
+}
+h1 .grad{
+  background:linear-gradient(100deg,#3366FF 0%,#00D4FF 38%,#14E0B0 62%,#7C4DFF 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.sub{font-size:clamp(1rem,1.6vw,1.18rem);color:var(--text-sub);max-width:60ch;line-height:1.6;margin-bottom:38px}
+.actions{display:flex;flex-wrap:wrap;gap:13px;align-items:center;justify-content:center}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  height:50px;padding:0 26px;border-radius:999px;border:1px solid transparent;
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;text-decoration:none;
+  transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,background-color .2s;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--btn-bg);color:var(--btn-fg);box-shadow:var(--shadow)}
+.btn-primary:hover{box-shadow:var(--shadow-lg)}
+.btn-ghost{background:var(--surface);color:var(--text);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--accent)}
+.relmeta{margin-top:20px;font-size:13px;color:var(--text-faint);min-height:19px}
+.relmeta a{color:var(--accent);text-decoration:none;font-weight:600}
+.relmeta a:hover{text-decoration:underline}
+
+/* -------------------------------------------------------------- sections */
+.sheet{background:var(--bg);border-top:1px solid var(--line-soft)}
+.wrap{max-width:1080px;margin:0 auto;padding:clamp(56px,9vw,110px) clamp(20px,5vw,32px)}
+h2{font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:700;letter-spacing:-.03em;margin-bottom:14px}
+.lede{color:var(--text-sub);max-width:62ch;line-height:1.65;margin-bottom:44px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:16px}
+.card{
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:16px;
+  padding:24px;transition:transform .25s,border-color .25s;
+}
+.card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.card .ico{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--accent);margin-bottom:14px;
+}
+.card h3{font-size:16px;font-weight:700;margin-bottom:7px;letter-spacing:-.01em}
+.card p{font-size:14px;line-height:1.6;color:var(--text-sub)}
+.dl-table{width:100%;border-collapse:collapse;font-size:14px;overflow:hidden;border-radius:14px;border:1px solid var(--line-soft)}
+.dl-table th,.dl-table td{text-align:left;padding:14px 18px;border-bottom:1px solid var(--line-soft)}
+.dl-table th{background:var(--surface);font-weight:700;font-size:13px;letter-spacing:.02em;text-transform:uppercase;color:var(--text-faint)}
+.dl-table tr:last-child td{border-bottom:none}
+.dl-table a{color:var(--accent);font-weight:600;text-decoration:none}
+.dl-table a:hover{text-decoration:underline}
+.dl-table code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--text-sub)}
+.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
+footer{border-top:1px solid var(--line-soft);background:var(--surface-2)}
+footer .wrap{padding-top:44px;padding-bottom:44px}
+.foot-row{display:flex;flex-wrap:wrap;gap:22px;justify-content:space-between;align-items:flex-start}
+footer p,footer li{font-size:13px;line-height:1.75;color:var(--text-faint)}
+footer a{color:var(--text-sub);text-decoration:none}
+footer a:hover{color:var(--accent)}
+footer ul{list-style:none}
+.rule{height:1px;background:var(--line-soft);margin:26px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<canvas id="backdrop" aria-hidden="true"></canvas>
+<div class="veil" aria-hidden="true"></div>
+
+<div class="page">
+
+  <div class="topbar">
+    <div class="wordmark">
+      <svg width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="13" stroke="currentColor" stroke-width="1.6" opacity=".35"/>
+        <ellipse cx="16" cy="16" rx="13" ry="5.4" stroke="#3366FF" stroke-width="1.8" transform="rotate(-28 16 16)"/>
+        <circle cx="16" cy="16" r="4" fill="#3366FF"/>
+      </svg>
+      <span>ProGramerly</span>
+    </div>
+    <button class="chip" id="themeBtn" title="Switch theme">
+      <span id="themeIcon">◐</span><span id="themeLabel">Light</span>
+    </button>
+  </div>
+
+  <main class="hero">
+    <div class="badge"><span class="dot"></span> Ionity (Pty) Ltd · AEDI · Free forever</div>
+    <h1>Your whole dev environment, <span class="grad">installed for you</span></h1>
+    <p class="sub">
+      ProGramerly provisions a complete development machine on Windows and macOS — runtimes,
+      editors, SDKs, shells, databases and AI tooling — from one catalogue, in one run.
+      Then it keeps everything in sync, watches the box from the tray, and repairs itself.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" id="dlPrimary" href="https://github.com/Ionity-Global/ProGramerly/releases/latest">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12"/><path d="m7 12 5 5 5-5"/><path d="M4 21h16"/>
+        </svg>
+        <span id="dlPrimaryLabel">Download for Windows</span>
+      </a>
+      <a class="btn btn-ghost" href="#downloads">All platforms</a>
+      <a class="btn btn-ghost" href="https://github.com/Ionity-Global/ProGramerly">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.49-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.81.06 1.23.83 1.23.83.72 1.23 1.89.87 2.35.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.96 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.52.56.83 1.28.83 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        Source
+      </a>
+    </div>
+    <p class="relmeta" id="relmeta">Checking for the latest release…</p>
+  </main>
+
+  <section class="sheet">
+    <div class="wrap">
+      <h2>What it actually does</h2>
+      <p class="lede">No wizards to babysit, no half-finished PATH. Pick a profile, press go, walk away.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+          <h3>A real catalogue</h3>
+          <p>Over a hundred curated packages across runtimes, IDEs, shells, databases, embedded, ML and MCP tooling — resolved to winget, Chocolatey or Homebrew per machine.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
+          <h3>Stays current</h3>
+          <p>Checks GitHub Releases on its own schedule, verifies each download against the published SHA-256, and updates itself in place.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+          <h3>Watches the machine</h3>
+          <p>A tray monitor for CPU, memory, disk and network, with live probing so you find out something broke before your build does.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <h3>Repairs itself</h3>
+          <p>Registry repair, PATH reconstruction and a dry-run mode that shows exactly what would change before a single byte moves.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 15 9l7 3-7 3-3 7-3-7-7-3 7-3 3-7z"/></svg></div>
+          <h3>AI tooling, first class</h3>
+          <p>The AI profile brings MCP servers, model runners and agent tooling in one pass instead of a weekend of README archaeology.</p>
+        </div>
+        <div class="card">
+          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div>
+          <h3>Zero runtime dependencies</h3>
+          <p>Node standard library only. Nothing to audit but the code you can already read, under Policy 986 AED.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet" id="downloads">
+    <div class="wrap">
+      <h2>Downloads</h2>
+      <p class="lede">
+        Every build is produced on GitHub's own runners — Windows on <code>windows-latest</code>,
+        macOS on Apple's toolchain — and published with a <code>SHA256.txt</code> you can check
+        before you run anything.
+      </p>
+      <div class="scroller">
+        <table class="dl-table" id="dlTable">
+          <thead><tr><th>Platform</th><th>File</th><th>Get it</th></tr></thead>
+          <tbody id="dlBody">
+            <tr><td>Windows 10/11 (x64)</td><td><code>ProGramerly-Setup-*-x64.exe</code></td><td><a href="https://github.com/Ionity-Global/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Windows (ARM64)</td><td><code>ProGramerly-Setup-*-arm64.exe</code></td><td><a href="https://github.com/Ionity-Global/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Windows portable</td><td><code>ProGramerly-Portable-*.exe</code></td><td><a href="https://github.com/Ionity-Global/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>macOS (Apple Silicon)</td><td><code>ProGramerly-*-arm64.dmg</code></td><td><a href="https://github.com/Ionity-Global/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>macOS (Intel)</td><td><code>ProGramerly-*-x64.dmg</code></td><td><a href="https://github.com/Ionity-Global/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Checksums</td><td><code>SHA256.txt</code></td><td><a href="https://github.com/Ionity-Global/ProGramerly/releases/latest">Latest release</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rule"></div>
+      <p class="lede" style="margin-bottom:0">
+        Builds are currently unsigned: Windows shows <em>“Windows protected your PC” → More info → Run anyway</em>,
+        and macOS asks for right-click → Open the first time. Signing turns on automatically the moment the
+        certificates are added to the repository secrets.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-row">
+        <div>
+          <p style="color:var(--text-sub);font-weight:700;margin-bottom:6px">Building Tomorrow, Today.</p>
+          <p>© 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — All rights reserved — TM²<br>
+             Governance: Policy 986 AED · Licence: AED 900<br>
+             Author: Johan Wilhelm van Antwerp · ORCID 0009-0005-7181-0347</p>
+        </div>
+        <ul>
+          <li><a href="https://www.ionity.co.za">ionity.co.za — main</a></li>
+          <li><a href="https://www.ionity.today">ionity.today — ecosystem</a></li>
+          <li><a href="https://www.ionity.world">ionity.world — profile</a></li>
+          <li><a href="https://github.com/Ionity-Global/ProGramerly">github.com/Ionity-Global</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  /* ------------------------------------------------------------- theme */
+  var root=document.documentElement, btn=document.getElementById('themeBtn'),
+      label=document.getElementById('themeLabel'), icon=document.getElementById('themeIcon');
+  function read(){ try{ return localStorage.getItem('pg-theme'); }catch(e){ return null; } }
+  function save(v){ try{ localStorage.setItem('pg-theme',v); }catch(e){} }
+  function apply(t){
+    if(t==='light'){ root.removeAttribute('data-theme'); label.textContent='Ionity Dark'; icon.textContent='◑'; }
+    else { root.setAttribute('data-theme','ionity-dark'); label.textContent='Light'; icon.textContent='◐'; }
+    readBg();
+  }
+  var stored=read();
+  apply(stored==='light'?'light':'dark');
+  btn.addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')?'light':'dark';
+    apply(next); save(next);
+  });
+
+  /* --------------------------------------------------------- backdrop */
+  var canvas=document.getElementById('backdrop'), ctx=canvas.getContext('2d');
+  var W=0,H=0,dpr=1,bg=[26,26,26],running=true;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function readBg(){
+    var c=getComputedStyle(root).getPropertyValue('--bg-rgb').trim();
+    var p=c.split(',').map(function(n){return parseInt(n,10);});
+    if(p.length===3 && !p.some(isNaN)) bg=p;
+  }
+  readBg();
+
+  var mouse={x:-9999,y:-9999,r:190,on:false};
+
+  /* Ionity spectrum: blue -> azure -> cyan -> mint -> violet -> amber */
+  var SPEC=[
+    {s:0.00,r:51, g:102,b:255},
+    {s:0.20,r:41, g:121,b:255},
+    {s:0.40,r:0,  g:212,b:255},
+    {s:0.58,r:20, g:224,b:176},
+    {s:0.80,r:124,g:77, b:255},
+    {s:1.00,r:255,g:176,b:32 }
+  ];
+  function colorAt(nx,ny){
+    var f=Math.min(Math.max(nx*0.74+ny*0.26,0),1);
+    for(var i=0;i<SPEC.length-1;i++){
+      var a=SPEC[i],b=SPEC[i+1];
+      if(f>=a.s&&f<=b.s){
+        var t=(f-a.s)/(b.s-a.s||1);
+        return [Math.round(a.r+(b.r-a.r)*t),Math.round(a.g+(b.g-a.g)*t),Math.round(a.b+(b.b-a.b)*t)];
+      }
+    }
+    return [51,102,255];
+  }
+
+  function Dash(seed){ this.reset(seed); }
+  Dash.prototype.reset=function(initial){
+    if(initial){
+      var ang=Math.random()*Math.PI*2, d=Math.pow(Math.random(),0.7)*Math.max(W,H)*0.7;
+      this.x=W/2+Math.cos(ang)*d; this.y=H/2+Math.sin(ang)*d;
+    } else { this.x=Math.random()*W; this.y=H+Math.random()*60; }
+    this.len=3.5+Math.random()*7;
+    this.w=1.5+Math.random()*1.5;
+    this.speed=0.38+Math.random()*0.85;
+    this.base=-Math.PI/3.4;
+    this.angle=this.base;
+    this.alpha=0.22+Math.random()*0.62;
+    this.phase=Math.random()*Math.PI*2;   /* per-particle breath offset */
+    this.vx=0; this.vy=0;
+  };
+  Dash.prototype.step=function(breath,t){
+    var nx=this.x/W, ny=this.y/H;
+    var curve=Math.sin(nx*3.5+ny*2.0+t*0.00012)*0.19;
+    var target=this.base+curve;
+    var sp=this.speed*(0.82+0.34*breath);
+    var dvx=Math.cos(target)*sp, dvy=Math.sin(target)*sp;
+
+    if(mouse.on){
+      var dx=this.x-mouse.x, dy=this.y-mouse.y, dist=Math.hypot(dx,dy);
+      if(dist<mouse.r&&dist>0){
+        var force=(1-dist/mouse.r)*3.4;
+        dvx+=(dx/dist)*force; dvy+=(dy/dist)*force;
+        this.angle=Math.atan2(dvy,dvx);
+      } else { this.angle+=(target-this.angle)*0.1; }
+    } else { this.angle+=(target-this.angle)*0.1; }
+
+    this.vx+=(dvx-this.vx)*0.12; this.vy+=(dvy-this.vy)*0.12;
+    this.x+=this.vx; this.y+=this.vy;
+
+    if(this.y<-40){ this.y=H+20; this.x=Math.random()*W; }
+    if(this.x>W+40){ this.x=-24; this.y=Math.random()*H; }
+    if(this.x<-60){ this.x=W+20; }
+  };
+  Dash.prototype.draw=function(breath,t){
+    var c=colorAt(this.x/W,this.y/H);
+    /* individual shimmer riding on the global breath */
+    var shimmer=0.78+0.22*Math.sin(t*0.0016+this.phase);
+    var a=this.alpha*(0.58+0.5*breath)*shimmer;
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.angle);
+    ctx.globalAlpha=Math.min(a,1);
+    ctx.strokeStyle='rgb('+c[0]+','+c[1]+','+c[2]+')';
+    ctx.lineWidth=this.w*(0.9+0.2*breath);
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(-this.len/2,0);
+    ctx.lineTo(this.len/2,0);
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  var parts=[], DENSITY=0.000125;
+  function fit(){
+    var want=Math.max(40,Math.min(Math.floor(W*H*DENSITY),820));
+    while(parts.length<want) parts.push(new Dash(true));
+    if(parts.length>want) parts.length=want;
+  }
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    W=window.innerWidth; H=window.innerHeight;
+    canvas.width=Math.floor(W*dpr); canvas.height=Math.floor(H*dpr);
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);   /* absolute, so repeated resizes never compound */
+    ctx.clearRect(0,0,W,H);
+    fit();
+  }
+  window.addEventListener('resize',resize,{passive:true});
+  resize();
+
+  window.addEventListener('mousemove',function(e){ mouse.x=e.clientX; mouse.y=e.clientY; mouse.on=true; },{passive:true});
+  window.addEventListener('mouseout',function(e){ if(!e.relatedTarget) mouse.on=false; },{passive:true});
+  window.addEventListener('touchmove',function(e){ if(e.touches[0]){ mouse.x=e.touches[0].clientX; mouse.y=e.touches[0].clientY; mouse.on=true; } },{passive:true});
+  window.addEventListener('touchend',function(){ mouse.on=false; },{passive:true});
+  document.addEventListener('visibilitychange',function(){
+    running=!document.hidden;
+    if(running) requestAnimationFrame(frame);
+  });
+
+  function frame(now){
+    if(!running) return;
+    /* one slow breath, ~13s in and out - everything below rides on it */
+    var breath=0.5+0.5*Math.sin(now*0.00048);
+
+    /* trail fade instead of a hard clear: strokes leave a comet tail that
+       lengthens on the inhale and tightens on the exhale */
+    ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=1;
+    ctx.fillStyle='rgba('+bg[0]+','+bg[1]+','+bg[2]+','+(0.15-0.055*breath).toFixed(3)+')';
+    ctx.fillRect(0,0,W,H);
+
+    /* breathing core glow */
+    var gr=Math.min(W,H)*(0.34+0.10*breath);
+    var g=ctx.createRadialGradient(W*0.5,H*0.44,0,W*0.5,H*0.44,gr);
+    g.addColorStop(0,'rgba(51,102,255,'+(0.055+0.045*breath).toFixed(3)+')');
+    g.addColorStop(1,'rgba(51,102,255,0)');
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,W,H);
+
+    for(var i=0;i<parts.length;i++){ parts[i].step(breath,now); parts[i].draw(breath,now); }
+    ctx.globalAlpha=1;
+    requestAnimationFrame(frame);
+  }
+
+  if(reduce){
+    ctx.fillStyle='rgb('+bg[0]+','+bg[1]+','+bg[2]+')';
+    ctx.fillRect(0,0,W,H);
+    for(var i=0;i<parts.length;i++) parts[i].draw(0.5,0);
+  } else {
+    requestAnimationFrame(frame);
+  }
+
+  /* ------------------------------------------------- live release data */
+  var REPO='Ionity-Global/ProGramerly';
+  var meta=document.getElementById('relmeta');
+  var body=document.getElementById('dlBody');
+  var primary=document.getElementById('dlPrimary');
+  var primaryLabel=document.getElementById('dlPrimaryLabel');
+  var RELEASES='https://github.com/'+REPO+'/releases/latest';
+
+  var isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);
+  if(isMac) primaryLabel.textContent='Download for macOS';
+
+  function mb(n){ return (n/1048576).toFixed(1)+' MB'; }
+  function pick(assets,re){ for(var i=0;i<assets.length;i++){ if(re.test(assets[i].name)) return assets[i]; } return null; }
+
+  fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(rel){
+      var a=rel.assets||[];
+      var rows=[
+        ['Windows 10/11 (x64)',   /Setup-.*-x64\.exe$/],
+        ['Windows (ARM64)',       /Setup-.*-arm64\.exe$/],
+        ['Windows portable',      /Portable-.*\.exe$/],
+        ['macOS (Apple Silicon)', /-arm64\.dmg$/],
+        ['macOS (Intel)',         /-x64\.dmg$/],
+        ['Checksums',             /^SHA256\.txt$/]
+      ];
+      var html='', found=0;
+      rows.forEach(function(row){
+        var asset=pick(a,row[1]);
+        if(asset){
+          found++;
+          html+='<tr><td>'+row[0]+'</td><td><code>'+asset.name+'</code></td>'+
+                '<td><a href="'+asset.browser_download_url+'">Download · '+mb(asset.size)+'</a></td></tr>';
+        } else {
+          html+='<tr><td>'+row[0]+'</td><td><code>—</code></td><td><a href="'+RELEASES+'">Not in this release</a></td></tr>';
+        }
+      });
+      if(found) body.innerHTML=html;
+
+      var best=isMac ? (pick(a,/-arm64\.dmg$/)||pick(a,/-x64\.dmg$/))
+                     : (pick(a,/Setup-.*-x64\.exe$/)||pick(a,/Portable-.*\.exe$/));
+      if(best){ primary.href=best.browser_download_url; primaryLabel.textContent='Download '+rel.tag_name+' · '+(isMac?'macOS':'Windows'); }
+
+      var when=new Date(rel.published_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+      meta.innerHTML='Latest release <strong>'+rel.tag_name+'</strong> · '+when+
+                     ' · <a href="'+rel.html_url+'">release notes</a>';
+    })
+    .catch(function(){
+      meta.innerHTML='No published release yet — <a href="https://github.com/'+REPO+'">browse the source</a> in the meantime.';
+    });
+})();
+</script>
+</body>
+</html>

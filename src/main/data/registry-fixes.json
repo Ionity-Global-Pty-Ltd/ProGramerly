@@ -1,0 +1,240 @@
+{
+  "meta": {
+    "title": "ProGramerly registry repair set",
+    "governance": "Policy 986 AED",
+    "principle": "Only values Microsoft documents as the correct setting are written. Nothing is deleted unless Microsoft's own guidance names that value as the cause of the fault, and even then only when you tick the removals box. A .reg export of every key touched is written before the first change."
+  },
+  "tools": [
+    {
+      "id": "sfc",
+      "name": "System File Checker",
+      "desc": "Verifies and repairs protected Windows system files. Safe, read-then-repair only.",
+      "cmd": "sfc /scannow",
+      "admin": true,
+      "minutes": 15
+    },
+    {
+      "id": "dism",
+      "name": "DISM component store repair",
+      "desc": "Repairs the component store that SFC pulls its known-good copies from. Run this before SFC when SFC cannot fix something.",
+      "cmd": "DISM /Online /Cleanup-Image /RestoreHealth",
+      "admin": true,
+      "minutes": 25
+    },
+    {
+      "id": "winsock",
+      "name": "Reset Winsock catalog",
+      "desc": "Rebuilds the Winsock catalogue when layered service providers have corrupted it. Standard Microsoft network repair.",
+      "cmd": "netsh winsock reset",
+      "admin": true,
+      "reboot": true,
+      "minutes": 1
+    },
+    {
+      "id": "tcpip",
+      "name": "Reset TCP/IP stack",
+      "desc": "Rewrites the TCP/IP registry keys to their installation defaults.",
+      "cmd": "netsh int ip reset",
+      "admin": true,
+      "reboot": true,
+      "minutes": 1
+    },
+    {
+      "id": "flushdns",
+      "name": "Flush DNS resolver cache",
+      "desc": "Clears stale name resolution. Harmless and instant.",
+      "cmd": "ipconfig /flushdns",
+      "admin": false,
+      "minutes": 1
+    },
+    {
+      "id": "chkdsk",
+      "name": "Check system drive (read-only scan)",
+      "desc": "Online scan of the system volume. Reports problems, changes nothing.",
+      "cmd": "chkdsk $env:SystemDrive /scan",
+      "admin": true,
+      "minutes": 10
+    },
+    {
+      "id": "wureset",
+      "name": "Reset Windows Update components",
+      "desc": "Stops the update services, renames SoftwareDistribution and catroot2 so Windows rebuilds them, then starts the services again. Microsoft's own documented reset.",
+      "cmd": "net stop wuauserv; net stop cryptSvc; net stop bits; net stop msiserver; Rename-Item -Path \"$env:SystemRoot\\SoftwareDistribution\" -NewName \"SoftwareDistribution.bak-$(Get-Date -Format yyyyMMddHHmmss)\" -ErrorAction SilentlyContinue; Rename-Item -Path \"$env:SystemRoot\\System32\\catroot2\" -NewName \"catroot2.bak-$(Get-Date -Format yyyyMMddHHmmss)\" -ErrorAction SilentlyContinue; net start wuauserv; net start cryptSvc; net start bits; net start msiserver",
+      "admin": true,
+      "minutes": 3
+    },
+    {
+      "id": "wsreset",
+      "name": "Clear Microsoft Store cache",
+      "desc": "Empties the Store download cache without touching installed apps.",
+      "cmd": "wsreset.exe -i",
+      "admin": false,
+      "minutes": 2
+    },
+    {
+      "id": "gpupdate",
+      "name": "Refresh policy",
+      "desc": "Re-applies local and domain policy so stale policy keys stop fighting your settings.",
+      "cmd": "gpupdate /force",
+      "admin": true,
+      "minutes": 2
+    }
+  ],
+  "fixes": [
+    {
+      "id": "exe-association",
+      "name": "Repair the .exe file association",
+      "desc": "When .exe stops opening programs and every double click launches the wrong thing, this is the pair of values that is wrong.",
+      "category": "repair",
+      "admin": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SOFTWARE\\Classes\\.exe", "name": "(Default)", "type": "String", "data": "exefile" },
+        { "path": "HKLM:\\SOFTWARE\\Classes\\exefile\\shell\\open\\command", "name": "(Default)", "type": "ExpandString", "data": "\"%1\" %*" }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/shell-experience/file-association-issues"
+    },
+    {
+      "id": "msiserver-start",
+      "name": "Windows Installer service start type",
+      "desc": "Sets msiserver back to manual start. This is the documented fix for \"The Windows Installer Service could not be accessed\" (error 1719), which blocks almost every .msi based installer.",
+      "category": "repair",
+      "admin": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\msiserver", "name": "Start", "type": "DWord", "data": 3 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/application-management/windows-installer-service-could-not-be-accessed"
+    },
+    {
+      "id": "bits-start",
+      "name": "BITS service start type",
+      "desc": "Background Intelligent Transfer Service back to manual start. Windows Update and winget both hand their downloads to BITS.",
+      "category": "repair",
+      "admin": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\BITS", "name": "Start", "type": "DWord", "data": 3 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/installing-updates-features-roles/windows-update-issues-troubleshooting"
+    },
+    {
+      "id": "wuauserv-start",
+      "name": "Windows Update service start type",
+      "desc": "Restores wuauserv to manual (trigger) start after a tuning script or a third party \"optimiser\" has disabled it.",
+      "category": "repair",
+      "admin": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\wuauserv", "name": "Start", "type": "DWord", "data": 3 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/installing-updates-features-roles/windows-update-issues-troubleshooting"
+    },
+    {
+      "id": "cryptsvc-start",
+      "name": "Cryptographic Services start type",
+      "desc": "CryptSvc automatic. Without it signature checks fail and installers refuse to run.",
+      "category": "repair",
+      "admin": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\CryptSvc", "name": "Start", "type": "DWord", "data": 2 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/installing-updates-features-roles/windows-update-issues-troubleshooting"
+    },
+    {
+      "id": "wsearch-start",
+      "name": "Windows Search service start type",
+      "desc": "Restores WSearch to automatic (delayed) so Start menu search and file search work again.",
+      "category": "repair",
+      "admin": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\WSearch", "name": "Start", "type": "DWord", "data": 2 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/shell-experience/windows-search-issues"
+    },
+    {
+      "id": "long-paths",
+      "name": "Enable Win32 long paths",
+      "desc": "Lifts the 260 character path limit. node_modules, Gradle caches and deep monorepos stop failing with cryptic ENAMETOOLONG and access denied errors.",
+      "category": "dev",
+      "admin": true,
+      "reboot": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", "name": "LongPathsEnabled", "type": "DWord", "data": 1 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation"
+    },
+    {
+      "id": "developer-mode",
+      "name": "Enable Developer Mode",
+      "desc": "Allows sideloading and symlink creation without elevation, which is what makes npm, pnpm and Flutter work properly.",
+      "category": "dev",
+      "admin": true,
+      "action": "set",
+      "values": [
+        { "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock", "name": "AllowDevelopmentWithoutDevLicense", "type": "DWord", "data": 1 },
+        { "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock", "name": "AllowAllTrustedApps", "type": "DWord", "data": 1 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development"
+    },
+    {
+      "id": "show-extensions",
+      "name": "Show file extensions and hidden files",
+      "desc": "Explorer stops hiding what a file actually is. Per user, no elevation needed.",
+      "category": "dev",
+      "admin": false,
+      "action": "set",
+      "values": [
+        { "path": "HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "HideFileExt", "type": "DWord", "data": 0 },
+        { "path": "HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Hidden", "type": "DWord", "data": 1 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/windows/win32/shell/how-to-display-file-extensions"
+    },
+    {
+      "id": "enable-uac",
+      "name": "Re-enable User Account Control",
+      "desc": "Only written when UAC has been switched off. Windows treats a machine with EnableLUA=0 as broken, and half of the Store and app model stops working.",
+      "category": "security",
+      "admin": true,
+      "reboot": true,
+      "action": "set",
+      "onlyIfEquals": 0,
+      "values": [
+        { "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", "name": "EnableLUA", "type": "DWord", "data": 1 }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/windows/security/application-security/application-control/user-account-control/settings-and-configuration"
+    },
+    {
+      "id": "cd-dvd-filters",
+      "name": "Clear stale CD/DVD class filters",
+      "desc": "Removes UpperFilters and LowerFilters from the CD/DVD class key. Microsoft names these two values as the cause when an optical drive vanishes from Explorer after a burning tool is uninstalled.",
+      "category": "cleanup",
+      "admin": true,
+      "action": "remove",
+      "flaggedByMicrosoft": true,
+      "values": [
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E965-E325-11CE-BFC1-08002BE10318}", "name": "UpperFilters" },
+        { "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E965-E325-11CE-BFC1-08002BE10318}", "name": "LowerFilters" }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/shell-experience/cd-dvd-drive-not-detected"
+    },
+    {
+      "id": "orphan-wsus-policy",
+      "name": "Clear orphaned WSUS update policy",
+      "desc": "Removes WUServer, WUStatusServer and UseWUServer when this machine points at a WSUS server that is not there. Microsoft documents these values as the cause of update error 0x80244019 on machines that have left a domain.",
+      "category": "cleanup",
+      "admin": true,
+      "flaggedByMicrosoft": true,
+      "action": "remove",
+      "values": [
+        { "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate", "name": "WUServer" },
+        { "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate", "name": "WUStatusServer" },
+        { "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU", "name": "UseWUServer" }
+      ],
+      "msRef": "https://learn.microsoft.com/en-us/troubleshoot/windows-client/installing-updates-features-roles/windows-update-error-80244019"
+    }
+  ]
+}

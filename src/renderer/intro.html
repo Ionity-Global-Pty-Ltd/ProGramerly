@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; media-src 'self' data:" />
+  <title>IONITY</title>
+  <link rel="stylesheet" href="intro.css" />
+</head>
+<body>
+  <div class="stage" id="stage">
+    <canvas id="stars"></canvas>
+
+    <div class="beamlane" id="beamlane">
+      <div class="beam" id="beam">
+        <span class="b0">·····</span><span class="b1">----</span><span class="b2">≡≡</span><span class="tip">►</span>
+      </div>
+    </div>
+
+    <div class="logo" id="logo" aria-label="IONITY" role="img"></div>
+
+    <div class="subtitle" id="subtitle"></div>
+
+    <div class="barwrap" id="barwrap">
+      <div class="bracket">[</div>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="bracket">]</div>
+    </div>
+    <div class="status" id="status"></div>
+
+    <div class="colophon" id="colophon">
+      <span>ProGramerly</span>
+      <em>Basic Coding Software for All</em>
+      <span class="dim">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd</span>
+    </div>
+
+    <button class="skip" id="skip" type="button">Skip</button>
+  </div>
+  <div class="flash" id="flash" aria-hidden="true"></div>
+  <script src="intro.js"></script>
+</body>
+</html>

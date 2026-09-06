@@ -1,0 +1,155 @@
+# ProGramerly - build Windows and macOS installers on native runners
+# Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+name: Build installers
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/syntax-check.js
+      - run: node scripts/validate-catalog.js
+      - run: node scripts/dry-run.js full win
+      - run: node scripts/dry-run.js full mac
+      - run: node scripts/dry-run.js ai win
+      - run: node scripts/dry-run.js minimal mac
+      - name: PowerShell syntax check
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($f in Get-ChildItem scripts -Filter *.ps1) {
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              $f.FullName, [ref]$null, [ref]$errs)
+            if ($errs) { $errs; throw "syntax errors in $($f.Name)" }
+          }
+      - name: Bash syntax check
+        run: for f in scripts/*.sh; do bash -n "$f"; done
+
+  # The app must actually boot. This caught a real one: the intro window
+  # closing before the main window existed made Electron fire
+  # window-all-closed and quit the app on launch.
+  smoke:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci || npm install
+      - name: Install a display
+        run: sudo apt-get update && sudo apt-get install -y xvfb imagemagick libnss3 libatk-bridge2.0-0 libgtk-3-0 libasound2t64
+      - name: Boot the app and prove it stays up
+        env:
+          PROGRAMERLY_UI_FIXTURES: '1'
+        run: |
+          Xvfb :99 -screen 0 1400x950x24 &
+          sleep 2
+          DISPLAY=:99 ./node_modules/electron/dist/electron . --no-sandbox --disable-gpu > app.log 2>&1 &
+          sleep 25
+          pgrep -f 'electron/dist/electron' > /dev/null || { echo '::error::the app exited during launch'; tail -50 app.log; exit 1; }
+          DISPLAY=:99 import -window root screenshot.png
+          echo "app is alive after 25s"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-screenshot
+          path: |
+            screenshot.png
+            app.log
+          if-no-files-found: warn
+
+  windows:
+    needs: [validate, smoke]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci || npm install
+      - name: Build Windows installer
+        run: npx electron-builder --win --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ProGramerly-windows
+          path: |
+            dist/*.exe
+            dist/*.blockmap
+          if-no-files-found: error
+
+  macos:
+    needs: [validate, smoke]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci || npm install
+      - name: Build macOS installer
+        # Signing/notarisation kicks in automatically once the four secrets
+        # below exist. Without them the build still produces a working
+        # (unsigned) .dmg - Gatekeeper will ask the user to right-click > Open.
+        run: npx electron-builder --mac --publish never
+        env:
+          CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ProGramerly-macos
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      # The in-app updater verifies its download against this file, so a
+      # release without it downgrades to "trust the transport".
+      - name: Publish checksums
+        run: |
+          cd artifacts
+          find . -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' -o -name '*.deb' \) \
+            -exec sha256sum {} + | sed 's#\./[^ ]*/#*#' > SHA256.txt
+          cat SHA256.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*
+            artifacts/SHA256.txt
+          generate_release_notes: true
+          body: |
+            **ProGramerly - Basic Coding Software for All**
+
+            Free desktop installer for a complete development environment.
+
+            | Platform | Download |
+            | --- | --- |
+            | Windows 10/11 | `ProGramerly-Setup-*.exe` |
+            | Windows (no install) | `ProGramerly-Portable-*.exe` |
+            | macOS Apple Silicon | `ProGramerly-*-arm64.dmg` |
+            | macOS Intel | `ProGramerly-*-x64.dmg` |
+
+            ---
+            Governance: Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — TM²
+            Author: Johan Wilhelm van Antwerp · https://www.ionity.today

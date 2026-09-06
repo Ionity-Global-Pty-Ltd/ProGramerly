@@ -1,0 +1,3084 @@
+{
+  "$schema": "./catalog.schema.json",
+  "meta": {
+    "title": "ProGramerly - Basic Coding Software for All",
+    "documentId": "DOC-2026-09-002",
+    "version": "1.2.0",
+    "governance": "Policy 986 AED",
+    "author": "Johan Wilhelm van Antwerp",
+    "organisation": "Ionity (Pty) Ltd | Antwerp Designs | AEDI",
+    "web": "https://www.ionity.today",
+    "updated": "2026-09-06"
+  },
+  "profiles": {
+    "full": {
+      "label": "Full Stack",
+      "desc": "Everything. Every app, every runtime, every SDK, every shell. ~45-70 GB, 60-120 min.",
+      "recommended": true
+    },
+    "ai": {
+      "label": "AI Dev",
+      "desc": "Claude, MCP servers, local models, Node, Python, Git, VS Code. ~12-20 GB.",
+      "recommended": false
+    },
+    "minimal": {
+      "label": "Minimal",
+      "desc": "Git, Node, Python, VS Code, Chrome, PowerShell. ~4-8 GB.",
+      "recommended": false
+    },
+    "custom": {
+      "label": "Custom",
+      "desc": "Nothing preselected. You pick.",
+      "recommended": false
+    }
+  },
+  "groups": [
+    {
+      "id": "bootstrap",
+      "label": "Package Managers",
+      "desc": "The engines everything else rides on."
+    },
+    {
+      "id": "vcs",
+      "label": "Source Control",
+      "desc": "Git and friends."
+    },
+    {
+      "id": "shells",
+      "label": "Shells & Terminal",
+      "desc": "All shells, updated."
+    },
+    {
+      "id": "runtimes",
+      "label": "Language Runtimes",
+      "desc": "Node, Python, .NET, Java, Go, Rust, C/C++."
+    },
+    {
+      "id": "ide",
+      "label": "IDEs & Editors",
+      "desc": "Visual Studio, VS Code, Android Studio."
+    },
+    {
+      "id": "apps",
+      "label": "Desktop Apps",
+      "desc": "Claude, Chrome, OBS, Canva, Obsidian, Notion, Miro."
+    },
+    {
+      "id": "browser",
+      "label": "Browsers & Extensions",
+      "desc": "Chrome, Edge, Firefox Dev, ad blocking, Claude in Chrome."
+    },
+    {
+      "id": "ai",
+      "label": "AI CLIs & Models",
+      "desc": "Claude Code, Qwen Code, Ollama, LM Studio."
+    },
+    {
+      "id": "ml",
+      "label": "ML & AI Frameworks",
+      "desc": "Managed venv, PyTorch, TensorFlow, Transformers, LangChain."
+    },
+    {
+      "id": "mcp",
+      "label": "MCP Servers",
+      "desc": "Model Context Protocol servers Claude Desktop uses."
+    },
+    {
+      "id": "db",
+      "label": "Databases",
+      "desc": "SQLite, MongoDB, PostgreSQL, MySQL, SQL Server, Redis, clients."
+    },
+    {
+      "id": "web",
+      "label": "Web Stacks",
+      "desc": "Apache + MySQL + PHP, Laravel, Rails, Django, React, Express, .NET."
+    },
+    {
+      "id": "mobile",
+      "label": "Mobile & Cross-platform",
+      "desc": "Flutter, Dart, Kotlin, Android SDK, React Native, Expo."
+    },
+    {
+      "id": "embedded",
+      "label": "Embedded & IoT",
+      "desc": "Arduino IDE, arduino-cli, PlatformIO, ESP-IDF, MicroPython."
+    },
+    {
+      "id": "apis",
+      "label": "APIs & Testing",
+      "desc": "Postman, Insomnia, HTTPie, Newman, OpenAPI tooling."
+    },
+    {
+      "id": "sdk",
+      "label": "SDKs / ADKs / Cloud",
+      "desc": "Android SDK, Google ADK, Azure/AWS/GCP CLIs."
+    },
+    {
+      "id": "libs",
+      "label": "Core Libraries & Tools",
+      "desc": "Build tools, CLI utilities, formatters."
+    },
+    {
+      "id": "wsl",
+      "label": "WSL (Windows only)",
+      "desc": "Windows Subsystem for Linux + Ubuntu."
+    },
+    {
+      "id": "ionity",
+      "label": "Ionity / AEDI",
+      "desc": "archify, brand assets, Policy 986 AED workspace."
+    }
+  ],
+  "items": [
+    {
+      "id": "winget",
+      "name": "winget (Windows Package Manager)",
+      "group": "bootstrap",
+      "desc": "Verifies winget is present; repairs the App Installer source if broken.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "elevate": true,
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "winget --version",
+            "check": true
+          },
+          {
+            "type": "shell",
+            "cmd": "winget source update --disable-interactivity",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "chocolatey",
+      "name": "Chocolatey",
+      "group": "bootstrap",
+      "desc": "Fallback package engine for anything winget cannot resolve.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "elevate": true,
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "if (-not (Get-Command choco -ErrorAction SilentlyContinue)) { Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1')) } else { choco --version }"
+          }
+        ]
+      }
+    },
+    {
+      "id": "homebrew",
+      "name": "Homebrew",
+      "group": "bootstrap",
+      "desc": "The macOS package engine. Installed non-interactively if missing.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "platforms": [
+        "mac"
+      ],
+      "mac": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "command -v brew >/dev/null 2>&1 || NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+          },
+          {
+            "type": "shell",
+            "cmd": "eval \"$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)\" && brew update",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "xcode-clt",
+      "name": "Xcode Command Line Tools",
+      "group": "bootstrap",
+      "desc": "Apple's compiler toolchain. Required by Homebrew and most native builds.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "platforms": [
+        "mac"
+      ],
+      "mac": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "xcode-select -p >/dev/null 2>&1 || xcode-select --install",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "group": "vcs",
+      "desc": "Distributed version control. On Windows this also brings Git Bash.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Git.Git"
+        ],
+        "choco": [
+          "git"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "git"
+        ]
+      }
+    },
+    {
+      "id": "gh-cli",
+      "name": "GitHub CLI",
+      "group": "vcs",
+      "desc": "gh - clone, PR, release and auth from the terminal.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "GitHub.cli"
+        ],
+        "choco": [
+          "gh"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "gh"
+        ]
+      }
+    },
+    {
+      "id": "github-desktop",
+      "name": "GitHub Desktop",
+      "group": "vcs",
+      "desc": "Graphical Git client.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "GitHub.GitHubDesktop"
+        ],
+        "choco": [
+          "github-desktop"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "github"
+          ]
+        }
+      }
+    },
+    {
+      "id": "git-lfs",
+      "name": "Git LFS",
+      "group": "vcs",
+      "desc": "Large file storage for binary assets.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "GitHub.GitLFS"
+        ],
+        "choco": [
+          "git-lfs"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "git-lfs"
+        ]
+      }
+    },
+    {
+      "id": "powershell",
+      "name": "PowerShell 7+",
+      "group": "shells",
+      "desc": "Cross-platform PowerShell (pwsh). Sits alongside Windows PowerShell 5.1.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.PowerShell"
+        ],
+        "choco": [
+          "powershell-core"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "powershell"
+          ]
+        }
+      }
+    },
+    {
+      "id": "windows-terminal",
+      "name": "Windows Terminal",
+      "group": "shells",
+      "desc": "Tabbed terminal host for cmd, PowerShell, WSL and Git Bash.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.WindowsTerminal"
+        ],
+        "choco": [
+          "microsoft-windows-terminal"
+        ]
+      }
+    },
+    {
+      "id": "nushell",
+      "name": "Nushell",
+      "group": "shells",
+      "desc": "Structured-data shell. Good for pipelines that carry tables, not text.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Nushell.Nushell"
+        ],
+        "choco": [
+          "nushell"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "nushell"
+        ]
+      }
+    },
+    {
+      "id": "oh-my-posh",
+      "name": "Oh My Posh",
+      "group": "shells",
+      "desc": "Prompt theme engine for every shell.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "JanDeDobbeleer.OhMyPosh"
+        ],
+        "choco": [
+          "oh-my-posh"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "oh-my-posh"
+        ]
+      }
+    },
+    {
+      "id": "starship",
+      "name": "Starship prompt",
+      "group": "shells",
+      "desc": "Minimal, fast, cross-shell prompt.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Starship.Starship"
+        ],
+        "choco": [
+          "starship"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "starship"
+        ]
+      }
+    },
+    {
+      "id": "shell-update",
+      "name": "Update all shells & package sources",
+      "group": "shells",
+      "desc": "winget source update + choco upgrade all / brew update && brew upgrade.",
+      "profiles": [
+        "full"
+      ],
+      "elevate": true,
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "winget upgrade --all --silent --accept-package-agreements --accept-source-agreements",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "brew update && brew upgrade",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "node",
+      "name": "Node.js (LTS + Latest via fnm)",
+      "group": "runtimes",
+      "desc": "fnm version manager, then Node LTS and Node Latest, LTS set as default.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Schniz.fnm"
+        ],
+        "choco": [
+          "fnm"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "fnm install --lts",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "fnm install latest",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "fnm default lts-latest",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "brew": [
+          "fnm"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "eval \"$(fnm env)\" && fnm install --lts && fnm install latest && fnm default lts-latest",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "node-system",
+      "name": "Node.js LTS (system install)",
+      "group": "runtimes",
+      "desc": "A plain system Node so global CLIs work even before fnm is on PATH.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "OpenJS.NodeJS.LTS"
+        ],
+        "choco": [
+          "nodejs-lts"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "node"
+        ]
+      }
+    },
+    {
+      "id": "pnpm-yarn",
+      "name": "pnpm, Yarn, npm-check-updates",
+      "group": "runtimes",
+      "desc": "The other JS package managers plus a dependency upgrader.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "npm": [
+        "pnpm",
+        "yarn",
+        "npm-check-updates"
+      ]
+    },
+    {
+      "id": "electron",
+      "name": "Electron + Electron Builder + Forge",
+      "group": "runtimes",
+      "desc": "Desktop app stack (this installer is built on it).",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "npm": [
+        "electron",
+        "electron-builder",
+        "@electron-forge/cli"
+      ]
+    },
+    {
+      "id": "typescript",
+      "name": "TypeScript + tsx + ESLint + Prettier",
+      "group": "runtimes",
+      "desc": "The standard TS toolchain, installed globally.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "npm": [
+        "typescript",
+        "tsx",
+        "eslint",
+        "prettier"
+      ]
+    },
+    {
+      "id": "python",
+      "name": "Python 3 (latest + 3.12)",
+      "group": "runtimes",
+      "desc": "Latest CPython plus 3.12 for compatibility, with py launcher on Windows.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Python.Python.3.13",
+          "Python.Python.3.12"
+        ],
+        "choco": [
+          "python"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "winCmd": "py -3 -m pip install --upgrade pip setuptools wheel",
+            "cmd": "python3 -m pip install --upgrade pip setuptools wheel",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "brew": [
+          "python@3.13",
+          "python@3.12"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "python3 -m pip install --upgrade --break-system-packages pip setuptools wheel",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "python-tooling",
+      "name": "uv, pipx, poetry, ruff",
+      "group": "runtimes",
+      "desc": "Modern Python packaging and lint stack.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "astral-sh.uv"
+        ],
+        "choco": [
+          "uv"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "py -3 -m pip install --user pipx poetry ruff",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "brew": [
+          "uv",
+          "pipx",
+          "poetry",
+          "ruff"
+        ]
+      }
+    },
+    {
+      "id": "dotnet",
+      "name": ".NET SDK (all supported LTS + current)",
+      "group": "runtimes",
+      "desc": ".NET 10, 9 and 8 SDKs side by side, plus the ASP.NET runtimes.",
+      "profiles": [
+        "full",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.DotNet.SDK.10",
+          "Microsoft.DotNet.SDK.9",
+          "Microsoft.DotNet.SDK.8"
+        ],
+        "choco": [
+          "dotnet-sdk"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "dotnet-sdk"
+          ]
+        }
+      }
+    },
+    {
+      "id": "dotnet-framework",
+      "name": ".NET Framework 4.8 Dev Pack",
+      "group": "runtimes",
+      "desc": "Legacy Framework targeting pack for older Windows projects.",
+      "profiles": [
+        "full"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.DotNet.Framework.DeveloperPack_4"
+        ],
+        "choco": [
+          "netfx-4.8-devpack"
+        ],
+        "allowFail": true
+      }
+    },
+    {
+      "id": "java",
+      "name": "Java JDK (Temurin 21 LTS + 17 LTS)",
+      "group": "runtimes",
+      "desc": "Eclipse Temurin OpenJDK builds.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "EclipseAdoptium.Temurin.21.JDK",
+          "EclipseAdoptium.Temurin.17.JDK"
+        ],
+        "choco": [
+          "temurin21"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "temurin@21",
+            "temurin@17"
+          ]
+        }
+      }
+    },
+    {
+      "id": "go",
+      "name": "Go",
+      "group": "runtimes",
+      "desc": "The Go toolchain.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "GoLang.Go"
+        ],
+        "choco": [
+          "golang"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "go"
+        ]
+      }
+    },
+    {
+      "id": "rust",
+      "name": "Rust (rustup)",
+      "group": "runtimes",
+      "desc": "rustup, cargo and the stable toolchain.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Rustlang.Rustup"
+        ],
+        "choco": [
+          "rustup.install"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "rustup default stable",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "brew": [
+          "rustup"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "rustup-init -y --no-modify-path || rustup default stable",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "cpp",
+      "name": "C/C++ toolchain (LLVM, CMake, Ninja)",
+      "group": "runtimes",
+      "desc": "Clang/LLVM, CMake and Ninja. MSVC comes with Visual Studio.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "LLVM.LLVM",
+          "Kitware.CMake",
+          "Ninja-build.Ninja"
+        ],
+        "choco": [
+          "llvm",
+          "cmake",
+          "ninja"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "llvm",
+          "cmake",
+          "ninja"
+        ]
+      }
+    },
+    {
+      "id": "ruby-php",
+      "name": "Ruby & PHP",
+      "group": "runtimes",
+      "desc": "Rounds out the mainstream scripting languages.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "RubyInstallerTeam.Ruby.3.3",
+          "PHP.PHP.8.3"
+        ],
+        "choco": [
+          "ruby",
+          "php"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "ruby",
+          "php"
+        ]
+      }
+    },
+    {
+      "id": "vscode",
+      "name": "Visual Studio Code",
+      "group": "ide",
+      "desc": "The editor. Extensions are installed in a follow-up step.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.VisualStudioCode"
+        ],
+        "choco": [
+          "vscode"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "visual-studio-code"
+          ]
+        }
+      }
+    },
+    {
+      "id": "vscode-extensions",
+      "name": "VS Code extension pack (critical set)",
+      "group": "ide",
+      "desc": "Every language server, debugger, database client, cloud tool and AI assistant a mixed stack needs - 57 extensions, installed with --force so a re-run repairs a broken one.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "vscode"
+      ],
+      "steps": [
+        {
+          "type": "vscodeExt",
+          "ids": [
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "ms-python.debugpy",
+            "charliermarsh.ruff",
+            "ms-toolsai.jupyter",
+            "ms-dotnettools.csharp",
+            "ms-dotnettools.csdevkit",
+            "ms-vscode.cpptools-extension-pack",
+            "ms-vscode.cmake-tools",
+            "twxs.cmake",
+            "ms-vscode.makefile-tools",
+            "golang.go",
+            "rust-lang.rust-analyzer",
+            "vscjava.vscode-java-pack",
+            "fwcd.kotlin",
+            "Dart-Code.dart-code",
+            "Dart-Code.flutter",
+            "bmewburn.vscode-intelephense-client",
+            "Shopify.ruby-lsp",
+            "dbaeumer.vscode-eslint",
+            "esbenp.prettier-vscode",
+            "bradlc.vscode-tailwindcss",
+            "dsznajder.es7-react-js-snippets",
+            "ritwickdey.LiveServer",
+            "ms-azuretools.vscode-docker",
+            "ms-azuretools.vscode-azurefunctions",
+            "ms-azuretools.vscode-azureresourcegroups",
+            "ms-kubernetes-tools.vscode-kubernetes-tools",
+            "ms-vscode-remote.remote-wsl",
+            "ms-vscode-remote.remote-ssh",
+            "ms-vscode-remote.remote-containers",
+            "ms-vscode.powershell",
+            "ms-mssql.mssql",
+            "mongodb.mongodb-vscode",
+            "ckolkman.vscode-postgres",
+            "cweijan.vscode-mysql-client2",
+            "humao.rest-client",
+            "rangav.vscode-thunder-client",
+            "platformio.platformio-ide",
+            "espressif.esp-idf-extension",
+            "eamodio.gitlens",
+            "GitHub.vscode-pull-request-github",
+            "GitHub.vscode-github-actions",
+            "anthropic.claude-code",
+            "continue.continue",
+            "saoudrizwan.claude-dev",
+            "RooVeterinaryInc.roo-cline",
+            "redhat.vscode-yaml",
+            "tamasfe.even-better-toml",
+            "yzhang.markdown-all-in-one",
+            "streetsidesoftware.code-spell-checker",
+            "EditorConfig.EditorConfig",
+            "usernamehw.errorlens",
+            "PKief.material-icon-theme",
+            "ms-vscode.hexeditor",
+            "mechatroner.rainbow-csv",
+            "Gruntfuggly.todo-tree"
+          ],
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "visual-studio",
+      "name": "Visual Studio Community",
+      "group": "ide",
+      "desc": "Full IDE with .NET desktop, ASP.NET, C++ desktop, Node.js and Azure workloads. Large download (~15-30 GB).",
+      "profiles": [
+        "full"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "elevate": true,
+      "win": {
+        "winget": [
+          "Microsoft.VisualStudio.2022.Community"
+        ],
+        "wingetArgs": "--override \"--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.Node --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Workload.NetCrossPlat --includeRecommended\"",
+        "choco": [
+          "visualstudio2022community"
+        ]
+      }
+    },
+    {
+      "id": "vs-buildtools",
+      "name": "Visual Studio Build Tools",
+      "group": "ide",
+      "desc": "MSVC compiler + Windows SDK without the full IDE. Needed by node-gyp and native npm modules.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "elevate": true,
+      "win": {
+        "winget": [
+          "Microsoft.VisualStudio.2022.BuildTools"
+        ],
+        "wingetArgs": "--override \"--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended\"",
+        "choco": [
+          "visualstudio2022buildtools"
+        ]
+      }
+    },
+    {
+      "id": "android-studio",
+      "name": "Android Studio + Android SDK",
+      "group": "ide",
+      "desc": "Android IDE, SDK, platform tools and emulator.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Google.AndroidStudio"
+        ],
+        "choco": [
+          "androidstudio"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "android-studio"
+          ]
+        }
+      }
+    },
+    {
+      "id": "claude-desktop",
+      "name": "Claude Desktop",
+      "group": "apps",
+      "desc": "Anthropic's desktop client. MCP servers configure into this.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Anthropic.Claude"
+        ],
+        "choco": [
+          "claude"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "claude"
+          ]
+        }
+      }
+    },
+    {
+      "id": "chrome",
+      "name": "Google Chrome",
+      "group": "browser",
+      "desc": "Browser. Also the host for the Claude in Chrome extension.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Google.Chrome"
+        ],
+        "choco": [
+          "googlechrome"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "google-chrome"
+          ]
+        }
+      }
+    },
+    {
+      "id": "obs",
+      "name": "OBS Studio",
+      "group": "apps",
+      "desc": "Screen recording and streaming.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "OBSProject.OBSStudio"
+        ],
+        "choco": [
+          "obs-studio"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "obs"
+          ]
+        }
+      }
+    },
+    {
+      "id": "canva",
+      "name": "Canva",
+      "group": "apps",
+      "desc": "Design app.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Canva.Canva"
+        ],
+        "choco": [
+          "canva"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "canva"
+          ]
+        }
+      }
+    },
+    {
+      "id": "obsidian",
+      "name": "Obsidian",
+      "group": "apps",
+      "desc": "Local-first markdown knowledge base.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "Obsidian.Obsidian"
+        ],
+        "choco": [
+          "obsidian"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "obsidian"
+          ]
+        }
+      }
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "group": "apps",
+      "desc": "Workspace and docs.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Notion.Notion"
+        ],
+        "choco": [
+          "notion"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "notion"
+          ]
+        }
+      }
+    },
+    {
+      "id": "miro",
+      "name": "Miro (MIRA)",
+      "group": "apps",
+      "desc": "Collaborative whiteboard desktop client.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Miro.Miro"
+        ],
+        "choco": [
+          "miro"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "miro"
+          ]
+        }
+      }
+    },
+    {
+      "id": "docker",
+      "name": "Docker Desktop",
+      "group": "apps",
+      "desc": "Containers. Several MCP servers ship as container images.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "elevate": true,
+      "win": {
+        "winget": [
+          "Docker.DockerDesktop"
+        ],
+        "choco": [
+          "docker-desktop"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "docker"
+          ]
+        }
+      }
+    },
+    {
+      "id": "7zip",
+      "name": "7-Zip / Keka",
+      "group": "apps",
+      "desc": "Archive tool.",
+      "profiles": [
+        "full",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "7zip.7zip"
+        ],
+        "choco": [
+          "7zip"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "keka"
+          ]
+        }
+      }
+    },
+    {
+      "id": "claude-code",
+      "name": "Claude Code CLI",
+      "group": "ai",
+      "desc": "Anthropic's agentic coding CLI.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Anthropic.ClaudeCode"
+        ],
+        "npm": [
+          "@anthropic-ai/claude-code"
+        ]
+      },
+      "mac": {
+        "npm": [
+          "@anthropic-ai/claude-code"
+        ]
+      }
+    },
+    {
+      "id": "qwen-code",
+      "name": "Qwen Code CLI",
+      "group": "ai",
+      "desc": "Alibaba's open-source terminal coding agent (Qwen3-Coder).",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "npm": [
+        "@qwen-code/qwen-code"
+      ]
+    },
+    {
+      "id": "other-ai-clis",
+      "name": "Gemini CLI + OpenAI Codex CLI",
+      "group": "ai",
+      "desc": "The other two mainstream terminal agents.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "npm": [
+        "@google/gemini-cli",
+        "@openai/codex"
+      ]
+    },
+    {
+      "id": "ollama",
+      "name": "Ollama",
+      "group": "ai",
+      "desc": "Run open models locally. Qwen, Llama, Mistral, DeepSeek.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "Ollama.Ollama"
+        ],
+        "choco": [
+          "ollama"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "ollama"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ollama-models",
+      "name": "Pull starter models (coder, chat, reasoning, embeddings, vision)",
+      "group": "ai",
+      "desc": "qwen2.5-coder for code, llama3.2 for chat, deepseek-r1 for reasoning, nomic-embed-text for embeddings and llava for vision. Roughly 12 GB.",
+      "profiles": [],
+      "dependsOn": [
+        "ollama"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "ollama pull qwen2.5-coder:7b",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "ollama pull llama3.2:3b",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "ollama pull deepseek-r1:7b",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "ollama pull nomic-embed-text",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "ollama pull llava:7b",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "lm-studio",
+      "name": "LM Studio",
+      "group": "ai",
+      "desc": "GUI for running and serving local models (the closest thing to a 'Qwen Studio').",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "ElementLabs.LMStudio"
+        ],
+        "choco": [
+          "lmstudio"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "lm-studio"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mcp-runtime",
+      "name": "MCP runtime prerequisites",
+      "group": "mcp",
+      "desc": "uvx and npx must be on PATH for MCP servers to launch.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "node-system",
+        "python-tooling"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "npx --version",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "uvx --version",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "mcp-servers",
+      "name": "MCP servers (filesystem, memory, git, fetch, time, sqlite, playwright, sequential-thinking)",
+      "group": "mcp",
+      "desc": "Pre-caches the reference MCP servers so Claude Desktop launches them instantly.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "mcp-runtime"
+      ],
+      "npm": [
+        "@modelcontextprotocol/server-filesystem",
+        "@modelcontextprotocol/server-memory",
+        "@modelcontextprotocol/server-sequential-thinking",
+        "@modelcontextprotocol/server-everything",
+        "@playwright/mcp",
+        "@upstash/context7-mcp"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "uvx --help >/dev/null 2>&1 && uvx --from mcp-server-git mcp-server-git --help",
+          "winCmd": "uvx --from mcp-server-git mcp-server-git --help",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "uvx mcp-server-fetch --help",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "uvx mcp-server-time --help",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "mcp-config",
+      "name": "Write claude_desktop_config.json",
+      "group": "mcp",
+      "desc": "Merges the installed MCP servers into Claude Desktop's config. Existing entries are preserved; a .bak is written first.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "mcp-servers"
+      ],
+      "steps": [
+        {
+          "type": "mcpConfig"
+        }
+      ]
+    },
+    {
+      "id": "cloud-clis",
+      "name": "Azure CLI, AWS CLI, Google Cloud CLI",
+      "group": "sdk",
+      "desc": "The three cloud command lines.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.AzureCLI",
+          "Amazon.AWSCLI",
+          "Google.CloudSDK"
+        ],
+        "choco": [
+          "azure-cli",
+          "awscli",
+          "gcloudsdk"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "azure-cli",
+          "awscli"
+        ],
+        "brewCask": [
+          "google-cloud-sdk"
+        ]
+      }
+    },
+    {
+      "id": "google-adk",
+      "name": "Google ADK (Agent Development Kit)",
+      "group": "sdk",
+      "desc": "Python agent framework: pip install google-adk.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "py -3 -m pip install --user google-adk",
+          "macCmd": "python3 -m pip install --user google-adk --break-system-packages",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "ai-sdks",
+      "name": "AI SDKs (Anthropic, OpenAI, Google GenAI)",
+      "group": "sdk",
+      "desc": "Python and Node SDKs for the major model providers.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python",
+        "node-system"
+      ],
+      "npm": [
+        "@anthropic-ai/sdk",
+        "openai",
+        "@google/genai",
+        "ai"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "py -3 -m pip install --user anthropic openai google-genai mcp",
+          "macCmd": "python3 -m pip install --user anthropic openai google-genai mcp --break-system-packages",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "windows-sdk",
+      "name": "Windows SDK",
+      "group": "sdk",
+      "desc": "Headers, libs and tools for native Windows development.",
+      "profiles": [
+        "full"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "elevate": true,
+      "win": {
+        "winget": [
+          "Microsoft.WindowsSDK.10.0.26100"
+        ],
+        "choco": [
+          "windows-sdk-10-version-2004-all"
+        ],
+        "allowFail": true
+      }
+    },
+    {
+      "id": "cli-tools",
+      "name": "CLI toolbelt (jq, ripgrep, fzf, curl, wget, fd, bat, delta)",
+      "group": "libs",
+      "desc": "The utilities every other script assumes you have.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "jqlang.jq",
+          "BurntSushi.ripgrep.MSVC",
+          "junegunn.fzf",
+          "cURL.cURL",
+          "JernejSimoncic.Wget",
+          "sharkdp.fd",
+          "sharkdp.bat",
+          "dandavison.delta"
+        ],
+        "choco": [
+          "jq",
+          "ripgrep",
+          "fzf",
+          "curl",
+          "wget",
+          "fd",
+          "bat",
+          "delta"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "jq",
+          "ripgrep",
+          "fzf",
+          "curl",
+          "wget",
+          "fd",
+          "bat",
+          "git-delta"
+        ]
+      }
+    },
+    {
+      "id": "build-libs",
+      "name": "Build libraries (OpenSSL, pkg-config, libffi, protobuf)",
+      "group": "libs",
+      "desc": "Native dependencies most language ecosystems link against.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "ShiningLight.OpenSSL.Light",
+          "protocolbuffers.Protobuf"
+        ],
+        "choco": [
+          "openssl",
+          "protoc"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "openssl@3",
+          "pkg-config",
+          "libffi",
+          "protobuf"
+        ]
+      }
+    },
+    {
+      "id": "nerd-fonts",
+      "name": "Cascadia Code + JetBrains Mono Nerd Font",
+      "group": "libs",
+      "desc": "Terminal fonts with the glyphs Oh My Posh and Starship expect.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.CascadiaCode",
+          "DEVCOM.JetBrainsMonoNerdFont"
+        ],
+        "choco": [
+          "cascadiacode",
+          "nerd-fonts-jetbrainsmono"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "font-caskaydia-cove-nerd-font",
+            "font-jetbrains-mono-nerd-font"
+          ]
+        }
+      }
+    },
+    {
+      "id": "wsl",
+      "name": "WSL 2 + Ubuntu",
+      "group": "wsl",
+      "desc": "Windows Subsystem for Linux with the Ubuntu distro. Needs a reboot to finish.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "elevate": true,
+      "reboot": true,
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "wsl --install --no-launch --distribution Ubuntu",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "wsl --update",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "wsl --set-default-version 2",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "archify",
+      "name": "archify (AntwerpDesignsIonity)",
+      "group": "ionity",
+      "desc": "Clones github.com/AntwerpDesignsIonity/archify into your dev root. Private repo - needs gh auth login first.",
+      "profiles": [
+        "full"
+      ],
+      "steps": [
+        {
+          "type": "gitClone",
+          "repo": "https://github.com/AntwerpDesignsIonity/archify.git",
+          "dest": "archify",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "ionity-assets",
+      "name": "Ionity brand assets",
+      "group": "ionity",
+      "desc": "Clones github.com/AntwerpDesignsIonity/ionity-assets1 for logos, icons and Policy 986 AED documents.",
+      "profiles": [
+        "full"
+      ],
+      "steps": [
+        {
+          "type": "gitClone",
+          "repo": "https://github.com/AntwerpDesignsIonity/ionity-assets1.git",
+          "dest": "ionity-assets1",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "ionity-workspace",
+      "name": "Create Ionity dev workspace",
+      "group": "ionity",
+      "desc": "Creates the standard folder tree and drops a Policy 986 AED README at the dev root.",
+      "profiles": [
+        "full"
+      ],
+      "steps": [
+        {
+          "type": "workspace"
+        }
+      ]
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "group": "ide",
+      "desc": "AI-native fork of VS Code.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "Anysphere.Cursor"
+        ],
+        "choco": [
+          "cursoride"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "cursor"
+          ]
+        }
+      }
+    },
+    {
+      "id": "windsurf",
+      "name": "Windsurf",
+      "group": "ide",
+      "desc": "Codeium's agentic editor.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Codeium.Windsurf"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "windsurf"
+          ]
+        }
+      }
+    },
+    {
+      "id": "zed",
+      "name": "Zed",
+      "group": "ide",
+      "desc": "Rust-built editor, very fast, good multiplayer.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Zed.Zed"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "zed"
+          ]
+        }
+      }
+    },
+    {
+      "id": "jetbrains-toolbox",
+      "name": "JetBrains Toolbox",
+      "group": "ide",
+      "desc": "One launcher for IntelliJ, PyCharm, WebStorm, Rider, CLion, Android Studio.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "JetBrains.Toolbox"
+        ],
+        "choco": [
+          "jetbrainstoolbox"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "jetbrains-toolbox"
+          ]
+        }
+      }
+    },
+    {
+      "id": "neovim",
+      "name": "Neovim",
+      "group": "ide",
+      "desc": "Modal editor for the terminal.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Neovim.Neovim"
+        ],
+        "choco": [
+          "neovim"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "neovim"
+        ]
+      }
+    },
+    {
+      "id": "browsers-extra",
+      "name": "Edge Dev + Firefox Developer Edition",
+      "group": "browser",
+      "desc": "The other two engines, so a site can be tested where it actually breaks.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Mozilla.Firefox.DeveloperEdition",
+          "Microsoft.Edge.Dev"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "firefox@developer-edition",
+            "microsoft-edge"
+          ]
+        },
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "chrome-extensions",
+      "name": "Chrome extensions (uBlock Origin Lite + Claude)",
+      "group": "browser",
+      "desc": "Ad and tracker blocking plus Claude in Chrome. On Windows with administrator rights both are added to Chrome's force-install policy list; otherwise the Web Store pages open so you can add them with one click.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "dependsOn": [
+        "chrome"
+      ],
+      "steps": [
+        {
+          "type": "chromeExt",
+          "ids": [
+            {
+              "id": "ddkjiahejlhfcafbddmgiahcphecmpfh",
+              "name": "uBlock Origin Lite",
+              "url": "https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh"
+            },
+            {
+              "id": "fcoeoabgfenejglbffodgkkbkcdhcgfn",
+              "name": "Claude in Chrome",
+              "url": "https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn"
+            }
+          ],
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "group": "ai",
+      "desc": "Terminal coding agent, provider agnostic.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "win": {
+        "winget": [
+          "SST.opencode"
+        ],
+        "npm": [
+          "opencode-ai"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "npm": [
+          "opencode-ai"
+        ]
+      }
+    },
+    {
+      "id": "aider",
+      "name": "Aider",
+      "group": "ai",
+      "desc": "Pair programming in the terminal against your git history.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python-tooling"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "uv tool install --force aider-chat",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "pipx install --force aider-chat",
+          "allowFail": true
+        }
+      ],
+      "allowPartial": true
+    },
+    {
+      "id": "ai-agent-clis",
+      "name": "More agent CLIs (Cline, Goose, Continue, Aichat)",
+      "group": "ai",
+      "desc": "A second bench of terminal agents so you are never stuck on one vendor.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
+        "@continuedev/cli",
+        "@vscode/vsce"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "uv tool install --force goose-ai",
+          "allowFail": true
+        }
+      ],
+      "allowPartial": true
+    },
+    {
+      "id": "python-venv",
+      "name": "Managed Python environment (.venvs/ionity)",
+      "group": "ml",
+      "desc": "One virtual environment every AI and data item below installs into, at Development/.venvs/ionity. Nothing lands in the system Python.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python"
+      ],
+      "steps": [
+        {
+          "type": "venv"
+        },
+        {
+          "type": "venvPip",
+          "packages": [
+            "pip",
+            "setuptools",
+            "wheel"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pytorch",
+      "name": "PyTorch (torch, torchvision, torchaudio)",
+      "group": "ml",
+      "desc": "CPU wheels by default - they work on every machine. Swap in a CUDA or ROCm index later if you have the hardware.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "torch",
+            "torchvision",
+            "torchaudio"
+          ],
+          "args": "--index-url https://download.pytorch.org/whl/cpu"
+        }
+      ]
+    },
+    {
+      "id": "transformers",
+      "name": "Hugging Face stack (transformers, datasets, accelerate)",
+      "group": "ml",
+      "desc": "transformers, datasets, accelerate, tokenizers, safetensors, sentence-transformers and the huggingface CLI.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "transformers",
+            "datasets",
+            "accelerate",
+            "tokenizers",
+            "safetensors",
+            "sentence-transformers",
+            "huggingface_hub[cli]",
+            "peft",
+            "trl"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tensorflow",
+      "name": "TensorFlow + Keras",
+      "group": "ml",
+      "desc": "TensorFlow with Keras 3 and TensorBoard.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "tensorflow",
+            "keras",
+            "tensorboard"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ml-toolkit",
+      "name": "Data science toolkit (numpy, pandas, sklearn, Jupyter)",
+      "group": "ml",
+      "desc": "numpy, pandas, scipy, scikit-learn, matplotlib, seaborn, JupyterLab, ipykernel, OpenCV, Pillow.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "numpy",
+            "pandas",
+            "scipy",
+            "scikit-learn",
+            "matplotlib",
+            "seaborn",
+            "jupyterlab",
+            "ipykernel",
+            "opencv-python",
+            "pillow",
+            "polars",
+            "pyarrow"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "agent-frameworks",
+      "name": "Agent frameworks (LangChain, LangGraph, LlamaIndex, CrewAI)",
+      "group": "ml",
+      "desc": "The orchestration layer plus the Anthropic, OpenAI and Google SDKs, inside the managed venv.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "langchain",
+            "langgraph",
+            "langchain-community",
+            "llama-index",
+            "crewai",
+            "anthropic",
+            "openai",
+            "google-genai",
+            "chromadb",
+            "faiss-cpu",
+            "tiktoken",
+            "mcp",
+            "fastapi",
+            "uvicorn",
+            "pydantic"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sqlite",
+      "name": "SQLite + DB Browser",
+      "group": "db",
+      "desc": "The engine, the CLI and a GUI that opens a .db file without ceremony.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "SQLite.SQLite",
+          "DBBrowserForSQLite.DBBrowserForSQLite"
+        ],
+        "choco": [
+          "sqlite",
+          "sqlitebrowser"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "sqlite"
+        ],
+        "brewCask": [
+          "db-browser-for-sqlite"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "mongodb",
+      "name": "MongoDB Community + Compass + mongosh",
+      "group": "db",
+      "desc": "Server, shell, database tools and the Compass GUI.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "MongoDB.Server",
+          "MongoDB.Shell",
+          "MongoDB.Compass.Full",
+          "MongoDB.DatabaseTools"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "mongodb/brew/mongodb-community",
+          "mongosh"
+        ],
+        "brewCask": [
+          "mongodb-compass"
+        ],
+        "allowPartial": true,
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "brew tap mongodb/brew",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "postgresql",
+      "name": "PostgreSQL + pgAdmin",
+      "group": "db",
+      "desc": "PostgreSQL server, client tools and the pgAdmin console.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "PostgreSQL.PostgreSQL.17",
+          "PostgreSQL.pgAdmin"
+        ],
+        "choco": [
+          "postgresql",
+          "pgadmin4"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "postgresql@17",
+          "libpq"
+        ],
+        "brewCask": [
+          "pgadmin4"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "mysql",
+      "name": "MySQL + Workbench",
+      "group": "db",
+      "desc": "MySQL Community Server and MySQL Workbench.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Oracle.MySQL",
+          "Oracle.MySQLWorkbench"
+        ],
+        "choco": [
+          "mysql",
+          "mysql.workbench"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "mysql"
+        ],
+        "brewCask": [
+          "mysqlworkbench"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "sqlserver",
+      "name": "SQL Server Express + SSMS + Azure Data Studio",
+      "group": "db",
+      "desc": "Microsoft's stack: the Express engine, Management Studio and Azure Data Studio.",
+      "profiles": [
+        "full"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.SQLServer.2022.Express",
+          "Microsoft.SQLServerManagementStudio",
+          "Microsoft.AzureDataStudio"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "redis-dbeaver",
+      "name": "Redis + DBeaver universal client",
+      "group": "db",
+      "desc": "DBeaver talks to every engine above. Redis runs natively on macOS; on Windows it lives in WSL or Docker, and RedisInsight is the console for it.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "dbeaver.dbeaver",
+          "Redis.RedisInsight"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "redis"
+        ],
+        "brewCask": [
+          "dbeaver-community"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "xampp",
+      "name": "XAMPP (Apache + MariaDB + PHP + Perl)",
+      "group": "web",
+      "desc": "The classic local LAMP stack in one installer.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "ApacheFriends.Xampp.8.2"
+        ],
+        "choco": [
+          "xampp-82"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "xampp"
+          ]
+        }
+      }
+    },
+    {
+      "id": "php-laravel",
+      "name": "PHP + Composer + Laravel + Symfony",
+      "group": "web",
+      "desc": "PHP CLI, Composer, the Laravel installer and the Symfony CLI.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "PHP.PHP.8.3",
+          "Composer.Composer"
+        ],
+        "choco": [
+          "php",
+          "composer"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "php",
+          "composer",
+          "symfony-cli/tap/symfony-cli"
+        ],
+        "allowPartial": true
+      },
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "composer global require laravel/installer",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "ruby-rails",
+      "name": "Ruby on Rails",
+      "group": "web",
+      "desc": "Rails, Bundler and the Rails command line, on top of the Ruby runtime.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "ruby-php"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "gem install --no-document rails bundler rake",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "django-stack",
+      "name": "Django + DRF + PostgreSQL/MySQL drivers",
+      "group": "web",
+      "desc": "Django, Django REST Framework, Celery, Gunicorn and the drivers for both PostgreSQL and MySQL, in the managed venv.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "django",
+            "djangorestframework",
+            "django-cors-headers",
+            "django-environ",
+            "psycopg[binary]",
+            "PyMySQL",
+            "celery",
+            "redis",
+            "gunicorn",
+            "whitenoise"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "node-web-stack",
+      "name": "React, Express, Vite, Nest, PM2",
+      "group": "web",
+      "desc": "The JavaScript side: Vite and create-vite for React, the Express generator, NestJS CLI, nodemon, PM2, serve and concurrently.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
+        "vite",
+        "create-vite",
+        "express-generator",
+        "@nestjs/cli",
+        "nodemon",
+        "pm2",
+        "serve",
+        "concurrently",
+        "json-server"
+      ]
+    },
+    {
+      "id": "mern-starter",
+      "name": "MERN starter project",
+      "group": "web",
+      "desc": "Writes a working React + Express + MongoDB starter into Development/Sandbox/mern-starter - server, client, scripts and a README - ready to npm install and run.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "node-web-stack"
+      ],
+      "steps": [
+        {
+          "type": "scaffold",
+          "kind": "mern",
+          "dest": "Sandbox/mern-starter"
+        }
+      ]
+    },
+    {
+      "id": "dotnet-web",
+      "name": ".NET web tooling (EF Core, ASP.NET, Azure Functions)",
+      "group": "web",
+      "desc": "dotnet-ef, the ASP.NET scaffolder, the user-secrets tool and the Azure Functions Core Tools.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "dotnet"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "dotnet tool install --global dotnet-ef",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "dotnet tool install --global dotnet-aspnet-codegenerator",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "dotnet tool install --global dotnet-outdated-tool",
+          "allowFail": true
+        }
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.AzureFunctionsCoreTools"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "azure-functions-core-tools@4"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "flutter-dart",
+      "name": "Flutter + Dart SDK",
+      "group": "mobile",
+      "desc": "The Flutter SDK and the Dart toolchain.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Google.Flutter",
+          "Flutter.Flutter",
+          "Google.Dart"
+        ],
+        "choco": [
+          "flutter",
+          "dart-sdk"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "flutter"
+          ]
+        },
+        "allowPartial": true
+      },
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "flutter --version",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "kotlin-gradle",
+      "name": "Kotlin + Gradle + Maven",
+      "group": "mobile",
+      "desc": "The Kotlin compiler and the two JVM build systems everything Android leans on.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "java"
+      ],
+      "win": {
+        "winget": [
+          "JetBrains.Kotlin",
+          "Gradle.Gradle",
+          "Apache.Maven"
+        ],
+        "choco": [
+          "kotlinc",
+          "gradle",
+          "maven"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "kotlin",
+          "gradle",
+          "maven"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "android-sdk",
+      "name": "Android SDK command line tools + platform tools",
+      "group": "mobile",
+      "desc": "sdkmanager, adb and fastboot without opening Android Studio, plus a licence acceptance pass.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Google.PlatformTools",
+          "Google.AndroidStudio"
+        ],
+        "choco": [
+          "android-sdk"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "android-platform-tools",
+            "android-commandlinetools"
+          ]
+        },
+        "allowPartial": true
+      },
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "yes | sdkmanager --licenses >/dev/null 2>&1 || true",
+          "winCmd": "if (Get-Command sdkmanager -ErrorAction SilentlyContinue) { cmd /c \"echo y| sdkmanager --licenses\" }",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "react-native",
+      "name": "React Native + Expo",
+      "group": "mobile",
+      "desc": "The Expo tooling, EAS CLI and the React Native community CLI.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
+        "expo",
+        "eas-cli",
+        "@react-native-community/cli"
+      ]
+    },
+    {
+      "id": "arduino",
+      "name": "Arduino IDE 2 + arduino-cli",
+      "group": "embedded",
+      "desc": "The IDE and the command line compiler/uploader that CI can drive.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "ArduinoSA.IDE.stable",
+          "ArduinoSA.CLI"
+        ],
+        "choco": [
+          "arduino",
+          "arduino-cli"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "arduino-ide"
+          ]
+        },
+        "brewCask": [],
+        "allowPartial": true
+      },
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "arduino-cli config init --overwrite",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli core update-index",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli core install arduino:avr",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli core install esp32:esp32 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "platformio",
+      "name": "PlatformIO Core + IDE extension",
+      "group": "embedded",
+      "desc": "PlatformIO in the managed venv, the VS Code extension, and udev/driver setup where it applies. This is the best embedded IDE going.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "python-venv",
+        "vscode"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "platformio"
+          ]
+        },
+        {
+          "type": "vscodeExt",
+          "ids": [
+            "platformio.platformio-ide"
+          ],
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "esp-embedded-extras",
+      "name": "ESP-IDF tooling, esptool, MicroPython, Thonny",
+      "group": "embedded",
+      "desc": "esptool, mpremote, adafruit-ampy and the Thonny editor, plus the ESP-IDF VS Code extension.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "esptool",
+            "mpremote",
+            "adafruit-ampy",
+            "pyserial"
+          ]
+        },
+        {
+          "type": "vscodeExt",
+          "ids": [
+            "espressif.esp-idf-extension"
+          ],
+          "allowFail": true
+        }
+      ],
+      "win": {
+        "winget": [
+          "AivarAnnamaa.Thonny"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "thonny"
+          ]
+        },
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "postman",
+      "name": "Postman + Insomnia",
+      "group": "apis",
+      "desc": "Two API consoles - Postman for collections and teams, Insomnia when you want something lighter.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "Postman.Postman",
+          "Insomnia.Insomnia"
+        ],
+        "choco": [
+          "postman",
+          "insomnia-rest-api-client"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "postman",
+            "insomnia"
+          ]
+        },
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "api-tooling",
+      "name": "HTTPie, Newman, OpenAPI tooling",
+      "group": "apis",
+      "desc": "Newman for Postman collections in CI, Redocly and swagger tooling for specs, HTTPie for one-liners.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
+        "newman",
+        "@redocly/cli",
+        "@apidevtools/swagger-cli",
+        "http-server"
+      ],
+      "win": {
+        "winget": [
+          "HTTPie.HTTPie"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "httpie"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "serverless-clis",
+      "name": "Serverless CLIs (AWS SAM, Azure Functions, Firebase, Wrangler)",
+      "group": "sdk",
+      "desc": "AWS Lambda through SAM, Azure Functions Core Tools, Google Firebase, Cloudflare Workers via Wrangler, plus Vercel and Netlify.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
+        "firebase-tools",
+        "wrangler",
+        "vercel",
+        "netlify-cli"
+      ],
+      "win": {
+        "winget": [
+          "Amazon.SAM-CLI",
+          "Microsoft.AzureFunctionsCoreTools"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "aws-sam-cli",
+          "azure-functions-core-tools@4"
+        ],
+        "allowPartial": true,
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "brew tap aws/tap",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare WARP + cloudflared",
+      "group": "sdk",
+      "desc": "The Cloudflare desktop client and the tunnel daemon.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Cloudflare.Warp",
+          "Cloudflare.cloudflared"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "cloudflare-warp"
+          ]
+        },
+        "brewCask": [],
+        "allowPartial": true,
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "brew install cloudflared",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "openrgb",
+      "name": "OpenRGB",
+      "group": "apps",
+      "desc": "Vendor-neutral RGB control: motherboard 12V and 5V ARGB headers, GPU, RAM, AIO, fans. ProGramerly's Hardware tab talks to its SDK server.",
+      "profiles": [
+        "full"
+      ],
+      "platforms": [
+        "win",
+        "mac",
+        "linux"
+      ],
+      "win": {
+        "winget": [
+          "CalcProgrammer1.OpenRGB"
+        ],
+        "choco": [
+          "openrgb"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "openrgb"
+        ],
+        "cask": true
+      }
+    },
+    {
+      "id": "fancontrol",
+      "name": "FanControl",
+      "group": "apps",
+      "desc": "Fan curves for every header, GPU and pump. Ships the signed kernel driver that makes writing to the EC possible.",
+      "profiles": [
+        "full"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "win": {
+        "winget": [
+          "Rem0o.FanControl"
+        ]
+      }
+    },
+    {
+      "id": "librehardwaremonitor",
+      "name": "LibreHardwareMonitor",
+      "group": "apps",
+      "desc": "Temperatures, fan RPM, voltages and power straight off the chips. The sensor source for ProGramerly's Hardware tab.",
+      "profiles": [
+        "full"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "win": {
+        "winget": [
+          "LibreHardwareMonitor.LibreHardwareMonitor"
+        ],
+        "choco": [
+          "librehardwaremonitor"
+        ]
+      }
+    },
+    {
+      "id": "curl",
+      "name": "curl",
+      "group": "libs",
+      "desc": "The transfer tool every install script assumes. Windows ships an older curl.exe; this puts the current one on PATH. Homebrew curl on macOS.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "cURL.cURL"
+        ],
+        "choco": [
+          "curl"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "curl"
+        ]
+      }
+    },
+    {
+      "id": "antigravity-ide",
+      "name": "Google Antigravity IDE",
+      "group": "ide",
+      "desc": "Google's agent-first IDE - agents across workspaces, VS Code-familiar editing. winget Google.AntigravityIDE; Homebrew cask antigravity.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "Google.AntigravityIDE"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "antigravity"
+          ]
+        }
+      }
+    },
+    {
+      "id": "antigravity-cli",
+      "name": "Google Antigravity CLI (agy)",
+      "group": "ai",
+      "desc": "The Antigravity agent harness in the terminal. Installed with Google's own script: curl -fsSL https://antigravity.google/cli/install.cmd, run, delete. Binary is `agy`; run it once to sign in.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "curl"
+      ],
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "cmd /c \"curl -fsSL https://antigravity.google/cli/install.cmd -o install.cmd && install.cmd && del install.cmd\""
+          },
+          {
+            "type": "shell",
+            "cmd": "& \"$env:LOCALAPPDATA\\agy\\bin\\agy.exe\" --version",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl -fsSL https://antigravity.google/cli/install.sh | bash"
+          },
+          {
+            "type": "shell",
+            "cmd": "~/.local/bin/agy --version",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "antigravity-auto-accept",
+      "name": "Antigravity auto-accept (Ionity)",
+      "group": "ionity",
+      "desc": "Clones github.com/Ionity-Global-Pty-Ltd/antigravity-auto-accept into your dev root - Ionity's utility that accepts Antigravity agent steps without a click each time.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "git",
+        "antigravity-ide"
+      ],
+      "steps": [
+        {
+          "type": "gitClone",
+          "repo": "https://github.com/Ionity-Global-Pty-Ltd/antigravity-auto-accept.git",
+          "dest": "antigravity-auto-accept",
+          "allowFail": true
+        }
+      ]
+    }
+  ]
+}

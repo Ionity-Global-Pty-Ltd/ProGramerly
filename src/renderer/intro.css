@@ -1,0 +1,117 @@
+/* ProGramerly - intro sequence
+   Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+   A screen-for-screen port of the IONITY LOADER v3.2 PowerShell intro. */
+
+:root{
+  --cyan:#00c6ff;
+  --cyan-deep:#0a97c4;
+  --dark-cyan:#087f9e;
+  --ink:#03070d;
+  --mono:"Cascadia Code","Cascadia Mono","JetBrains Mono",Consolas,"DejaVu Sans Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{width:100%; height:100%; overflow:hidden; background:transparent}
+body{
+  font-family:var(--mono);
+  color:var(--cyan);
+  user-select:none;
+  cursor:default;
+}
+.stage{
+  position:relative;
+  width:100%; height:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:
+    radial-gradient(900px 520px at 50% 45%, rgba(0,198,255,.10), transparent 62%),
+    radial-gradient(1200px 700px at 50% 120%, rgba(0,198,255,.06), transparent 60%),
+    var(--ink);
+  border:1px solid rgba(0,198,255,.28);
+  border-radius:14px;
+  box-shadow:0 40px 120px -40px rgba(0,198,255,.55), inset 0 0 120px rgba(0,198,255,.05);
+  overflow:hidden;
+}
+.stage::after{           /* scanlines - the CRT the original ran on */
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.55;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);
+}
+#stars{position:absolute; inset:0; width:100%; height:100%}
+
+/* ------------------------------------------------------- charging beam -- */
+.beamlane{
+  position:absolute; left:0; right:0; top:50%; height:24px; transform:translateY(-50%);
+  display:block; opacity:0;
+}
+.beamlane.on{opacity:1}
+.beam{
+  position:absolute; left:0; top:0; white-space:pre; font-size:19px; line-height:24px;
+  letter-spacing:1px; will-change:transform;
+  filter:drop-shadow(0 0 10px rgba(0,198,255,.75));
+}
+.beam .b0{color:#3d4c5c}
+.beam .b1{color:var(--dark-cyan)}
+.beam .b2{color:var(--cyan)}
+.beam .tip{color:#fff; text-shadow:0 0 14px #fff, 0 0 34px var(--cyan)}
+
+/* -------------------------------------------------------------- logo -- */
+.logo{
+  color:var(--cyan);
+  opacity:0; transform:scale(.985);
+  transition:opacity .18s ease, transform .18s ease, color .1s linear;
+  filter:drop-shadow(0 0 16px rgba(0,198,255,.55));
+}
+.logo svg{display:block; width:min(560px, 74vw); height:auto}
+.logo svg rect{fill:currentColor}
+.logo.on{opacity:1; transform:none}
+.logo.pulse-white{color:#fff; filter:drop-shadow(0 0 26px rgba(255,255,255,.7))}
+
+/* ---------------------------------------------------------- subtitle -- */
+.subtitle{
+  margin-top:16px; min-height:20px;
+  font-size:13px; letter-spacing:3.4px; color:#fff;
+  text-shadow:0 0 12px rgba(255,255,255,.35);
+}
+.subtitle::after{content:"▌"; color:var(--cyan); animation:blink 1s steps(1) infinite}
+.subtitle.done::after{content:""}
+@keyframes blink{50%{opacity:0}}
+
+/* -------------------------------------------------------------- bar -- */
+.barwrap{
+  margin-top:26px; display:flex; align-items:center; gap:6px; opacity:0;
+  transition:opacity .2s ease;
+}
+.barwrap.on{opacity:1}
+.bracket{color:#4a5c6e; font-size:16px}
+.bar{width:360px; height:12px; background:rgba(255,255,255,.05); overflow:hidden}
+.fill{
+  height:100%; width:0%;
+  background:repeating-linear-gradient(90deg, var(--dark-cyan) 0 6px, rgba(8,127,158,.55) 6px 9px);
+  box-shadow:0 0 14px rgba(0,198,255,.5);
+  transition:width .04s linear;
+}
+.status{
+  margin-top:10px; min-height:16px; font-size:12px; letter-spacing:1.6px; color:#7e93a7;
+}
+
+/* --------------------------------------------------------- colophon -- */
+.colophon{
+  position:absolute; left:0; right:0; bottom:16px;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:11px; color:#5f748a; opacity:0; transition:opacity .4s ease .1s;
+}
+.colophon.on{opacity:1}
+.colophon span{color:#9fb6cc; letter-spacing:2px; font-weight:600}
+.colophon em{color:var(--cyan); font-style:normal; font-size:10.5px; letter-spacing:1.4px}
+.colophon .dim{color:#4d6076; letter-spacing:.2px; font-weight:400; font-size:10px}
+
+/* ------------------------------------------------------------ flash -- */
+.flash{position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none}
+
+/* ------------------------------------------------------------- skip -- */
+.skip{
+  position:absolute; right:14px; top:12px;
+  font-family:inherit; font-size:10.5px; letter-spacing:1.6px; text-transform:uppercase;
+  color:#5f7488; background:transparent; border:1px solid rgba(0,198,255,.22);
+  border-radius:99px; padding:5px 12px; cursor:pointer; opacity:.55;
+}
+.skip:hover{opacity:1; color:var(--cyan); border-color:rgba(0,198,255,.6)}

@@ -1,0 +1,37 @@
+{
+  "name": "programerly",
+  "productName": "ProGramerly",
+  "version": "2.2.0",
+  "description": "ProGramerly - Basic Coding Software for All. One free desktop app that provisions a complete development environment on Windows and macOS, elevates once so nothing prompts again, diagnoses and repairs the machine it runs on, manages local LLMs and Python environments, opens any installed shell, reads sensors and drives RGB through the OpenRGB SDK, and - for its own maintainers - pushes itself to GitHub and cuts its own release.",
+  "main": "src/main/main.js",
+  "author": {
+    "name": "Johan Wilhelm van Antwerp",
+    "email": "ai@ionity.today",
+    "url": "https://www.ionity.today"
+  },
+  "homepage": "https://www.ionity.today",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ionity-Global-Pty-Ltd/ProGramerly.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dry-run": "node scripts/dry-run.js",
+    "validate": "node scripts/validate-catalog.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "pack": "electron-builder --dir",
+    "start:min": "electron . --minimised",
+    "lint:syntax": "node scripts/syntax-check.js"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
