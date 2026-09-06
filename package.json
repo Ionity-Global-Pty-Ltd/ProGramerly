@@ -20,9 +20,12 @@
     "start": "electron .",
     "dry-run": "node scripts/dry-run.js",
     "validate": "node scripts/validate-catalog.js",
+    "build": "npm run dist",
+    "test": "npm run lint:syntax && npm run validate",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux AppImage deb",
     "pack": "electron-builder --dir",
     "start:min": "electron . --minimised",
     "lint:syntax": "node scripts/syntax-check.js"
