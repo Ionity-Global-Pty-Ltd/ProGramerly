@@ -847,8 +847,11 @@ npm start              # run the GUI
 npm run start:min      # start straight into the tray
 npm run validate       # catalog
 npm run lint:syntax    # parse every shipped source file
+npm run build          # alias for npm run dist
+npm run dist           # build for current platform
 npm run dist:win       # -> dist/ProGramerly-Setup-*.exe   (on Windows)
 npm run dist:mac       # -> dist/ProGramerly-*.dmg         (on macOS)
+npm run dist:linux     # -> dist/ProGramerly-*.AppImage / *.deb (on Linux)
 ```
 
 `PROGRAMERLY_UI_FIXTURES=1` makes the Windows-only readers return a fixed
@@ -856,10 +859,34 @@ sample, so the registry screen can be rendered and screenshotted from a Linux
 CI runner. A screen nobody has ever looked at is a screen nobody has tested.
 
 Cross-compiling desktop installers is unreliable, so CI builds each target on
-its own runner. Push a `v*` tag and the workflow attaches both to a GitHub
-Release. Add `MAC_CERT_P12_BASE64`, `MAC_CERT_PASSWORD`, `APPLE_ID`,
-`APPLE_APP_PASSWORD` and `APPLE_TEAM_ID` as repository secrets and the macOS
-build signs and notarises itself.
+its own runner.
+
+## Create release artifacts
+
+The workflow at `.github/workflows/build.yml` builds and publishes release
+artifacts on:
+
+- `push` tags matching `v*`
+- `release` events (`published`)
+- manual `workflow_dispatch`
+
+Artifact matrix:
+
+| Platform | Artifacts |
+| --- | --- |
+| Windows | `ProGramerly-Setup-<version>-x64.exe`, `ProGramerly-Setup-<version>-arm64.exe`, `ProGramerly-Portable-<version>.exe` |
+| macOS | `ProGramerly-<version>-arm64.dmg`, `ProGramerly-<version>-x64.dmg` (+ `.zip`) |
+| Linux | `ProGramerly-<version>-*.AppImage`, `ProGramerly-<version>-*.deb` |
+
+The workflow also attaches `SHA256.txt` to the GitHub Release.
+
+Code-signing/notarization is optional:
+
+- macOS signing/notarization: `MAC_CERT_P12_BASE64`, `MAC_CERT_PASSWORD`,
+  `APPLE_ID`, `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID`
+- Windows code signing: `CSC_LINK`, `CSC_KEY_PASSWORD`
+
+Without signing secrets, builds are unsigned but still generated.
 
 ---
 
