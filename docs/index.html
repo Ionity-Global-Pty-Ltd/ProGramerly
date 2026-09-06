@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ProGramerly — Basic Coding Software for All</title>
-<meta name="description" content="One free desktop app that provisions a complete development environment on Windows and macOS, keeps it in sync, and watches the machine from the tray. Ionity (Pty) Ltd — Building Tomorrow, Today." />
+<meta name="description" content="One free desktop app that provisions a complete development environment on Windows, macOS and Linux, keeps it in sync, and watches the machine from the tray. Ionity (Pty) Ltd — Building Tomorrow, Today." />
 <meta name="author" content="Johan Wilhelm van Antwerp | Ionity (Pty) Ltd | AEDI" />
 <meta property="og:title" content="ProGramerly — Basic Coding Software for All" />
 <meta property="og:description" content="A complete development environment, installed for you. Free, open, and built by Ionity." />
@@ -170,7 +170,7 @@ footer ul{list-style:none}
     <div class="badge"><span class="dot"></span> Ionity (Pty) Ltd · AEDI · Free forever</div>
     <h1>Your whole dev environment, <span class="grad">installed for you</span></h1>
     <p class="sub">
-      ProGramerly provisions a complete development machine on Windows and macOS — runtimes,
+      ProGramerly provisions a complete development machine on Windows, macOS and Linux — runtimes,
       editors, SDKs, shells, databases and AI tooling — from one catalogue, in one run.
       Then it keeps everything in sync, watches the box from the tray, and repairs itself.
     </p>
@@ -234,8 +234,8 @@ footer ul{list-style:none}
       <h2>Downloads</h2>
       <p class="lede">
         Every build is produced on GitHub's own runners — Windows on <code>windows-latest</code>,
-        macOS on Apple's toolchain — and published with a <code>SHA256.txt</code> you can check
-        before you run anything.
+        macOS on Apple's toolchain, Linux on <code>ubuntu-latest</code> — and published with a
+        <code>SHA256.txt</code> you can check before you run anything.
       </p>
       <div class="scroller">
         <table class="dl-table" id="dlTable">
@@ -246,6 +246,9 @@ footer ul{list-style:none}
             <tr><td>Windows portable</td><td><code>ProGramerly-Portable-*.exe</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
             <tr><td>macOS (Apple Silicon)</td><td><code>ProGramerly-*-arm64.dmg</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
             <tr><td>macOS (Intel)</td><td><code>ProGramerly-*-x64.dmg</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Linux (any distro)</td><td><code>ProGramerly-*-x86_64.AppImage</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Debian / Ubuntu</td><td><code>programerly_*_amd64.deb</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Fedora / RHEL / openSUSE</td><td><code>programerly-*.x86_64.rpm</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
             <tr><td>Checksums</td><td><code>SHA256.txt</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
           </tbody>
         </table>
@@ -253,8 +256,10 @@ footer ul{list-style:none}
       <div class="rule"></div>
       <p class="lede" style="margin-bottom:0">
         Builds are currently unsigned: Windows shows <em>“Windows protected your PC” → More info → Run anyway</em>,
-        and macOS asks for right-click → Open the first time. Signing turns on automatically the moment the
-        certificates are added to the repository secrets.
+        and macOS asks for right-click → Open the first time. On Linux nothing gets in your way — mark the
+        AppImage executable with <code>chmod +x</code> and run it, or install the package with
+        <code>sudo apt install ./programerly_*_amd64.deb</code> / <code>sudo dnf install ./programerly-*.rpm</code>.
+        Signing turns on automatically the moment the certificates are added to the repository secrets.
       </p>
     </div>
   </section>
@@ -458,8 +463,12 @@ footer ul{list-style:none}
   var primaryLabel=document.getElementById('dlPrimaryLabel');
   var RELEASES='https://github.com/'+REPO+'/releases/latest';
 
-  var isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);
-  if(isMac) primaryLabel.textContent='Download for macOS';
+  var ua=navigator.userAgent||'', plat=navigator.platform||'';
+  var isMac=/Mac|iPhone|iPad/.test(plat+ua);
+  /* Android reports "Linux" too, so it has to be excluded explicitly. */
+  var isLinux=!isMac && /Linux|X11|CrOS/.test(plat+ua) && !/Android/.test(ua);
+  var osName=isMac?'macOS':(isLinux?'Linux':'Windows');
+  primaryLabel.textContent='Download for '+osName;
 
   function mb(n){ return (n/1048576).toFixed(1)+' MB'; }
   function pick(assets,re){ for(var i=0;i<assets.length;i++){ if(re.test(assets[i].name)) return assets[i]; } return null; }
@@ -469,12 +478,15 @@ footer ul{list-style:none}
     .then(function(rel){
       var a=rel.assets||[];
       var rows=[
-        ['Windows 10/11 (x64)',   /Setup-.*-x64\.exe$/],
-        ['Windows (ARM64)',       /Setup-.*-arm64\.exe$/],
-        ['Windows portable',      /Portable-.*\.exe$/],
-        ['macOS (Apple Silicon)', /-arm64\.dmg$/],
-        ['macOS (Intel)',         /-x64\.dmg$/],
-        ['Checksums',             /^SHA256\.txt$/]
+        ['Windows 10/11 (x64)',       /Setup-.*-x64\.exe$/],
+        ['Windows (ARM64)',           /Setup-.*-arm64\.exe$/],
+        ['Windows portable',          /Portable-.*\.exe$/],
+        ['macOS (Apple Silicon)',     /-arm64\.dmg$/],
+        ['macOS (Intel)',             /-x64\.dmg$/],
+        ['Linux (any distro)',        /\.AppImage$/],
+        ['Debian / Ubuntu',           /\.deb$/],
+        ['Fedora / RHEL / openSUSE',  /\.rpm$/],
+        ['Checksums',                 /^SHA256\.txt$/]
       ];
       var html='', found=0;
       rows.forEach(function(row){
@@ -489,9 +501,10 @@ footer ul{list-style:none}
       });
       if(found) body.innerHTML=html;
 
-      var best=isMac ? (pick(a,/-arm64\.dmg$/)||pick(a,/-x64\.dmg$/))
-                     : (pick(a,/Setup-.*-x64\.exe$/)||pick(a,/Portable-.*\.exe$/));
-      if(best){ primary.href=best.browser_download_url; primaryLabel.textContent='Download '+rel.tag_name+' · '+(isMac?'macOS':'Windows'); }
+      var best = isMac   ? (pick(a,/-arm64\.dmg$/)||pick(a,/-x64\.dmg$/))
+               : isLinux ? (pick(a,/\.AppImage$/)||pick(a,/\.deb$/)||pick(a,/\.rpm$/))
+               :           (pick(a,/Setup-.*-x64\.exe$/)||pick(a,/Portable-.*\.exe$/));
+      if(best){ primary.href=best.browser_download_url; primaryLabel.textContent='Download '+rel.tag_name+' · '+osName; }
 
       var when=new Date(rel.published_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
       meta.innerHTML='Latest release <strong>'+rel.tag_name+'</strong> · '+when+

@@ -168,7 +168,28 @@ if (-not $remote)          { git remote add origin $want | Out-Null; Good "origi
 elseif ($remote -ne $want) { git remote set-url origin $want | Out-Null; Good "origin re-pointed -> $want" }
 else                       { Good "origin already correct" }
 
-# ---------------------------------------------------------------- 6. commit
+# ------------------------------------------------------- 6. the CI workflow
+# This is what turns a tag into a Release with a real .exe and .dmg. The app
+# bundles the workflow as a template; put it where GitHub looks for it.
+Step "GitHub Actions workflow"
+$tpl = Join-Path $root 'src\main\data\ci-workflow.yml'
+$wfDir = Join-Path $root '.github\workflows'
+$wf = Join-Path $wfDir 'build.yml'
+if (Test-Path $tpl) {
+  New-Item -ItemType Directory -Force -Path $wfDir | Out-Null
+  $tplText = Get-Content $tpl -Raw
+  $cur = if (Test-Path $wf) { Get-Content $wf -Raw } else { '' }
+  if ($cur -ne $tplText) { Set-Content -Path $wf -Value $tplText -NoNewline -Encoding UTF8; Good "wrote .github\workflows\build.yml" }
+  else { Good "build.yml already current" }
+} else {
+  Warn "template src\main\data\ci-workflow.yml not found - no Release build will run from this tag"
+}
+# A stray npm-package workflow fails on every push here (nothing to npm publish)
+# and buries the real build in red. Remove it if it is present.
+$stray = Join-Path $wfDir 'npm-publish-github-packages.yml'
+if (Test-Path $stray) { Remove-Item $stray -Force; Say "removed npm-publish-github-packages.yml - it publishes npm packages, this is not one" }
+
+# ---------------------------------------------------------------- 7. commit
 Step "Commit"
 $version = (Get-Content (Join-Path $root 'package.json') -Raw | ConvertFrom-Json).version
 git add -A
@@ -184,7 +205,7 @@ if ($pending) {
   Good "nothing changed since the last commit"
 }
 
-# ------------------------------------------------------------------ 7. push
+# ------------------------------------------------------------------ 8. push
 Step "Push"
 git push -u origin $Branch 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
@@ -207,19 +228,31 @@ if ($LASTEXITCODE -ne 0) {
 }
 Good "pushed $Branch"
 
-# ------------------------------------------------------------------- 8. tag
+# ------------------------------------------------------------------- 9. tag
 if (-not $NoTag) {
   Step "Tag v$version - this is what builds the Release"
   $exists = Quiet git tag --list "v$version"
-  if (-not $exists) { git tag "v$version" | Out-Null; Good "created tag v$version" }
-  else              { Good "tag v$version already exists locally" }
-
-  git push origin "v$version" 2>&1 | Out-Null
-  if ($LASTEXITCODE -ne 0) {
-    Warn "the tag was already on GitHub, or the push was rejected."
-    Warn "To rebuild the same version:  git push origin :refs/tags/v$version  then run again."
+  $head   = Quiet git rev-parse HEAD
+  $tagAt  = if ($exists) { Quiet git rev-list -n 1 "v$version" } else { $null }
+  if (-not $exists) {
+    git tag "v$version" | Out-Null
+    Good "created tag v$version"
+    git push origin "v$version" 2>&1 | Out-Null
+  } elseif ($tagAt -ne $head) {
+    # The tag points at an older commit - typically one pushed before the
+    # workflow file existed, so it never built anything. Move it to HEAD.
+    # No Release was ever produced from the old position, so nothing is lost.
+    Say "tag v$version points at $($tagAt.Substring(0,7)); HEAD is $($head.Substring(0,7)) - moving it"
+    git tag -f "v$version" | Out-Null
+    git push --force origin "refs/tags/v$version" 2>&1 | Out-Null
   } else {
-    Good "tag pushed - the build is starting now"
+    Good "tag v$version already at HEAD"
+    git push origin "v$version" 2>&1 | Out-Null
+  }
+  if ($LASTEXITCODE -ne 0) {
+    Warn "the tag push was rejected. Check that '$who' can push tags to $Owner/$Repo."
+  } else {
+    Good "tag v$version is on GitHub - the Release build is starting now"
   }
 }
 

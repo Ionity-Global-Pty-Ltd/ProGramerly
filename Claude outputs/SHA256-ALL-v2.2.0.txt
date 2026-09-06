@@ -1,0 +1,7 @@
+ProGramerly v2.2.0 - release asset checksums
+Ionity (Pty) Ltd | AEDI - Policy 986 AED
+
+477c0fb56f244e55f9f20a4dcc2158dcff19693e44b819cb6b0e5da5af8dbb10  *ProGramerly-Setup-2.2.0-x64.exe
+77113ffdb5ac8fe2c13835572dea7c90f74df9bef6915cc7daf828df9c7c2b22  *ProGramerly-2.2.0-x86_64.AppImage
+a21b9af78c0750f883d95c5ed3b4dfcfbac77f67b4f60c8e663a372ec35149bc  *programerly_2.2.0_amd64.deb
+b97a61dfb497d3392be1f9fe5d482b7b95e9e35ec6c28746ca2a63ddfa2027b9  *ProGramerly-2.2.0-mac.zip
