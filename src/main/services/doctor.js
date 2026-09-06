@@ -828,7 +828,7 @@ function markdown(diag, env, ports) {
   L.push('');
   L.push('---');
   L.push('');
-  L.push('Governance: Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — TM²');
+  L.push('Governance: Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — TM');
   return L.join('\n');
 }
 

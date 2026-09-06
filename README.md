@@ -906,7 +906,7 @@ Johan Wilhelm van Antwerp · Centurion, Gauteng, South Africa
 ORCID [0009-0005-7181-0347](https://orcid.org/0009-0005-7181-0347)
 
 Governance **Policy 986 AED** · Licence CC BY-NC-SA 4.0 where stated
-© 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — All rights reserved — TM²
+© 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — All rights reserved — TM
 
 _Building Tomorrow, Today. Anything is Possible with God._
 

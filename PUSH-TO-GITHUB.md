@@ -105,5 +105,5 @@ tag. That is the one and only real path to a Mac launcher.
 
 ---
 
-Governance: Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — TM²
+Governance: Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — TM
 Author: Johan Wilhelm van Antwerp · <https://www.ionity.today>

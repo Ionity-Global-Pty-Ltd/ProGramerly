@@ -25,7 +25,7 @@
     Author     : Johan Wilhelm van Antwerp
     Company    : Antwerp Designs | Ionity (Pty) Ltd | AEDI
     Governance : Policy 986 AED
-    Copyright  : (c) 2018-2026 - All rights reserved - TM2
+    Copyright  : (c) 2018-2026 - All rights reserved - TM
     Web        : https://www.ionity.today
 #>
 [CmdletBinding()]

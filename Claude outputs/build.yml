@@ -110,16 +110,38 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci || npm install
       - name: Build macOS installer
-        # Signing/notarisation kicks in automatically once the secrets below
-        # exist. Without them the build still produces a working (unsigned)
-        # .dmg - Gatekeeper will ask the user to right-click > Open.
-        run: npx electron-builder --mac --publish never
+        # A missing secret still defines the variable, as an empty string, and
+        # electron-builder resolves an empty CSC_LINK against the project root
+        # and dies with "<projectDir> not a file". So the signing variables are
+        # exported here only when they actually carry something; otherwise the
+        # build is explicitly told not to go looking for an identity and
+        # produces a working unsigned .dmg - Gatekeeper then asks the user to
+        # right-click > Open the first time.
+        shell: bash
         env:
-          CSC_LINK: ${{ secrets.MAC_CERT_P12_BASE64 }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MAC_CERT_P12_BASE64: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          MAC_APPLE_ID: ${{ secrets.APPLE_ID }}
+          MAC_APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          MAC_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -n "$MAC_CERT_P12_BASE64" ]; then
+            export CSC_LINK="$MAC_CERT_P12_BASE64"
+            export CSC_KEY_PASSWORD="$MAC_CERT_PASSWORD"
+            echo "signing with the certificate from repository secrets"
+          else
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+            echo "::notice::no signing certificate in secrets - building an unsigned .dmg"
+          fi
+          if [ -n "$MAC_APPLE_ID" ] && [ -n "$MAC_APPLE_APP_PASSWORD" ] && [ -n "$MAC_APPLE_TEAM_ID" ]; then
+            export APPLE_ID="$MAC_APPLE_ID"
+            export APPLE_APP_SPECIFIC_PASSWORD="$MAC_APPLE_APP_PASSWORD"
+            export APPLE_TEAM_ID="$MAC_APPLE_TEAM_ID"
+            echo "notarising as $APPLE_ID"
+          else
+            echo "::notice::Apple ID secrets absent - skipping notarisation"
+          fi
+          npx electron-builder --mac --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: ProGramerly-macos
@@ -185,10 +207,10 @@ jobs:
             | Windows (no install) | `ProGramerly-Portable-*.exe` |
             | macOS Apple Silicon | `ProGramerly-*-arm64.dmg` |
             | macOS Intel | `ProGramerly-*-x64.dmg` |
-            | Linux (any distro) | `ProGramerly-*-x86_64.AppImage` |
+            | Linux (any distro) | `ProGramerly-*.AppImage` |
             | Debian / Ubuntu | `programerly_*_amd64.deb` |
             | Fedora / RHEL / openSUSE | `programerly-*.x86_64.rpm` |
 
             ---
-            Governance: Policy 986 AED - (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM2
+            Governance: Policy 986 AED - (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM
             Author: Johan Wilhelm van Antwerp - https://www.ionity.today

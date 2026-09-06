@@ -83,7 +83,7 @@ async function workspace(log) {
       '---',
       '',
       'Governance: **Policy 986 AED** · Licence: AED 900 / CC BY-NC-SA 4.0 where stated',
-      '(c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - All rights reserved - TM2',
+      '(c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - All rights reserved - TM',
       'Author: Johan Wilhelm van Antwerp · https://www.ionity.today',
       '',
       '_Building Tomorrow, Today._',

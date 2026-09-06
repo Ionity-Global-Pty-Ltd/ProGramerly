@@ -5,7 +5,7 @@ then keeps it in sync, watches it from the tray, and repairs Windows when it
 breaks.
 
 Author: Johan Wilhelm van Antwerp - Antwerp Designs | Ionity (Pty) Ltd | AEDI
-Governance: Policy 986 AED - (c) 2018-2026 - TM2
+Governance: Policy 986 AED - (c) 2018-2026 - TM
 Built: 2026-09-06 - `G:\.Development\ProGramerly-Basic Software for All`
 Supersedes the v1.0.0 notes.
 

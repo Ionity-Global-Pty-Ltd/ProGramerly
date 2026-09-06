@@ -262,7 +262,7 @@ Write-Host "  Repository : https://github.com/$Owner/$Repo"
 Write-Host "  Build      : https://github.com/$Owner/$Repo/actions"
 Write-Host "  Release    : https://github.com/$Owner/$Repo/releases  (10-15 min, macOS is the slow one)"
 Write-Host ""
-Write-Host "  (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM2 - Policy 986 AED" -ForegroundColor DarkGray
+Write-Host "  (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM - Policy 986 AED" -ForegroundColor DarkGray
 Write-Host ""
 
 try { Start-Process "https://github.com/$Owner/$Repo/actions" } catch { }

@@ -5,7 +5,7 @@
  *
  * Antwerp Designs | Ionity (Pty) Ltd | AEDI
  * Author: Johan Wilhelm van Antwerp
- * Governance: Policy 986 AED  |  (c) 2018-2026  All rights reserved  TM2
+ * Governance: Policy 986 AED  |  (c) 2018-2026  All rights reserved  TM
  * https://www.ionity.today
  */
 
