@@ -54,7 +54,11 @@ mac:
       arch: [arm64, x64]
 
 dmg:
-  title: ProGramerly ${version}
+  # Volume name must not contain a space. electron-builder passes it unquoted
+  # to `hdiutil detach /Volumes/<title>`, so "ProGramerly 2.2.0" is read as two
+  # arguments and the whole macOS build fails on cleanup - after the .dmg has
+  # already been written. The version still appears in artifactName below.
+  title: ProGramerly
   artifactName: ProGramerly-${version}-${arch}.${ext}
   contents:
     - x: 140

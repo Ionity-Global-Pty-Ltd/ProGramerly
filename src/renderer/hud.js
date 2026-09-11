@@ -57,10 +57,16 @@ api.onHud((d) => {
     const nm = (dk.name || '').replace(/\\$/, '');
     return `<div class="drive ${cls}">
       <span class="nm" title="${dk.label || ''}">${nm}</span>
-      <span class="track"><i style="width:${Math.min(100, dk.usedPct)}%"></i></span>
+      <span class="track"><i data-pct="${Math.min(100, dk.usedPct)}"></i></span>
       <span class="free">${size(dk.free)}</span>
     </div>`;
   }).join('') || '<div class="drive"><span class="nm">—</span><span class="track"></span><span class="free">reading…</span></div>';
+
+  // Same reason as the main window: style-src 'self' drops inline style attrs,
+  // so the fill width is set through the CSSOM once the markup is in place.
+  for (const i of $('drives').querySelectorAll('.track i[data-pct]')) {
+    i.style.width = `${i.dataset.pct}%`;
+  }
 
   const sync = d.sync;
   $('foot').textContent = sync && sync.enabled

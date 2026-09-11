@@ -362,10 +362,17 @@ function paintMonitor(d) {
         <span class="dvlabel">${esc(dk.label || (dk.removable ? 'removable' : ''))}</span>
         <span class="dvpct">${dk.usedPct}%</span>
       </div>
-      <div class="track"><i style="width:${Math.min(100, dk.usedPct)}%"></i></div>
+      <div class="track"><i data-pct="${Math.min(100, dk.usedPct)}"></i></div>
       <div class="dvfoot">${size(dk.free)} free of ${size(dk.total)}</div>
     </div>`;
   }).join('') || '<p class="cardnote">reading drives…</p>';
+
+  // Widths are applied here, not as style="" in the markup above: this window
+  // runs under style-src 'self', which drops inline style attributes silently
+  // and would leave every usage bar sitting at zero width.
+  for (const i of $('driveList').querySelectorAll('.track i[data-pct]')) {
+    i.style.width = `${i.dataset.pct}%`;
+  }
 
   $('machineKv').innerHTML = [
     ['Host', m.host],
@@ -730,7 +737,7 @@ function paintEnvironments(env) {
   const nodeBox = $('aiNodeList');
   if (env.node && env.node.length) {
     nodeBox.innerHTML = '<b>Node versions:</b> ' + env.node
-      .map((n) => `${esc(n.version)}${n.current ? ' (current)' : ''} <span style="color:var(--text-faint)">${esc(n.manager)}</span>`)
+      .map((n) => `${esc(n.version)}${n.current ? ' (current)' : ''} <span class="faint">${esc(n.manager)}</span>`)
       .join(' · ');
     nodeBox.hidden = false;
   } else nodeBox.hidden = true;
@@ -1899,6 +1906,11 @@ api.onAction((a) => { if (a === 'speedtest') $('speedBtn').click(); });
 window.addEventListener('resize', () => { if (activeTab === 'monitor') drawNetChart(); });
 
 boot().catch((e) => {
-  document.body.insertAdjacentHTML('afterbegin',
-    `<pre style="padding:20px;color:#ff5d6c">Failed to start: ${e.message}</pre>`);
+  // Built via the DOM, not an inline style attribute: this app runs under a
+  // strict CSP (style-src 'self'), which silently drops style="..." - and the
+  // one moment this message must be readable is when boot() has failed.
+  const pre = document.createElement('pre');
+  pre.className = 'bootfail';
+  pre.textContent = `Failed to start: ${e && e.message ? e.message : e}`;
+  document.body.prepend(pre);
 });

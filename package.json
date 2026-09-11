@@ -1,7 +1,7 @@
 {
   "name": "programerly",
   "productName": "ProGramerly",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "ProGramerly - Basic Coding Software for All. One free desktop app that provisions a complete development environment on Windows and macOS, elevates once so nothing prompts again, diagnoses and repairs the machine it runs on, manages local LLMs and Python environments, opens any installed shell, reads sensors and drives RGB through the OpenRGB SDK, and - for its own maintainers - pushes itself to GitHub and cuts its own release.",
   "main": "src/main/main.js",
   "author": {
