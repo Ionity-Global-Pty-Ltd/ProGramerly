@@ -35,6 +35,9 @@ const hardware = require('./services/hardware');
 const openrgb = require('./services/openrgb');
 const projects = require('./services/projects');
 const secrets = require('./services/secrets');
+const firebaseAuth = require('./services/firebaseAuth');
+const programs = require('./services/programs');
+const cloudConfig = require('./services/cloudConfig');
 const tray = require('./tray');
 
 const IS_WIN = process.platform === 'win32';
@@ -338,6 +341,15 @@ function startServices() {
   });
 
   sync.init(serviceEmit);
+
+  // Internal auth: forward every state change to the renderer, then restore a
+  // previously signed-in identity so the UI shows the chip immediately.
+  firebaseAuth.onChange((snap) => emit('auth:changed', snap));
+  try { firebaseAuth.restore(); } catch { /* nothing persisted */ }
+
+  // First-run hydrate of the bundled programs into the writable managed
+  // folder, off the critical path so it never delays the window.
+  setTimeout(() => { try { programs.hydrate(); } catch { /* best effort */ } }, 4000);
 
   try {
     tray.create({
@@ -762,6 +774,71 @@ ipcMain.handle('app:createShortcut', async () => shortcut.createDesktopShortcut(
   minimised: Boolean(settings.get('startMinimised')),
 }));
 ipcMain.handle('app:loginState', () => shortcut.loginState());
+
+/* --- auth (internal Ionity Google sign-in) ------------------------------ */
+ipcMain.handle('auth:signIn', async () => {
+  try {
+    const res = await firebaseAuth.signIn();
+    logLine(`Signed in: ${res.user.email}`, 'ok');
+    return { ok: true, ...res };
+  } catch (e) {
+    logLine(`Sign-in failed: ${e.message}`, 'warn');
+    return { ok: false, error: e.message };
+  }
+});
+ipcMain.handle('auth:signOut', () => {
+  const u = firebaseAuth.currentUser();
+  firebaseAuth.signOut();
+  if (u) logLine(`Signed out: ${u.email}`);
+  return { ok: true };
+});
+ipcMain.handle('auth:state', () => firebaseAuth.state());
+ipcMain.handle('auth:config', () => cloudConfig.effective());
+
+/* --- cloud config (built-in + bring-your-own Firebase) ------------------ */
+ipcMain.handle('cloud:config', () => cloudConfig.effective());
+ipcMain.handle('cloud:setConfig', (_e, patch) => cloudConfig.setConfig(patch));
+ipcMain.handle('cloud:clearConfig', () => cloudConfig.clearConfig());
+
+// Write bytes from a cloud download to a temp file and open it with the OS
+// default app (the "open externally" path for CAD/binaries the app cannot
+// preview inline). base64 keeps the IPC payload structured-clone-safe.
+ipcMain.handle('cloud:saveTemp', async (_e, payload) => {
+  try {
+    const { name, base64 } = payload || {};
+    if (!name || !base64) return { ok: false, error: 'name and base64 are required' };
+    const safe = String(name).replace(/[^\w.\-]+/g, '_').slice(-120) || 'download';
+    const dir = path.join(app.getPath('temp'), 'programerly-files');
+    fs.mkdirSync(dir, { recursive: true });
+    const dest = path.join(dir, safe);
+    fs.writeFileSync(dest, Buffer.from(base64, 'base64'));
+    return { ok: true, path: dest };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+ipcMain.handle('cloud:openExternalFile', async (_e, payload) => {
+  try {
+    const { name, base64 } = payload || {};
+    if (!name || !base64) return { ok: false, error: 'name and base64 are required' };
+    const safe = String(name).replace(/[^\w.\-]+/g, '_').slice(-120) || 'download';
+    const dir = path.join(app.getPath('temp'), 'programerly-files');
+    fs.mkdirSync(dir, { recursive: true });
+    const dest = path.join(dir, safe);
+    fs.writeFileSync(dest, Buffer.from(base64, 'base64'));
+    const err = await shell.openPath(dest);
+    if (err) return { ok: false, error: err, path: dest };
+    return { ok: true, path: dest };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
+
+/* --- programs (bundled Ionity utilities) -------------------------------- */
+ipcMain.handle('programs:list', () => programs.list());
+ipcMain.handle('programs:launch', (_e, id) => programs.launch(id));
+ipcMain.handle('programs:hydrate', () => programs.hydrate());
+ipcMain.handle('programs:openFolder', () => programs.openFolder());
 
 /* --- installer ---------------------------------------------------------- */
 ipcMain.handle('install:cancel', () => { cancelRequested = true; return true; });

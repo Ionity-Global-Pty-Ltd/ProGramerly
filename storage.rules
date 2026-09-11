@@ -1,0 +1,52 @@
+rules_version = '2';
+// ProGramerly - Cloud Storage security rules
+// Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+//
+// The shared organisation file space lives under /org/. Every read and write
+// requires an authenticated internal Ionity user. A single file may not exceed
+// the whole pool (1 GiB); the running org total is tracked in Firestore
+// (org/shared.usedBytes) and enforced there and client-side before upload.
+// Keep the allowlist in sync with src/shared/firebase.config.js.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function emailDomain() {
+      return request.auth != null && request.auth.token.email != null
+        ? request.auth.token.email.lower().split('@')[1]
+        : '';
+    }
+
+    function isInternal() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && emailDomain() in ['ionity.today', 'ionity.digital'];
+    }
+
+    // Shared organisation file space. Any internal user may read every file
+    // (the pool is shared) and write files. A single object is capped at the
+    // full pool size; the cumulative 1 GiB cap is enforced against the
+    // Firestore counter in the client and in firestore.rules.
+    match /org/{allPaths=**} {
+      allow read: if isInternal();
+      allow write: if isInternal()
+        && (request.resource == null
+            || request.resource.size <= 1073741824); // 1 GiB per object ceiling
+    }
+
+    // Each user's personal scratch area (optional, still inside the org pool
+    // accounting). Owner-only write, internal read.
+    match /users/{uid}/{allPaths=**} {
+      allow read: if isInternal();
+      allow write: if isInternal() && request.auth.uid == uid
+        && (request.resource == null
+            || request.resource.size <= 1073741824);
+    }
+
+    // Everything else denied.
+  }
+}

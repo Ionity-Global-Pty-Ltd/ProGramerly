@@ -1,0 +1,78 @@
+rules_version = '2';
+// ProGramerly - Firestore security rules
+// Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+//
+// Every read and write requires an authenticated user whose email domain is on
+// the internal Ionity allowlist. Keep the allowlist in sync with
+// src/shared/firebase.config.js (ALLOWED_DOMAINS).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ---------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function emailDomain() {
+      return request.auth != null && request.auth.token.email != null
+        ? request.auth.token.email.lower().split('@')[1]
+        : '';
+    }
+
+    function isInternal() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && emailDomain() in ['ionity.today', 'ionity.digital'];
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ---- users: one profile doc per uid ---------------------------------
+    // A user may read/write only their own profile. Any internal user may read
+    // other profiles (so Reports can show who did what by name).
+    match /users/{uid} {
+      allow read: if isInternal();
+      allow write: if isInternal() && isOwner(uid);
+    }
+
+    // ---- activity: login/logout, sessions, tab usage, file events -------
+    // Users write only their own activity. Any internal user may read activity
+    // (team-wide reporting). Activity is append-only: no edits, no deletes.
+    match /activity/{eventId} {
+      allow read: if isInternal();
+      allow create: if isInternal()
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ---- files: metadata index for the shared org storage pool ----------
+    // Any internal user can see the shared file index and add/remove entries.
+    match /files/{fileId} {
+      allow read: if isInternal();
+      allow create: if isInternal()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.size is int
+        && request.resource.data.size >= 0;
+      // Only the owner (or, deliberately, any internal user for shared cleanup)
+      // may delete a file entry.
+      allow update, delete: if isInternal();
+    }
+
+    // ---- org: the shared 1 GB pool counter ------------------------------
+    // A single document (org/shared) holds the running byte total. Any internal
+    // user may read it and adjust it (upload adds, delete subtracts). The hard
+    // cap is enforced here: usedBytes may never exceed the pool size.
+    match /org/{docId} {
+      allow read: if isInternal();
+      allow write: if isInternal()
+        && request.resource.data.usedBytes is int
+        && request.resource.data.usedBytes >= 0
+        && request.resource.data.usedBytes <= 1073741824; // 1 GiB
+    }
+
+    // Everything else is denied by default.
+  }
+}

@@ -9,3 +9,12 @@ Thumbs.db
 .env.*
 *.p12
 *.mobileprovision
+
+# Bundled Ionity utilities consumed by src/main/services/programs.js via
+# electron-builder extraResources. ~470 MB of .exe, three of them over
+# GitHub's 100 MB per-file hard limit, so they stay local / out of the repo.
+PROGRAMS TO REF AND USE/
+
+# local scratch
+do-commit.cmd
+commitmsg.txt

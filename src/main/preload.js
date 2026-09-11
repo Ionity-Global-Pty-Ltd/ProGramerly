@@ -132,6 +132,37 @@ contextBridge.exposeInMainWorld('programerly', {
   profileGet: () => ipcRenderer.invoke('profile:get'),
   profileSave: (patch) => ipcRenderer.invoke('profile:save', patch),
 
+  /* ---------------------------------------------------------------- auth */
+  /* Internal Ionity Google sign-in. The heavy lifting (system-browser
+     loopback PKCE) happens in the main process; the renderer receives the
+     resulting Google credential and completes Firebase sign-in itself. */
+  auth: {
+    signIn: () => ipcRenderer.invoke('auth:signIn'),
+    signOut: () => ipcRenderer.invoke('auth:signOut'),
+    state: () => ipcRenderer.invoke('auth:state'),
+    config: () => ipcRenderer.invoke('auth:config'),
+    onChanged: (cb) => on('auth:changed', cb),
+  },
+
+  /* --------------------------------------------------------------- cloud */
+  /* Firebase config resolution + BYO-Firebase overrides. Firestore/Storage
+     calls themselves run in the renderer through the Firebase Web SDK. */
+  cloud: {
+    config: () => ipcRenderer.invoke('cloud:config'),
+    setConfig: (patch) => ipcRenderer.invoke('cloud:setConfig', patch),
+    clearConfig: () => ipcRenderer.invoke('cloud:clearConfig'),
+    openExternalFile: (payload) => ipcRenderer.invoke('cloud:openExternalFile', payload),
+    saveTemp: (payload) => ipcRenderer.invoke('cloud:saveTemp', payload),
+  },
+
+  /* ------------------------------------------------------------ programs */
+  programs: {
+    list: () => ipcRenderer.invoke('programs:list'),
+    launch: (id) => ipcRenderer.invoke('programs:launch', id),
+    hydrate: () => ipcRenderer.invoke('programs:hydrate'),
+    openFolder: () => ipcRenderer.invoke('programs:openFolder'),
+  },
+
   /* ------------------------------------------------------------- events */
   onLog: (cb) => on('install:log', cb),
   onItem: (cb) => on('install:item', cb),
