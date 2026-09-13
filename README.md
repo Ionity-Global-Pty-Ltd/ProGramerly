@@ -822,13 +822,72 @@ node scripts/syntax-check.js          # parse every shipped .js and .json
 
 ---
 
+## Command Center — the home screen
+
+Since 2.3.0 the app opens on **Home**: a live operator surface built from the
+same telemetry the tray already collects. CPU, memory, thermals, system disk and
+network are painted every tick with warning and critical thresholds; the health
+line summarises pressure in words ("memory pressure · disk space low") instead
+of making you read five gauges. A command box (**Ctrl+K** from anywhere) finds
+any workspace or bundled utility by name or keyword and opens it on Enter. The
+local-AI panel probes Ollama and LM Studio and hands a prompt straight to the AI
+tab. Operations shows the sync schedule, the update state and the managed
+package count without leaving the page.
+
+**Kiosk mode** is an opt-in, full-screen application shell for a workstation
+that only runs ProGramerly — not Windows Assigned Access. It is a persisted
+setting, it always keeps a visible **Exit kiosk** control in the header, and
+**Ctrl+Shift+K** toggles it from anywhere. The main process applies
+`BrowserWindow.setKiosk()` only in response to that explicit setting message, so
+nothing can trap the operator by accident.
+
+### Bundled Ionity utilities
+
+The Home screen also launches four Windows programs that ship with ProGramerly:
+
+| Utility | File | Kind |
+| --- | --- | --- |
+| Fanzi FanControl | `Fanzi.FanControl.exe` | utility |
+| IONITY AiOS Demo 1.6.0 | `IONITY-AiOS-Demo-v1.6.0.exe` | application |
+| CiC | `CiC.exe` | utility |
+| MCP-AUDIT 1.15.0 | `MCP-AUDIT.Setup.1.15.0.exe` | installer (asks first) |
+
+They are ~495 MB together and three of them are over GitHub's 100 MB per-file
+limit, so they are **not in git**. They live as assets on the dedicated
+[`programs-v1`](https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/tag/programs-v1)
+release and `src/main/data/programs.json` pins each one by byte size and
+SHA-256. Three paths lead to the same verified result:
+
+- **Windows installer from CI.** The `windows` job downloads the payload with
+  `gh release download programs-v1`, runs `scripts/check-programs.js --strict`
+  (size + hash for every file, and nothing unpinned in the folder), and
+  electron-builder packs them into `resources/programs`.
+- **Portable build, dev checkout, or an installer built while the payload was
+  unavailable.** `programs.js` finds nothing in resources, downloads that one
+  file from the release into a temporary name inside the managed folder,
+  byte-counts and hashes it, and only then renames it into place. Progress is
+  streamed to the tile in the Home screen.
+- **Local build on the maintainer machine.** The `PROGRAMS TO REF AND USE\`
+  folder sits next to `package.json`; `npm run check:programs` verifies it and
+  `--write-sums` regenerates `SHA256-programs.txt`.
+
+In every case the file is verified again immediately before `shell.openPath`,
+and the renderer only ever sends a catalogue id — never a path or a file name.
+The self-updater ignores the `programs-v1` tag, so it can never be mistaken for
+a newer ProGramerly.
+
+---
+
 ## The download page
 
-`docs/index.html` is the public landing page — turn on GitHub Pages for the
-`docs/` folder and it serves itself. It reads the latest release straight from
-the GitHub API at load time, so the version, the file sizes and every download
-link are whatever is actually published, not something hard-coded that rots on
-the next tag. The backdrop is a flow field of dashes on one slow ~13-second
+`docs/index.html` is the public landing page, served by GitHub Pages from the
+`docs/` folder at **<https://www.ionity.fun>** (`docs/CNAME`; the
+`ionity-global-pty-ltd.github.io/ProGramerly` address keeps working). It reads
+the latest release straight from the GitHub API at load time, so the version,
+the file sizes and every download link are whatever is actually published, not
+something hard-coded that rots on the next tag. A second section lists the four
+bundled Ionity utilities with their SHA-256 pins, and fills in live sizes and
+download counts from the `programs-v1` payload release. The backdrop is a flow field of dashes on one slow ~13-second
 breath: stroke opacity, drift speed, trail length and the core glow all ride the
 same oscillator, so the whole field inhales and exhales together instead of
 looking like six unrelated animations. The pointer pushes the field away from
@@ -847,8 +906,10 @@ npm start              # run the GUI
 npm run start:min      # start straight into the tray
 npm run validate       # catalog
 npm run lint:syntax    # parse every shipped source file
+npm run check:programs # bundled-utilities manifest (+ payload folder if present)
 npm run dist:win       # -> dist/ProGramerly-Setup-*.exe   (on Windows)
 npm run dist:mac       # -> dist/ProGramerly-*.dmg         (on macOS)
+npm run dist:linux     # -> dist/*.AppImage, .deb, .rpm    (on Linux)
 ```
 
 `PROGRAMERLY_UI_FIXTURES=1` makes the Windows-only readers return a fixed
@@ -856,7 +917,9 @@ sample, so the registry screen can be rendered and screenshotted from a Linux
 CI runner. A screen nobody has ever looked at is a screen nobody has tested.
 
 Cross-compiling desktop installers is unreliable, so CI builds each target on
-its own runner. Push a `v*` tag and the workflow attaches both to a GitHub
+its own runner — `windows-latest`, `macos-latest` (native `.dmg` + `.zip` for
+Apple Silicon and Intel) and `ubuntu-latest` (AppImage, `.deb`, `.rpm`). Push a
+`v*` tag and the workflow attaches all of them, plus `SHA256.txt`, to a GitHub
 Release. Add `MAC_CERT_P12_BASE64`, `MAC_CERT_PASSWORD`, `APPLE_ID`,
 `APPLE_APP_PASSWORD` and `APPLE_TEAM_ID` as repository secrets and the macOS
 build signs and notarises itself.

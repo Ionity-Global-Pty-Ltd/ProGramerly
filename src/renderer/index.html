@@ -6,6 +6,7 @@
         content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'" />
   <title>ProGramerly - Basic Coding Software for All</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
   <canvas id="nodefield" aria-hidden="true"></canvas>
@@ -21,7 +22,8 @@
     </div>
 
     <nav class="tabs" id="tabs" aria-label="Sections">
-      <button class="tab active" data-tab="software">Software</button>
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="software">Software</button>
       <button class="tab" data-tab="monitor">Monitor</button>
       <button class="tab" data-tab="network">Network</button>
       <button class="tab" data-tab="ai">AI</button>
@@ -35,14 +37,125 @@
     </nav>
 
     <div class="badges">
+      <span class="badge" id="homeLiveBadge">WARMING UP</span>
       <span class="badge" id="osBadge">detecting…</span>
       <span class="badge" id="privBadge">…</span>
+      <button class="badge badge-btn" id="kioskExitBtn" hidden>Exit kiosk · Ctrl+Shift+K</button>
       <button class="badge badge-btn" id="elevateBtn" hidden>Restart as Administrator</button>
     </div>
   </header>
 
+  <!-- ========================= COMMAND CENTER ========================== -->
+  <main id="homeView" class="view">
+    <section class="home-hero">
+      <div class="home-hero-copy">
+        <p class="home-eyebrow">IONITY WORKSTATION OS · LOCAL OPERATOR SHELL</p>
+        <h2 id="homeGreeting">Command Center</h2>
+        <p class="home-machine-line" id="homeMachineLine">Reading this machine…</p>
+        <div class="home-command-wrap">
+          <div class="home-command">
+            <span class="home-command-icon" aria-hidden="true">⌘</span>
+            <input id="homeCommand" type="text" autocomplete="off" aria-label="Find a workspace or launch a utility" placeholder="Find a workspace or launch a utility…" />
+            <button class="btn ghost" id="homeCommandBtn">Open <kbd>Ctrl K</kbd></button>
+          </div>
+          <div class="home-command-results" id="homeCommandResults" role="listbox" hidden></div>
+        </div>
+      </div>
+      <div class="home-clock-panel">
+        <div class="home-clock" id="homeClock">--:--</div>
+        <div class="home-date" id="homeDate">Local time</div>
+        <div class="home-health ok" id="homeHealth"><span id="homeHealthText">Reading system health…</span></div>
+        <div class="home-metrics-at" id="homeMetricsAt">collecting first sample</div>
+      </div>
+    </section>
+
+    <section class="home-metrics" aria-label="Live system telemetry">
+      <article class="dash-metric" id="homeCpuMetric">
+        <div class="metric-head"><span>CPU</span><span>◉</span></div>
+        <div class="metric-value" id="homeCpuValue">—</div>
+        <div class="metric-note" id="homeCpuNote">reading load…</div>
+        <div class="metric-track"><i id="homeCpuBar"></i></div>
+      </article>
+      <article class="dash-metric" id="homeMemMetric">
+        <div class="metric-head"><span>Memory</span><span>▤</span></div>
+        <div class="metric-value" id="homeMemValue">—</div>
+        <div class="metric-note" id="homeMemNote">reading memory…</div>
+        <div class="metric-track"><i id="homeMemBar"></i></div>
+      </article>
+      <article class="dash-metric" id="homeTempMetric">
+        <div class="metric-head"><span>Thermals</span><span>⌁</span></div>
+        <div class="metric-value" id="homeTempValue">—</div>
+        <div class="metric-note" id="homeTempNote">probing sensors…</div>
+        <div class="metric-track"><i id="homeTempBar"></i></div>
+      </article>
+      <article class="dash-metric" id="homeDiskMetric">
+        <div class="metric-head"><span>System disk</span><span>◫</span></div>
+        <div class="metric-value" id="homeDiskValue">—</div>
+        <div class="metric-note" id="homeDiskNote">reading drives…</div>
+        <div class="metric-track"><i id="homeDiskBar"></i></div>
+      </article>
+      <article class="dash-metric" id="homeNetMetric">
+        <div class="metric-head"><span>Network</span><span>◎</span></div>
+        <div class="metric-value" id="homeNetValue">—</div>
+        <div class="metric-note" id="homeNetNote">waiting for counters…</div>
+        <div class="net-pulse" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </article>
+    </section>
+
+    <section class="home-cockpit">
+      <article class="card home-panel home-program-panel">
+        <div class="cardhead">
+          <h3>Local utility launcher</h3>
+          <div class="cardactions">
+            <button class="btn ghost" id="homeProgramsFolder">Managed folder</button>
+            <button class="btn ghost" id="homeProgramsRefresh">Refresh</button>
+          </div>
+        </div>
+        <div class="program-grid" id="homePrograms"><p class="home-empty">Reading bundled utilities…</p></div>
+        <p class="home-panel-note" id="homeProgramMessage" aria-live="polite">Checking real packaged resources…</p>
+      </article>
+
+      <article class="card home-panel home-ai-panel">
+        <div class="cardhead"><h3>Local AI copilot</h3><div class="cardactions"><button class="btn ghost" id="homeAiRefresh">Probe</button></div></div>
+        <div class="ai-state"><span class="ai-orb" id="homeAiLamp"></span><div><b id="homeAiState">Scanning local models…</b><small id="homeAiDetail">Ollama and LM Studio stay on this machine.</small></div></div>
+        <textarea id="homeAiPrompt" rows="3" placeholder="Give your local model a task…"></textarea>
+        <div class="ai-seeds">
+          <button class="ai-seed" data-ai-seed="Explain the health of this development workstation and suggest safe next checks.">Health brief</button>
+          <button class="ai-seed" data-ai-seed="Help me plan the next coding task as a concise checklist.">Plan a task</button>
+          <button class="ai-seed" data-ai-seed="Review an error log I paste next and identify the likely root cause.">Debug a log</button>
+        </div>
+        <div class="ai-action-row"><small>Ctrl+Enter · local inference only</small><button class="btn primary" id="homeAiOpen">Open in AI</button></div>
+      </article>
+
+      <article class="card home-panel home-spaces-panel">
+        <div class="cardhead"><h3>Workspaces</h3><span class="muted">operator-ready tools</span></div>
+        <div class="space-grid">
+          <button class="space-tile" data-home-tab="software"><span class="space-glyph">＋</span><b>Software</b><small>Provision a complete development stack</small></button>
+          <button class="space-tile" data-home-tab="ai"><span class="space-glyph">AI</span><b>Local AI</b><small>Models, chat, GPU and environments</small></button>
+          <button class="space-tile" data-home-tab="projects"><span class="space-glyph">◇</span><b>Projects</b><small>Git state across every workspace</small></button>
+          <button class="space-tile" data-home-tab="monitor"><span class="space-glyph">◉</span><b>Monitor</b><small>Detailed live machine telemetry</small></button>
+          <button class="space-tile" data-home-tab="network"><span class="space-glyph">◎</span><b>Network</b><small>Global sweep and throughput</small></button>
+          <button class="space-tile" data-home-tab="hardware"><span class="space-glyph">⚙</span><b>Hardware</b><small>Sensors, cooling, RGB and RAM</small></button>
+          <button class="space-tile" data-home-tab="doctor"><span class="space-glyph">✚</span><b>Doctor</b><small>Diagnostics, cleanup and ports</small></button>
+          <button class="space-tile" data-home-tab="terminals"><span class="space-glyph">&gt;_</span><b>Terminals</b><small>Open a real installed shell</small></button>
+        </div>
+      </article>
+
+      <article class="card home-panel home-ops-panel">
+        <div class="cardhead"><h3>Operations</h3><button class="btn ghost" data-home-tab="updates">Open operations</button></div>
+        <div class="ops-list">
+          <div class="ops-row"><span class="ops-icon">↻</span><div class="ops-copy"><b id="homeSyncState">Reading schedule…</b><small id="homeSyncDetail">—</small></div><button class="btn ghost" data-home-tab="updates">View</button></div>
+          <div class="ops-row"><span class="ops-icon">↑</span><div class="ops-copy"><b id="homeUpdateState">Reading version…</b><small id="homeUpdateDetail">—</small></div><button class="btn ghost" data-home-tab="updates">View</button></div>
+          <div class="ops-row"><span class="ops-icon">▦</span><div class="ops-copy"><b id="homeInstallState">Reading catalog…</b><small id="homeInstallDetail">—</small></div><button class="btn ghost" data-home-tab="software">Add</button></div>
+          <div class="ops-row"><span class="ops-icon">▣</span><div class="ops-copy"><b id="homeModeState">Desktop window</b><small id="homeModeDetail">Kiosk mode is opt-in and escapable</small></div><button class="btn" id="homeKioskBtn">Enter kiosk mode</button></div>
+        </div>
+        <p class="home-panel-note">This focus kiosk is an application shell, not Windows Assigned Access. Operator escape: <b>Ctrl+Shift+K</b>.</p>
+      </article>
+    </section>
+  </main>
+
   <!-- ========================== SOFTWARE / PICK ========================= -->
-  <main id="pickView" class="view">
+  <main id="pickView" class="view" hidden>
     <section class="profiles" id="profiles" aria-label="Install profiles"></section>
     <div class="workarea">
       <nav class="groupnav" id="groupNav" aria-label="Categories"></nav>

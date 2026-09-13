@@ -46,6 +46,7 @@ const DEFAULTS = Object.freeze({
   minimizeToTray: true,
   closeToTray: true,
   startMinimised: false,
+  kioskMode: false,                 // opt-in full-screen operator shell; Ctrl+Shift+K exits
   launchAtLogin: false,
   profile: {},                     // name/email/role/org + preferred install profile
   nodeBackdrop: true,              // the gradient node field behind the app

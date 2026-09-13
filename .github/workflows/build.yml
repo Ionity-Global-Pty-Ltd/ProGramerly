@@ -28,6 +28,7 @@ jobs:
         with: { node-version: 22 }
       - run: node scripts/syntax-check.js
       - run: node scripts/validate-catalog.js
+      - run: node scripts/check-programs.js
       - run: node scripts/dry-run.js full win
       - run: node scripts/dry-run.js full mac
       - run: node scripts/dry-run.js ai win
@@ -89,10 +90,44 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci || npm install
+      # The four Ionity utilities (~495 MB, three of them over GitHub's 100 MB
+      # per-file limit) are not in git. They live as assets on the dedicated
+      # `programs-v1` release and are pulled here so electron-builder's
+      # win.extraResources packs them into resources/programs. Every file is
+      # then checked against the size + SHA-256 pins in
+      # src/main/data/programs.json - a corrupted or tampered payload fails the
+      # build rather than shipping. If the payload release is not (yet)
+      # published the installer is still built: the app downloads and verifies
+      # each utility on first launch from that same release.
+      - name: Fetch bundled utilities payload (programs-v1)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $folder = 'PROGRAMS TO REF AND USE'
+          New-Item -ItemType Directory -Force -Path $folder | Out-Null
+          gh release download programs-v1 --repo $env:GITHUB_REPOSITORY --dir $folder --clobber 2>&1 | Write-Host
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::programs-v1 payload is not available to this build - installers will fetch the utilities on first launch"
+            Get-ChildItem $folder -File | Remove-Item -Force
+            exit 0
+          }
+          Get-ChildItem $folder | Format-Table Name, Length -AutoSize | Out-String | Write-Host
+          $ErrorActionPreference = 'Stop'
+          node scripts/check-programs.js --strict
+          if ($LASTEXITCODE -ne 0) { throw 'payload verification failed' }
       - name: Build Windows installer
         run: npx electron-builder --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Report what the installer bundles
+        shell: pwsh
+        run: |
+          $bundled = Get-ChildItem 'dist/win-unpacked/resources/programs' -File -ErrorAction SilentlyContinue
+          if ($bundled) { Write-Host "bundled utilities:"; $bundled | Format-Table Name, Length -AutoSize | Out-String | Write-Host }
+          else { Write-Host "::notice::no utilities bundled - the app downloads them on first launch" }
+          Get-ChildItem dist -File | Format-Table Name, Length -AutoSize | Out-String | Write-Host
       - uses: actions/upload-artifact@v4
         with:
           name: ProGramerly-windows
@@ -237,6 +272,15 @@ jobs:
             | Linux (any distro) | `ProGramerly-*.AppImage` |
             | Debian / Ubuntu | `programerly_*_amd64.deb` |
             | Fedora / RHEL / openSUSE | `programerly-*.x86_64.rpm` |
+
+            **Bundled Ionity utilities (Windows).** The Command Center launcher ships
+            Fanzi FanControl, IONITY AiOS Demo 1.6.0, CiC and MCP-AUDIT 1.15.0 inside the
+            Windows installer when the [`programs-v1`](https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/tag/programs-v1)
+            payload is available to the build, and otherwise downloads each one from that
+            release on first launch. Either way every executable is checked against the
+            byte size and SHA-256 pinned in `src/main/data/programs.json` before it runs.
+
+            Download page: https://www.ionity.fun
 
             ---
             Governance: Policy 986 AED - (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM

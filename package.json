@@ -1,8 +1,8 @@
 {
   "name": "programerly",
   "productName": "ProGramerly",
-  "version": "2.2.1",
-  "description": "ProGramerly - Basic Coding Software for All. One free desktop app that provisions a complete development environment on Windows and macOS, elevates once so nothing prompts again, diagnoses and repairs the machine it runs on, manages local LLMs and Python environments, opens any installed shell, reads sensors and drives RGB through the OpenRGB SDK, and - for its own maintainers - pushes itself to GitHub and cuts its own release.",
+  "version": "2.3.0",
+  "description": "ProGramerly - Basic Coding Software for All. One free desktop app that provisions a complete development environment on Windows, macOS and Linux, elevates once so nothing prompts again, diagnoses and repairs the machine it runs on, manages local LLMs and Python environments, opens any installed shell, reads sensors and drives RGB through the OpenRGB SDK, launches the bundled Ionity utilities from a Command Center with every executable SHA-256 pinned, and - for its own maintainers - pushes itself to GitHub and cuts its own release.",
   "main": "src/main/main.js",
   "author": {
     "name": "Johan Wilhelm van Antwerp",
@@ -20,9 +20,11 @@
     "start": "electron .",
     "dry-run": "node scripts/dry-run.js",
     "validate": "node scripts/validate-catalog.js",
+    "check:programs": "node scripts/check-programs.js",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
     "pack": "electron-builder --dir",
     "start:min": "electron . --minimised",
     "lint:syntax": "node scripts/syntax-check.js"

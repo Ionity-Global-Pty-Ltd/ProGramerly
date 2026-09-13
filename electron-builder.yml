@@ -18,6 +18,16 @@ files:
 win:
   icon: build/icon.ico
   requestedExecutionLevel: asInvoker   # app self-elevates only when installing
+  # Windows-only kiosk utilities. Keeping this platform-scoped avoids adding
+  # roughly 495 MB of unusable .exe payloads to macOS and Linux artifacts.
+  extraResources:
+    - from: "PROGRAMS TO REF AND USE"
+      to: programs
+      filter:
+        - CiC.exe
+        - Fanzi.FanControl.exe
+        - IONITY-AiOS-Demo-v1.6.0.exe
+        - MCP-AUDIT.Setup.1.15.0.exe
   target:
     - target: nsis
       arch: [x64, arm64]

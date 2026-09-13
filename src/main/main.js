@@ -347,9 +347,12 @@ function startServices() {
   firebaseAuth.onChange((snap) => emit('auth:changed', snap));
   try { firebaseAuth.restore(); } catch { /* nothing persisted */ }
 
-  // First-run hydrate of the bundled programs into the writable managed
-  // folder, off the critical path so it never delays the window.
-  setTimeout(() => { try { programs.hydrate(); } catch { /* best effort */ } }, 4000);
+  // Bundled programs remain in read-only application resources until the
+  // operator launches one. Staging almost 500 MB on every first run would be
+  // wasteful; programs.launch() verifies and copies exactly one on demand -
+  // or, in a build that ships without the payload, downloads that one from the
+  // pinned programs release. The renderer only ever sees progress packets.
+  programs.setProgressSink((packet) => emit('programs:progress', packet));
 
   try {
     tray.create({
@@ -455,6 +458,11 @@ ipcMain.handle('settings:set', (_e, patch) => {
   if (patch && patch.launchAtLogin !== undefined) {
     shortcut.setLaunchAtLogin(next.launchAtLogin, { minimised: true });
   }
+  if (patch && patch.kioskMode !== undefined && win && !win.isDestroyed()) {
+    // This is an explicit, reversible operator focus mode. The dashboard keeps
+    // a visible exit control and Ctrl+Shift+K sends this same setting back.
+    win.setKiosk(Boolean(next.kioskMode));
+  }
   tray.refreshMenu();
   emit('settings:changed', next);
   return next;
@@ -464,6 +472,7 @@ ipcMain.handle('settings:reset', () => {
   const next = settings.reset();
   sync.schedule();
   metrics.start(next.metricsInterval);
+  if (win && !win.isDestroyed()) win.setKiosk(Boolean(next.kioskMode));
   tray.refreshMenu();
   emit('settings:changed', next);
   return next;

@@ -161,6 +161,7 @@ contextBridge.exposeInMainWorld('programerly', {
     launch: (id) => ipcRenderer.invoke('programs:launch', id),
     hydrate: () => ipcRenderer.invoke('programs:hydrate'),
     openFolder: () => ipcRenderer.invoke('programs:openFolder'),
+    onProgress: (cb) => on('programs:progress', cb),
   },
 
   /* ------------------------------------------------------------- events */

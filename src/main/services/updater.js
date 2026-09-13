@@ -99,6 +99,10 @@ async function check() {
     );
     const usable = (Array.isArray(list) ? list : [])
       .filter((r) => !r.draft)
+      // Only application releases carry a version tag. The `programs-v1`
+      // payload release (bundled utilities) lives in the same repository and
+      // must never be mistaken for a newer ProGramerly.
+      .filter((r) => /^v?\d+(\.\d+)*/.test(String(r.tag_name || '')))
       .filter((r) => (s.updateChannel === 'prerelease' ? true : !r.prerelease))
       .sort((a, b) => cmpVersion(b.tag_name, a.tag_name));
 

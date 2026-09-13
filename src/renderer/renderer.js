@@ -1905,12 +1905,24 @@ api.onAction((a) => { if (a === 'speedtest') $('speedBtn').click(); });
 
 window.addEventListener('resize', () => { if (activeTab === 'monitor') drawNetChart(); });
 
-boot().catch((e) => {
-  // Built via the DOM, not an inline style attribute: this app runs under a
-  // strict CSP (style-src 'self'), which silently drops style="..." - and the
-  // one moment this message must be readable is when boot() has failed.
-  const pre = document.createElement('pre');
-  pre.className = 'bootfail';
-  pre.textContent = `Failed to start: ${e && e.message ? e.message : e}`;
-  document.body.prepend(pre);
-});
+(() => {
+  const showBootFailure = (error) => {
+    // Built via the DOM, not an inline style attribute: this app runs under a
+    // strict CSP (style-src 'self'), which silently drops style="..." - and the
+    // one moment this message must be readable is when boot() has failed.
+    const pre = document.createElement('pre');
+    pre.className = 'bootfail';
+    pre.textContent = `Failed to start: ${error && error.message ? error.message : error}`;
+    document.body.prepend(pre);
+  };
+  const start = () => boot().catch(showBootFailure);
+  const commandCenter = document.createElement('script');
+  commandCenter.src = 'dashboard.js';
+  commandCenter.addEventListener('load', start, { once: true });
+  commandCenter.addEventListener('error', () => {
+    $('homeView').hidden = true;
+    document.querySelector('[data-tab="home"]').hidden = true;
+    start();
+  }, { once: true });
+  document.body.appendChild(commandCenter);
+})();

@@ -1,0 +1,57 @@
+{
+  "_comment": "ProGramerly bundled utilities manifest. Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED. Every file is pinned by byte size and SHA-256; src/main/services/programs.js refuses to launch anything that does not match, and scripts/check-programs.js verifies the payload folder against this list before a build.",
+  "payload": {
+    "repo": "Ionity-Global-Pty-Ltd/ProGramerly",
+    "tag": "programs-v1",
+    "checksums": "SHA256-programs.txt",
+    "localFolder": "PROGRAMS TO REF AND USE",
+    "resourceFolder": "programs"
+  },
+  "programs": [
+    {
+      "id": "fanzi",
+      "name": "Fanzi FanControl",
+      "file": "Fanzi.FanControl.exe",
+      "desc": "Fan curve and cooling control (Ionity build of FanControl).",
+      "tags": ["hardware", "fans"],
+      "kind": "utility",
+      "version": null,
+      "expectedBytes": 146727885,
+      "sha256": "eb3c46043a0c113b56a64fcab81496e556b99756452a25185cca12240c5aa3cc"
+    },
+    {
+      "id": "aios-demo",
+      "name": "IONITY AiOS Demo",
+      "file": "IONITY-AiOS-Demo-v1.6.0.exe",
+      "desc": "IONITY AiOS demonstration environment.",
+      "tags": ["ionity", "ai", "demo"],
+      "kind": "application",
+      "version": "1.6.0",
+      "expectedBytes": 119566233,
+      "sha256": "6055982fda322c42d7619346f6edd3d9cafb040b9a5e37030d7e75d3163cfe80"
+    },
+    {
+      "id": "cic",
+      "name": "CiC",
+      "file": "CiC.exe",
+      "desc": "IONITY CiC workstation utility.",
+      "tags": ["ionity", "tools"],
+      "kind": "utility",
+      "version": null,
+      "expectedBytes": 32174678,
+      "sha256": "f53659597150a11d71efabeec7d992785495c2b78349f38b994f03ae57131201"
+    },
+    {
+      "id": "mcp-audit",
+      "name": "MCP-AUDIT",
+      "file": "MCP-AUDIT.Setup.1.15.0.exe",
+      "desc": "MCP server security auditor and setup package.",
+      "tags": ["mcp", "security", "audit"],
+      "kind": "installer",
+      "version": "1.15.0",
+      "requiresConfirmation": true,
+      "expectedBytes": 196282172,
+      "sha256": "086cd9c1b52584f3297223399273700e2d8aad3851214f02c3ab961e221bd6b4"
+    }
+  ]
+}
