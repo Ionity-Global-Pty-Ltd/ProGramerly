@@ -18,3 +18,7 @@ PROGRAMS TO REF AND USE/
 # local scratch
 do-commit.cmd
 commitmsg.txt
+
+# Dissected Ai-OS demo (400 MB extracted app) - reference only, never committed
+Claude outputs/aios-dissect/
+Claude outputs/ProGramerly-STATUS-2026-09-13.md

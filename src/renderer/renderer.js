@@ -1916,13 +1916,16 @@ window.addEventListener('resize', () => { if (activeTab === 'monitor') drawNetCh
     document.body.prepend(pre);
   };
   const start = () => boot().catch(showBootFailure);
-  const commandCenter = document.createElement('script');
-  commandCenter.src = 'dashboard.js';
-  commandCenter.addEventListener('load', start, { once: true });
-  commandCenter.addEventListener('error', () => {
-    $('homeView').hidden = true;
-    document.querySelector('[data-tab="home"]').hidden = true;
+  // The Ai-OS shell wraps boot() and showTab(); if it fails to load the app
+  // still starts in its plain form so nothing is ever unreachable.
+  const shell = document.createElement('script');
+  shell.src = 'shell.js';
+  shell.addEventListener('load', start, { once: true });
+  shell.addEventListener('error', () => {
+    document.body.classList.remove('aios');
+    const s = $('shell'); if (s) s.hidden = true;
+    const store = $('apps-store'); if (store) { store.removeAttribute('aria-hidden'); store.id = 'apps-fallback'; }
     start();
   }, { once: true });
-  document.body.appendChild(commandCenter);
+  document.body.appendChild(shell);
 })();

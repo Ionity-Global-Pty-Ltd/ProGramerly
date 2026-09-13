@@ -822,24 +822,31 @@ node scripts/syntax-check.js          # parse every shipped .js and .json
 
 ---
 
-## Command Center — the home screen
+## The Ai-OS shell — the home screen
 
-Since 2.3.0 the app opens on **Home**: a live operator surface built from the
-same telemetry the tray already collects. CPU, memory, thermals, system disk and
-network are painted every tick with warning and critical thresholds; the health
-line summarises pressure in words ("memory pressure · disk space low") instead
-of making you read five gauges. A command box (**Ctrl+K** from anywhere) finds
-any workspace or bundled utility by name or keyword and opens it on Enter. The
-local-AI panel probes Ollama and LM Studio and hands a prompt straight to the AI
-tab. Operations shows the sync schedule, the update state and the managed
-package count without leaving the page.
+Since 3.1.0 ProGramerly opens in the **IONITY Ai-OS operator layout** — the
+DOME shell, lifted from the Ai-OS 1.6.0 build and driven by ProGramerly's own
+data. Top bar: clock, a status capsule that says in words what the machine is
+doing ("memory pressure · disk space low"), the local-AI core chip, privilege
+badge, kiosk and power. Hero: a greeting and **one ask box** — type a question
+and the local Ollama model answers in a thread right there; type a workspace
+name and it opens. Lower deck: the **workstation dome** (five strata — Hardware,
+System, Storage, Toolchain, Local AI — read live, click a band to open its
+workspace), four stats, and module tiles. Bottom: a **dock**. Every workspace —
+Software, Local AI, Projects, Monitor, Network, Hardware, Doctor, Terminals,
+Maintenance, Operations, Settings — opens as an app window over the deck; Esc
+or the × parks it again with its state intact.
 
-**Kiosk mode** is an opt-in, full-screen application shell for a workstation
-that only runs ProGramerly — not Windows Assigned Access. It is a persisted
-setting, it always keeps a visible **Exit kiosk** control in the header, and
-**Ctrl+Shift+K** toggles it from anywhere. The main process applies
-`BrowserWindow.setKiosk()` only in response to that explicit setting message, so
-nothing can trap the operator by accident.
+The Ionity tools sit in the same shell: **Fan control** opens the Hardware
+workspace with an *Open Fanzi FanControl* action in the window head, **CiC** is
+a dock button and a tile, and the internal MCP audit tool is a violet side
+button on the right of the dock (maintainers; asks before it runs). **Ctrl+K**
+focuses the ask box from anywhere; **Ctrl+Shift+K** toggles kiosk mode, which
+always keeps a visible exit.
+
+Implementation note: `src/renderer/shell.js` wraps `boot()` and `showTab()`
+from `renderer.js` and moves each existing view element into the app window on
+open, so all workspace logic is unchanged; `aios.css` draws only the shell.
 
 ### Ionity tools built in
 

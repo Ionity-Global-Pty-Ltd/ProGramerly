@@ -6,155 +6,151 @@
         content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'" />
   <title>ProGramerly - Basic Coding Software for All</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="dashboard.css" />
+  <link rel="stylesheet" href="aios.css" />
 </head>
-<body>
-  <canvas id="nodefield" aria-hidden="true"></canvas>
-  <div class="grain" aria-hidden="true"></div>
+<body class="aios">
+  <div id="field" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+  <div id="grain" aria-hidden="true"></div>
 
-  <header class="topbar">
-    <div class="brand">
-      <img src="assets/logo.png" alt="Ionity" class="brand-mark" />
-      <div class="brand-text">
-        <h1>ProGramerly</h1>
-        <p>Basic Coding Software for All <span class="sep">·</span> <span id="appVersion">v1.1.0</span></p>
+  <div id="shell">
+    <header id="topbar">
+      <div class="tb-side">
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.1.0</span></span>
+        <span class="tb-divider"></span>
+        <span id="clock">--:--</span>
+        <span id="date">Local time</span>
       </div>
-    </div>
+      <div id="status-capsule"><span class="dot"></span><span id="status-text">Reading this machine…</span></div>
+      <div class="tb-side right">
+        <button id="engine-chip" class="off" title="Local AI core (Ollama on this machine)"><i></i><span id="engine-label">Local core · scanning</span></button>
+        <span class="badge" id="osBadge">detecting…</span>
+        <span class="badge" id="privBadge">…</span>
+        <button class="badge badge-btn" id="kioskExitBtn" hidden>Exit kiosk · Ctrl+Shift+K</button>
+        <button class="badge badge-btn" id="elevateBtn" hidden title="Restart ProGramerly elevated - one prompt, then nothing asks again">Run as admin</button>
+        <div class="user-chip" id="userChip" title="Profile"><span class="avatar" id="who-initial">P</span><span class="who"><b id="who-name">Operator</b><span id="who-role">Ionity workstation</span></span></div>
+        <button class="tb-icon" id="alert-ic" title="Updates &amp; alerts" data-app="updates"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg><span class="nb" id="updateDot" hidden>1</span></button>
+        <button class="tb-icon" id="kiosk-ic" title="Kiosk mode (Ctrl+Shift+K)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M8 8l4 3-4 3"/></svg></button>
+        <button class="tb-icon" id="power-btn" title="Power"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg></button>
+      </div>
+    </header>
 
-    <nav class="tabs" id="tabs" aria-label="Sections">
-      <button class="tab active" data-tab="home">Home</button>
-      <button class="tab" data-tab="software">Software</button>
-      <button class="tab" data-tab="monitor">Monitor</button>
-      <button class="tab" data-tab="network">Network</button>
-      <button class="tab" data-tab="ai">AI</button>
-      <button class="tab" data-tab="projects">Projects</button>
-      <button class="tab" data-tab="terminals">Terminals</button>
-      <button class="tab" data-tab="hardware">Hardware</button>
-      <button class="tab" data-tab="maintenance">Maintenance</button>
-      <button class="tab" data-tab="doctor">Doctor</button>
-      <button class="tab" data-tab="updates">Updates<span class="tabdot" id="updateDot" hidden></span></button>
-      <button class="tab" data-tab="settings">Settings</button>
-    </nav>
-
-    <div class="badges">
-      <span class="badge" id="homeLiveBadge">WARMING UP</span>
-      <span class="badge" id="osBadge">detecting…</span>
-      <span class="badge" id="privBadge">…</span>
-      <button class="badge badge-btn" id="kioskExitBtn" hidden>Exit kiosk · Ctrl+Shift+K</button>
-      <button class="badge badge-btn" id="elevateBtn" hidden>Restart as Administrator</button>
-    </div>
-  </header>
-
-  <!-- ========================= COMMAND CENTER ========================== -->
-  <main id="homeView" class="view">
-    <section class="home-hero">
-      <div class="home-hero-copy">
-        <p class="home-eyebrow">IONITY WORKSTATION OS · LOCAL OPERATOR SHELL</p>
-        <h2 id="homeGreeting">Command Center</h2>
-        <p class="home-machine-line" id="homeMachineLine">Reading this machine…</p>
-        <div class="home-command-wrap">
-          <div class="home-command">
-            <span class="home-command-icon" aria-hidden="true">⌘</span>
-            <input id="homeCommand" type="text" autocomplete="off" aria-label="Find a workspace or launch a utility" placeholder="Find a workspace or launch a utility…" />
-            <button class="btn ghost" id="homeCommandBtn">Open <kbd>Ctrl K</kbd></button>
+    <main id="main">
+      <section id="hero">
+        <div class="eyebrow">Ionity workstation · ProGramerly</div>
+        <h1 id="greeting">Command Center</h1>
+        <p class="sub" id="homeMachineLine">Reading this machine…</p>
+        <div id="chat">
+          <div id="thread" aria-live="polite"></div>
+          <div id="ask">
+            <span id="ask-orb" class="ai-orb off"></span>
+            <input id="ask-input" type="text" autocomplete="off" placeholder="Ask the local core, or type a workspace name… (Ctrl+K)" aria-label="Ask" />
+            <kbd>Enter</kbd>
+            <button class="send" id="ask-send" title="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </div>
-          <div class="home-command-results" id="homeCommandResults" role="listbox" hidden></div>
-        </div>
-      </div>
-      <div class="home-clock-panel">
-        <div class="home-clock" id="homeClock">--:--</div>
-        <div class="home-date" id="homeDate">Local time</div>
-        <div class="home-health ok" id="homeHealth"><span id="homeHealthText">Reading system health…</span></div>
-        <div class="home-metrics-at" id="homeMetricsAt">collecting first sample</div>
-      </div>
-    </section>
-
-    <section class="home-metrics" aria-label="Live system telemetry">
-      <article class="dash-metric" id="homeCpuMetric">
-        <div class="metric-head"><span>CPU</span><span>◉</span></div>
-        <div class="metric-value" id="homeCpuValue">—</div>
-        <div class="metric-note" id="homeCpuNote">reading load…</div>
-        <div class="metric-track"><i id="homeCpuBar"></i></div>
-      </article>
-      <article class="dash-metric" id="homeMemMetric">
-        <div class="metric-head"><span>Memory</span><span>▤</span></div>
-        <div class="metric-value" id="homeMemValue">—</div>
-        <div class="metric-note" id="homeMemNote">reading memory…</div>
-        <div class="metric-track"><i id="homeMemBar"></i></div>
-      </article>
-      <article class="dash-metric" id="homeTempMetric">
-        <div class="metric-head"><span>Thermals</span><span>⌁</span></div>
-        <div class="metric-value" id="homeTempValue">—</div>
-        <div class="metric-note" id="homeTempNote">probing sensors…</div>
-        <div class="metric-track"><i id="homeTempBar"></i></div>
-      </article>
-      <article class="dash-metric" id="homeDiskMetric">
-        <div class="metric-head"><span>System disk</span><span>◫</span></div>
-        <div class="metric-value" id="homeDiskValue">—</div>
-        <div class="metric-note" id="homeDiskNote">reading drives…</div>
-        <div class="metric-track"><i id="homeDiskBar"></i></div>
-      </article>
-      <article class="dash-metric" id="homeNetMetric">
-        <div class="metric-head"><span>Network</span><span>◎</span></div>
-        <div class="metric-value" id="homeNetValue">—</div>
-        <div class="metric-note" id="homeNetNote">waiting for counters…</div>
-        <div class="net-pulse" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      </article>
-    </section>
-
-    <section class="home-cockpit">
-      <article class="card home-panel home-program-panel">
-        <div class="cardhead">
-          <h3>Ionity tools</h3>
-          <div class="cardactions">
-            <button class="btn ghost" id="homeProgramsFolder">Managed folder</button>
-            <button class="btn ghost" id="homeProgramsRefresh">Refresh</button>
+          <div id="suggest">
+            <button data-say="How healthy is this workstation right now?">Health brief</button>
+            <button data-say="Plan my next coding task as a short checklist.">Plan a task</button>
+            <button data-say="I will paste an error log next - find the likely root cause.">Debug a log</button>
+            <button data-open="software">Install software</button>
+            <button data-open="fans">Fan control</button>
+            <button class="setup" id="ai-setup-chip" hidden>Set up local AI</button>
           </div>
         </div>
-        <div class="program-grid" id="homePrograms"><p class="home-empty">Reading integrated tools…</p></div>
-        <p class="home-panel-note" id="homeProgramMessage" aria-live="polite">Checking packaged resources…</p>
-      </article>
+      </section>
 
-      <article class="card home-panel home-ai-panel">
-        <div class="cardhead"><h3>Local AI copilot</h3><div class="cardactions"><button class="btn ghost" id="homeAiSetup" hidden>Set up local AI</button><button class="btn ghost" id="homeAiRefresh">Probe</button></div></div>
-        <div class="ai-state"><span class="ai-orb" id="homeAiLamp"></span><div><b id="homeAiState">Scanning local models…</b><small id="homeAiDetail">Ollama runs on this machine; nothing leaves it.</small></div></div>
-        <textarea id="homeAiPrompt" rows="3" placeholder="Give your local model a task…"></textarea>
-        <div class="ai-seeds">
-          <button class="ai-seed" data-ai-seed="Explain the health of this development workstation and suggest safe next checks.">Health brief</button>
-          <button class="ai-seed" data-ai-seed="Help me plan the next coding task as a concise checklist.">Plan a task</button>
-          <button class="ai-seed" data-ai-seed="Review an error log I paste next and identify the likely root cause.">Debug a log</button>
+      <section id="deck">
+        <button id="dome-card" class="sh-card" title="The workstation dome - open the Monitor">
+          <div class="card-head">
+            <span class="card-title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17a9 9 0 0 1 18 0"/><path d="M2 17h20"/><path d="M6 20h12"/><path d="M12 8v-3"/></svg>Workstation dome</span>
+            <span class="live-pill" id="dome-pill"><i></i>Live</span>
+          </div>
+          <div class="card-sub"><b id="dome-read">Five strata</b> · <span id="dome-note">hardware to projects, read live</span></div>
+          <div id="dome-body">
+            <svg id="dome-svg" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+            <div id="dome-legend"></div>
+          </div>
+        </button>
+        <div id="right-col">
+          <div id="stats">
+            <div class="stat" id="st-cpu"><div class="k" id="st-cpu-k">—</div><div class="l">CPU</div><div class="t" id="st-cpu-t">reading load…</div><div class="bar"><i id="st-cpu-b"></i></div></div>
+            <div class="stat" id="st-mem"><div class="k" id="st-mem-k">—</div><div class="l">Memory</div><div class="t" id="st-mem-t">reading memory…</div><div class="bar"><i id="st-mem-b"></i></div></div>
+            <div class="stat" id="st-disk"><div class="k" id="st-disk-k">—</div><div class="l">System disk</div><div class="t" id="st-disk-t">reading drives…</div><div class="bar"><i id="st-disk-b"></i></div></div>
+            <div class="stat" id="st-net"><div class="k" id="st-net-k">—</div><div class="l">Network</div><div class="t" id="st-net-t">waiting for counters…</div><div class="bar"><i id="st-net-b"></i></div></div>
+          </div>
+          <div id="modules" aria-label="Workspaces and tools"></div>
         </div>
-        <div class="ai-action-row"><small>Ctrl+Enter · local inference only</small><button class="btn primary" id="homeAiOpen">Open in AI</button></div>
-      </article>
+      </section>
+    </main>
 
-      <article class="card home-panel home-spaces-panel">
-        <div class="cardhead"><h3>Workspaces</h3><span class="muted">operator-ready tools</span></div>
-        <div class="space-grid">
-          <button class="space-tile" data-home-tab="software"><span class="space-glyph">＋</span><b>Software</b><small>Provision a complete development stack</small></button>
-          <button class="space-tile" data-home-tab="ai"><span class="space-glyph">AI</span><b>Local AI</b><small>Models, chat, GPU and environments</small></button>
-          <button class="space-tile" data-home-tab="projects"><span class="space-glyph">◇</span><b>Projects</b><small>Git state across every workspace</small></button>
-          <button class="space-tile" data-home-tab="monitor"><span class="space-glyph">◉</span><b>Monitor</b><small>Detailed live machine telemetry</small></button>
-          <button class="space-tile" data-home-tab="network"><span class="space-glyph">◎</span><b>Network</b><small>Global sweep and throughput</small></button>
-          <button class="space-tile" data-home-tab="hardware"><span class="space-glyph">⚙</span><b>Hardware</b><small>Sensors, cooling, RGB and RAM</small></button>
-          <button class="space-tile" data-home-tab="doctor"><span class="space-glyph">✚</span><b>Doctor</b><small>Diagnostics, cleanup and ports</small></button>
-          <button class="space-tile" data-home-tab="terminals"><span class="space-glyph">&gt;_</span><b>Terminals</b><small>Open a real installed shell</small></button>
-        </div>
-      </article>
+    <footer id="dockwrap">
+      <nav id="dock" aria-label="Dock">
+        <span class="dock-side left">
+        <button class="dock-btn" data-app="software"><span class="tip">Software</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><rect x="4" y="4" width="16" height="16" rx="4"/></svg></button>
+        <button class="dock-btn" data-app="ai"><span class="tip">Local AI</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
+        <button class="dock-btn" data-app="projects"><span class="tip">Projects</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></button>
+        <button class="dock-btn" data-app="monitor"><span class="tip">Monitor</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
+        <button class="dock-btn" data-app="network"><span class="tip">Network</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></button>
+        <button class="dock-btn" data-app="hardware"><span class="tip">Hardware</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg></button>
+        <button class="dock-btn" data-app="doctor"><span class="tip">Doctor</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-7-11a7 7 0 0 1 14 0c0 6.5-7 11-7 11z"/><path d="M12 8v6M9 11h6"/></svg></button>
+        <button class="dock-btn" data-app="terminals"><span class="tip">Terminals</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg></button>
+        </span>
+        <span class="dock-sep"></span>
+        <button id="dock-orb" class="dock-btn" data-app="_ask" title="Ask the local core"><span class="tip">Ask</span><span class="ai-orb"></span></button>
+        <span class="dock-sep"></span>
+        <span class="dock-side right">
+        <button class="dock-btn" data-app="fans"><span class="tip">Fan control</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 2-7 5-7 1.5 0 2 1.5 1 3-1.2 1.8-3.5 3-6 4M14 12c4 0 7 2 7 5 0 1.5-1.5 2-3 1-1.8-1.2-3-3.5-4-6M12 14c0 4-2 7-5 7-1.5 0-2-1.5-1-3 1.2-1.8 3.5-3 6-4M10 12c-4 0-7-2-7-5 0-1.5 1.5-2 3-1 1.8 1.2 3 3.5 4 6"/></svg></button>
+        <button class="dock-btn" data-app="cic"><span class="tip">CiC</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21"/></svg></button>
+        <button class="dock-btn side" data-app="mcp"><span class="tip">MCP audit · internal</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></button>
+        <button class="dock-btn" data-app="maintenance"><span class="tip">Maintenance</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2 2 0 0 1-2.8-2.8l9.4-9.4z"/><path d="M15 3a6 6 0 0 1 6 6"/></svg></button>
+        <button class="dock-btn" data-app="updates"><span class="tip">Updates</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg><span class="nb" id="dockUpdateDot" hidden></span></button>
+        <button class="dock-btn" data-app="settings"><span class="tip">Settings</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+        <button class="dock-btn" data-app="about"><span class="tip">About</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+        </span>
+      </nav>
+      <span id="build-chip"><b>ProGramerly</b> · <span id="build-label">Policy 986 AED</span></span>
+    </footer>
+  </div>
 
-      <article class="card home-panel home-ops-panel">
-        <div class="cardhead"><h3>Operations</h3><button class="btn ghost" data-home-tab="updates">Open operations</button></div>
-        <div class="ops-list">
-          <div class="ops-row"><span class="ops-icon">↻</span><div class="ops-copy"><b id="homeSyncState">Reading schedule…</b><small id="homeSyncDetail">—</small></div><button class="btn ghost" data-home-tab="updates">View</button></div>
-          <div class="ops-row"><span class="ops-icon">↑</span><div class="ops-copy"><b id="homeUpdateState">Reading version…</b><small id="homeUpdateDetail">—</small></div><button class="btn ghost" data-home-tab="updates">View</button></div>
-          <div class="ops-row"><span class="ops-icon">▦</span><div class="ops-copy"><b id="homeInstallState">Reading catalog…</b><small id="homeInstallDetail">—</small></div><button class="btn ghost" data-home-tab="software">Add</button></div>
-          <div class="ops-row"><span class="ops-icon">▣</span><div class="ops-copy"><b id="homeModeState">Desktop window</b><small id="homeModeDetail">Kiosk mode is opt-in and escapable</small></div><button class="btn" id="homeKioskBtn">Enter kiosk mode</button></div>
-        </div>
-        <p class="home-panel-note">This focus kiosk is an application shell, not Windows Assigned Access. Operator escape: <b>Ctrl+Shift+K</b>.</p>
-      </article>
-    </section>
-  </main>
+  <!-- ===================== APP WINDOW (workspaces open here) ==================== -->
+  <div id="overlay" aria-hidden="true">
+    <div id="appwin" role="dialog" aria-modal="true" aria-labelledby="aw-name">
+      <div class="aw-head">
+        <div class="aw-title"><span id="aw-glyph" class="tile-glyph"></span><h2 id="aw-name">Workspace<span id="aw-sub"></span></h2></div>
+        <div class="aw-tools"><span id="aw-extra"></span><button id="aw-close" class="aw-close" title="Close (Esc)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      </div>
+      <div id="aw-content"></div>
+    </div>
+  </div>
 
-  <!-- ========================== SOFTWARE / PICK ========================= -->
+  <div id="powermenu" hidden>
+    <button id="pm-about"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>About ProGramerly</button>
+    <button id="pm-kiosk"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M8 8l4 3-4 3"/></svg>Toggle kiosk mode</button>
+    <button id="pm-log"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg>Open the log</button>
+    <div class="pm-sep"></div>
+    <button id="pm-quit" class="danger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>Quit ProGramerly</button>
+  </div>
+  <!-- ============================ SUMMARY ============================== -->
+  <div class="sheet" id="summarySheet" hidden>
+    <div class="sheet-card">
+      <h2 id="summaryTitle">Finished</h2>
+      <p id="summaryBody"></p>
+      <div id="rebootNote" class="note" hidden>
+        WSL was installed. Restart Windows to finish setting it up.
+      </div>
+      <div class="sheet-actions">
+        <button class="btn ghost" id="summaryLog">Open log file</button>
+        <button class="btn ghost" id="summaryRoot">Open dev folder</button>
+        <button class="btn" id="summaryClose">Back to list</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"><span class="dot"></span><span id="toast-text"></span></div>
+
+  <!-- =========== WORKSPACES - parked here, moved into the app window on open =========== -->
+  <div id="apps-store" aria-hidden="true">
+    <div id="softwareApp">
+<!-- ========================== SOFTWARE / PICK ========================= -->
   <main id="pickView" class="view" hidden>
     <section class="profiles" id="profiles" aria-label="Install profiles"></section>
     <div class="workarea">
@@ -163,7 +159,7 @@
     </div>
   </main>
 
-  <!-- ============================== RUN ================================ -->
+<!-- ============================== RUN ================================ -->
   <main id="runView" class="view" hidden>
     <section class="runhead">
       <div class="runtitle">
@@ -184,7 +180,24 @@
     </div>
   </main>
 
-  <!-- ============================ MONITOR ============================== -->
+<footer class="bottombar">
+    <div class="foot-meta">
+      <span id="selCount">0 selected</span>
+      <span class="sep">·</span>
+      <span id="selSize">—</span>
+      <span class="sep">·</span>
+      <span class="muted">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd</span>
+    </div>
+    <div class="foot-actions">
+      <button class="btn ghost" id="openRootBtn">Dev folder</button>
+      <button class="btn ghost" id="logBtn">Log</button>
+      <button class="btn ghost" id="cancelBtn" hidden>Stop</button>
+      <button class="btn primary" id="installBtn" disabled>Install</button>
+    </div>
+  </footer>
+    </div>
+
+<!-- ============================ MONITOR ============================== -->
   <main id="monitorView" class="view pad" hidden>
     <div class="cardgrid">
       <section class="card gaugecard">
@@ -225,7 +238,7 @@
     </section>
   </main>
 
-  <!-- ============================ NETWORK ============================== -->
+<!-- ============================ NETWORK ============================== -->
   <main id="networkView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
@@ -269,7 +282,7 @@
     </section>
   </main>
 
-  <!-- ========================== MAINTENANCE ============================ -->
+<!-- ========================== MAINTENANCE ============================ -->
   <main id="maintView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
@@ -305,7 +318,7 @@
     </section>
   </main>
 
-  <!-- =============================== AI ================================ -->
+<!-- =============================== AI ================================ -->
   <main id="aiView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
@@ -384,7 +397,7 @@
     </section>
   </main>
 
-  <!-- ============================= PROJECTS ============================= -->
+<!-- ============================= PROJECTS ============================= -->
   <main id="projectsView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
@@ -413,7 +426,7 @@
     </section>
   </main>
 
-  <!-- ============================ TERMINALS ============================= -->
+<!-- ============================ TERMINALS ============================= -->
   <main id="terminalsView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
@@ -434,7 +447,7 @@
     </section>
   </main>
 
-  <!-- ============================ HARDWARE ============================== -->
+<!-- ============================ HARDWARE ============================== -->
   <main id="hardwareView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
@@ -513,7 +526,7 @@
     </section>
   </main>
 
-  <!-- ============================= DOCTOR ============================== -->
+<!-- ============================= DOCTOR ============================== -->
   <main id="doctorView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
@@ -579,7 +592,7 @@
     </section>
   </main>
 
-  <!-- ============================ UPDATES ============================== -->
+<!-- ============================ UPDATES ============================== -->
   <main id="updatesView" class="view pad" hidden>
     <section class="card wide" id="appUpdateCard">
       <div class="cardhead">
@@ -650,7 +663,7 @@
     </section>
   </main>
 
-  <!-- ============================ SETTINGS ============================= -->
+<!-- ============================ SETTINGS ============================= -->
   <main id="settingsView" class="view pad" hidden>
     <section class="card wide" id="profileCard">
       <div class="cardhead">
@@ -711,40 +724,8 @@
       <dl class="kv" id="aboutKv"></dl>
     </section>
   </main>
-
-  <!-- ============================ SUMMARY ============================== -->
-  <div class="sheet" id="summarySheet" hidden>
-    <div class="sheet-card">
-      <h2 id="summaryTitle">Finished</h2>
-      <p id="summaryBody"></p>
-      <div id="rebootNote" class="note" hidden>
-        WSL was installed. Restart Windows to finish setting it up.
-      </div>
-      <div class="sheet-actions">
-        <button class="btn ghost" id="summaryLog">Open log file</button>
-        <button class="btn ghost" id="summaryRoot">Open dev folder</button>
-        <button class="btn" id="summaryClose">Back to list</button>
-      </div>
-    </div>
   </div>
 
-  <footer class="bottombar">
-    <div class="foot-meta">
-      <span id="selCount">0 selected</span>
-      <span class="sep">·</span>
-      <span id="selSize">—</span>
-      <span class="sep">·</span>
-      <span class="muted">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd</span>
-    </div>
-    <div class="foot-actions">
-      <button class="btn ghost" id="openRootBtn">Dev folder</button>
-      <button class="btn ghost" id="logBtn">Log</button>
-      <button class="btn ghost" id="cancelBtn" hidden>Stop</button>
-      <button class="btn primary" id="installBtn" disabled>Install</button>
-    </div>
-  </footer>
-
-  <script src="nodes.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>
