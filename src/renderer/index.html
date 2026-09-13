@@ -105,19 +105,19 @@
     <section class="home-cockpit">
       <article class="card home-panel home-program-panel">
         <div class="cardhead">
-          <h3>Local utility launcher</h3>
+          <h3>Ionity tools</h3>
           <div class="cardactions">
             <button class="btn ghost" id="homeProgramsFolder">Managed folder</button>
             <button class="btn ghost" id="homeProgramsRefresh">Refresh</button>
           </div>
         </div>
-        <div class="program-grid" id="homePrograms"><p class="home-empty">Reading bundled utilities…</p></div>
-        <p class="home-panel-note" id="homeProgramMessage" aria-live="polite">Checking real packaged resources…</p>
+        <div class="program-grid" id="homePrograms"><p class="home-empty">Reading integrated tools…</p></div>
+        <p class="home-panel-note" id="homeProgramMessage" aria-live="polite">Checking packaged resources…</p>
       </article>
 
       <article class="card home-panel home-ai-panel">
-        <div class="cardhead"><h3>Local AI copilot</h3><div class="cardactions"><button class="btn ghost" id="homeAiRefresh">Probe</button></div></div>
-        <div class="ai-state"><span class="ai-orb" id="homeAiLamp"></span><div><b id="homeAiState">Scanning local models…</b><small id="homeAiDetail">Ollama and LM Studio stay on this machine.</small></div></div>
+        <div class="cardhead"><h3>Local AI copilot</h3><div class="cardactions"><button class="btn ghost" id="homeAiSetup" hidden>Set up local AI</button><button class="btn ghost" id="homeAiRefresh">Probe</button></div></div>
+        <div class="ai-state"><span class="ai-orb" id="homeAiLamp"></span><div><b id="homeAiState">Scanning local models…</b><small id="homeAiDetail">Ollama runs on this machine; nothing leaves it.</small></div></div>
         <textarea id="homeAiPrompt" rows="3" placeholder="Give your local model a task…"></textarea>
         <div class="ai-seeds">
           <button class="ai-seed" data-ai-seed="Explain the health of this development workstation and suggest safe next checks.">Health brief</button>

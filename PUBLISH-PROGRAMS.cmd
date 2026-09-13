@@ -8,15 +8,14 @@ echo  ProGramerly - publish the programs-v1 payload release
 echo  Ionity (Pty) Ltd ^| AEDI - Policy 986 AED
 echo ==========================================================
 echo.
-echo  Uploads the four Ionity utilities (~495 MB) from
+echo  Uploads the integrated Ionity tools (~495 MB) from
 echo    "PROGRAMS TO REF AND USE\"
-echo  as assets on the dedicated pre-release tag programs-v1 in
-echo    https://github.com/Ionity-Global-Pty-Ltd/ProGramerly
+echo  as assets on the tag programs-v1 in the PRIVATE repository
+echo    https://github.com/Ionity-Global-Pty-Ltd/programerly-payload
 echo.
-echo  The Windows CI runner bundles them into the installer from there,
-echo  and the app downloads + SHA-256-verifies them on first launch when
-echo  a build ships without them. Safe to re-run: existing assets are
-echo  replaced (--clobber), nothing else is touched.
+echo  The Windows CI runner (secret PAYLOAD_TOKEN) bundles them into the
+echo  installer from there. They are never published for separate
+echo  download. Safe to re-run: existing assets are replaced (--clobber).
 echo.
 
 echo [1/4] Verifying the payload against src\main\data\programs.json
@@ -36,16 +35,16 @@ if errorlevel 1 (
 )
 echo.
 
-set REPO=Ionity-Global-Pty-Ltd/ProGramerly
+set REPO=Ionity-Global-Pty-Ltd/programerly-payload
 set TAG=programs-v1
 set SRC=PROGRAMS TO REF AND USE
 
 echo [3/4] Creating the release if it does not exist yet
 gh release view %TAG% --repo %REPO% >nul 2>&1
 if errorlevel 1 (
-  gh release create %TAG% --repo %REPO% --target main --prerelease ^
-    --title "Bundled utilities payload (programs-v1)" ^
-    --notes "Bundled Ionity utilities consumed by ProGramerly's Command Center launcher (Windows). The Windows CI runner packs these into resources/programs; builds that ship without them download each one from here on first launch. Every file is pinned by byte size and SHA-256 in src/main/data/programs.json and verified before it runs. Not an application release - install ProGramerly from the latest v* release. Download page: https://www.ionity.fun  --  Governance: Policy 986 AED - (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM"
+  gh release create %TAG% --repo %REPO% --target main ^
+    --title "ProGramerly bundled utilities payload (programs-v1)" ^
+    --notes "Private payload consumed by the ProGramerly Windows CI job. Pins live in ProGramerly/src/main/data/programs.json. Not for independent distribution. Policy 986 AED - (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM"
   if errorlevel 1 (
     echo   Could not create the release - check the messages above.
     pause
@@ -76,9 +75,11 @@ echo ==========================================================
 echo  Published. Verify here:
 echo    https://github.com/%REPO%/releases/tag/%TAG%
 echo.
-echo  Then re-run the Windows build so the installer bundles them:
-echo    gh workflow run build.yml --repo %REPO% -f release_tag=v2.3.0
-echo  or simply push the next v* tag.
+echo  The ProGramerly repository needs a read-only token for this repo as
+echo  the Actions secret PAYLOAD_TOKEN (fine-grained PAT, Contents: read):
+echo    gh secret set PAYLOAD_TOKEN --repo Ionity-Global-Pty-Ltd/ProGramerly
+echo  Then push the next v* tag, or re-run the build onto an existing one:
+echo    gh workflow run build.yml --repo Ionity-Global-Pty-Ltd/ProGramerly -f release_tag=v3.0.5
 echo ==========================================================
 echo.
 pause

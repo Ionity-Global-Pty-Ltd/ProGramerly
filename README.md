@@ -841,40 +841,51 @@ setting, it always keeps a visible **Exit kiosk** control in the header, and
 `BrowserWindow.setKiosk()` only in response to that explicit setting message, so
 nothing can trap the operator by accident.
 
-### Bundled Ionity utilities
+### Ionity tools built in
 
-The Home screen also launches four Windows programs that ship with ProGramerly:
+ProGramerly is the combined Ionity workstation. The tools below are
+capabilities of the app, not products of their own, and they are never offered
+for separate download:
 
-| Utility | File | Kind |
-| --- | --- | --- |
-| Fanzi FanControl | `Fanzi.FanControl.exe` | utility |
-| IONITY AiOS Demo 1.6.0 | `IONITY-AiOS-Demo-v1.6.0.exe` | application |
-| CiC | `CiC.exe` | utility |
-| MCP-AUDIT 1.15.0 | `MCP-AUDIT.Setup.1.15.0.exe` | installer (asks first) |
+| Capability | Where it lives in the app |
+| --- | --- |
+| **Fan control** (Ionity FanControl build, "Fanzi") | Hardware workspace, next to the sensors it reads |
+| **AiOS operator layout** | The layout the Command Center follows - telemetry on top, one command box, tools as tiles, escapable kiosk |
+| **CiC** | One tile in the Command Center |
+| an internal audit side tool | maintainers only, asks before it runs |
 
-They are ~495 MB together and three of them are over GitHub's 100 MB per-file
-limit, so they are **not in git**. They live as assets on the dedicated
-[`programs-v1`](https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/tag/programs-v1)
-release and `src/main/data/programs.json` pins each one by byte size and
-SHA-256. Three paths lead to the same verified result:
+Together they are ~495 MB, three files over GitHub's 100 MB per-file limit, so
+they are **not in git**. They live as assets on the `programs-v1` release of the
+**private** repository `Ionity-Global-Pty-Ltd/programerly-payload`, and
+`src/main/data/programs.json` pins each one by byte size and SHA-256:
 
-- **Windows installer from CI.** The `windows` job downloads the payload with
-  `gh release download programs-v1`, runs `scripts/check-programs.js --strict`
-  (size + hash for every file, and nothing unpinned in the folder), and
-  electron-builder packs them into `resources/programs`.
-- **Portable build, dev checkout, or an installer built while the payload was
-  unavailable.** `programs.js` finds nothing in resources, downloads that one
-  file from the release into a temporary name inside the managed folder,
-  byte-counts and hashes it, and only then renames it into place. Progress is
-  streamed to the tile in the Home screen.
+- **Windows installer from CI.** The `windows` job downloads the payload with a
+  read-only token (repository secret `PAYLOAD_TOKEN`), runs
+  `scripts/check-programs.js --strict` (size + hash for every file, nothing
+  unpinned in the folder), and electron-builder packs them into
+  `resources/programs`. Without the token the installer still builds and the
+  Command Center shows those tiles as "not in this build".
 - **Local build on the maintainer machine.** The `PROGRAMS TO REF AND USE\`
-  folder sits next to `package.json`; `npm run check:programs` verifies it and
-  `--write-sums` regenerates `SHA256-programs.txt`.
+  folder sits next to `package.json`; `npm run check:programs` verifies it,
+  `--write-sums` regenerates `SHA256-programs.txt`, and `PUBLISH-PROGRAMS.cmd`
+  refreshes the private payload release.
+- **At run time** `programs.js` stages the file from resources into the managed
+  folder, verifies it again immediately before `shell.openPath`, and the
+  renderer only ever sends a catalogue id - never a path or a file name.
+  `payload.download` is `false`, so the app never reaches for the network for
+  these; the download-and-verify path stays in the code for a future public
+  payload. The self-updater ignores non-version tags.
 
-In every case the file is verified again immediately before `shell.openPath`,
-and the renderer only ever sends a catalogue id — never a path or a file name.
-The self-updater ignores the `programs-v1` tag, so it can never be mistaken for
-a newer ProGramerly.
+### Local AI by default
+
+The Command Center's copilot is Ollama on this machine. `settings.aiDefaultModel`
+(`llama3.2:1b`, ~1.3 GB) is the small model it prefers and offers to set up:
+if Ollama is not running the **Set up local AI** button ticks `ollama` and
+`ollama-small` in Software and hands over to the installer engine; if Ollama is
+running without the model it pulls it with live progress. The `full` and `ai`
+profiles include `ollama-small`, so a fresh machine has a working local model
+the first time the Home tab opens. Larger models stay a choice in the AI
+workspace.
 
 ---
 
@@ -885,9 +896,9 @@ a newer ProGramerly.
 `ionity-global-pty-ltd.github.io/ProGramerly` address keeps working). It reads
 the latest release straight from the GitHub API at load time, so the version,
 the file sizes and every download link are whatever is actually published, not
-something hard-coded that rots on the next tag. A second section lists the four
-bundled Ionity utilities with their SHA-256 pins, and fills in live sizes and
-download counts from the `programs-v1` payload release. The backdrop is a flow field of dashes on one slow ~13-second
+something hard-coded that rots on the next tag. A second section describes what is
+inside the suite - names only; the integrated tools are not offered for
+separate download. The backdrop is a flow field of dashes on one slow ~13-second
 breath: stroke opacity, drift speed, trail length and the core glow all ride the
 same oscillator, so the whole field inhales and exhales together instead of
 looking like six unrelated animations. The pointer pushes the field away from
@@ -923,6 +934,15 @@ Apple Silicon and Intel) and `ubuntu-latest` (AppImage, `.deb`, `.rpm`). Push a
 Release. Add `MAC_CERT_P12_BASE64`, `MAC_CERT_PASSWORD`, `APPLE_ID`,
 `APPLE_APP_PASSWORD` and `APPLE_TEAM_ID` as repository secrets and the macOS
 build signs and notarises itself.
+
+**Windows and SmartScreen.** The purple "Windows protected your PC" dialog is
+Microsoft's reputation check on an unsigned or unknown publisher; no code change
+removes it. The `windows` job signs automatically once secrets exist, in either
+of two ways: **Azure Trusted Signing** (`AZURE_TENANT_ID`, `AZURE_CLIENT_ID`,
+`AZURE_CLIENT_SECRET`, `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`,
+`AZURE_SIGNING_PROFILE` - the cheapest route, and reputation is immediate), or
+a classic Authenticode `.pfx` (`WIN_CSC_LINK` as base64, `WIN_CSC_KEY_PASSWORD`).
+The job prints the Authenticode status of every `.exe` it built.
 
 ---
 

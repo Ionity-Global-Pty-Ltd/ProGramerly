@@ -1359,6 +1359,26 @@
       }
     },
     {
+      "id": "ollama-small",
+      "name": "Local AI starter model (llama3.2:1b, ~1.3 GB)",
+      "group": "ai",
+      "desc": "The small model the Command Center copilot uses by default. Runs on CPU, answers in seconds on a laptop, and is enough for health briefs, checklists and log triage without leaving the machine.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "ollama"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "ollama pull llama3.2:1b",
+          "allowFail": true
+        }
+      ]
+    },
+    {
       "id": "ollama-models",
       "name": "Pull starter models (coder, chat, reasoning, embeddings, vision)",
       "group": "ai",

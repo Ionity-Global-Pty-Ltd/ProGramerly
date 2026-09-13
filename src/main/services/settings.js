@@ -47,6 +47,7 @@ const DEFAULTS = Object.freeze({
   closeToTray: true,
   startMinimised: false,
   kioskMode: false,                 // opt-in full-screen operator shell; Ctrl+Shift+K exits
+  aiDefaultModel: 'llama3.2:1b',    // small local Ollama model the Command Center sets up and prefers (~1.3 GB, runs on CPU)
   launchAtLogin: false,
   profile: {},                     // name/email/role/org + preferred install profile
   nodeBackdrop: true,              // the gradient node field behind the app

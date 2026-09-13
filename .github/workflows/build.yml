@@ -90,26 +90,33 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci || npm install
-      # The four Ionity utilities (~495 MB, three of them over GitHub's 100 MB
-      # per-file limit) are not in git. They live as assets on the dedicated
-      # `programs-v1` release and are pulled here so electron-builder's
+      # The Ionity tools (~495 MB, three files over GitHub's 100 MB per-file
+      # limit) are integrated capabilities of ProGramerly, not separate
+      # products, so they are never published for download. They live as
+      # assets on the `programs-v1` release of the PRIVATE repository
+      # Ionity-Global-Pty-Ltd/programerly-payload and are pulled here with a
+      # read-only token (repository secret PAYLOAD_TOKEN) so electron-builder's
       # win.extraResources packs them into resources/programs. Every file is
       # then checked against the size + SHA-256 pins in
       # src/main/data/programs.json - a corrupted or tampered payload fails the
-      # build rather than shipping. If the payload release is not (yet)
-      # published the installer is still built: the app downloads and verifies
-      # each utility on first launch from that same release.
-      - name: Fetch bundled utilities payload (programs-v1)
+      # build rather than shipping. Without the token the installer is still
+      # built and the Command Center reports those tools as "not in this build".
+      - name: Fetch integrated tools payload (private programs-v1)
         shell: pwsh
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAYLOAD_TOKEN }}
+          PAYLOAD_REPO: Ionity-Global-Pty-Ltd/programerly-payload
         run: |
           $ErrorActionPreference = 'Continue'
           $folder = 'PROGRAMS TO REF AND USE'
           New-Item -ItemType Directory -Force -Path $folder | Out-Null
-          gh release download programs-v1 --repo $env:GITHUB_REPOSITORY --dir $folder --clobber 2>&1 | Write-Host
+          if (-not $env:GH_TOKEN) {
+            Write-Host "::warning::PAYLOAD_TOKEN secret is not set - building without the integrated Ionity tools (add a read-only token for $env:PAYLOAD_REPO to include them)"
+            exit 0
+          }
+          gh release download programs-v1 --repo $env:PAYLOAD_REPO --dir $folder --clobber 2>&1 | Write-Host
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "::warning::programs-v1 payload is not available to this build - installers will fetch the utilities on first launch"
+            Write-Host "::warning::programs-v1 payload could not be fetched from $env:PAYLOAD_REPO - building without the integrated Ionity tools"
             Get-ChildItem $folder -File | Remove-Item -Force
             exit 0
           }
@@ -117,16 +124,54 @@ jobs:
           $ErrorActionPreference = 'Stop'
           node scripts/check-programs.js --strict
           if ($LASTEXITCODE -ne 0) { throw 'payload verification failed' }
+      # Code signing is what makes the SmartScreen "Windows protected your PC"
+      # dialog go away. electron-builder 25 signs through Azure Trusted Signing
+      # when these six secrets exist; with none of them the build is unsigned
+      # and SmartScreen shows the dialog until the publisher earns reputation.
+      #   AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET   (service principal)
+      #   AZURE_SIGNING_ENDPOINT      e.g. https://weu.codesigning.azure.net
+      #   AZURE_SIGNING_ACCOUNT       the Trusted Signing account name
+      #   AZURE_SIGNING_PROFILE       the certificate profile name
+      # A classic Authenticode .pfx works too: CSC_LINK (base64) + CSC_KEY_PASSWORD.
       - name: Build Windows installer
-        run: npx electron-builder --win --publish never
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SIGNING_ENDPOINT: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ secrets.AZURE_SIGNING_PROFILE }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          $ebArgs = @('--win', '--publish', 'never')
+          if ($env:AZURE_TENANT_ID -and $env:AZURE_CLIENT_ID -and $env:AZURE_CLIENT_SECRET -and $env:AZURE_SIGNING_ENDPOINT -and $env:AZURE_SIGNING_ACCOUNT -and $env:AZURE_SIGNING_PROFILE) {
+            Write-Host "signing with Azure Trusted Signing ($env:AZURE_SIGNING_ACCOUNT / $env:AZURE_SIGNING_PROFILE)"
+            $ebArgs += @(
+              "--config.win.azureSignOptions.endpoint=$env:AZURE_SIGNING_ENDPOINT",
+              "--config.win.azureSignOptions.codeSigningAccountName=$env:AZURE_SIGNING_ACCOUNT",
+              "--config.win.azureSignOptions.certificateProfileName=$env:AZURE_SIGNING_PROFILE",
+              "--config.win.azureSignOptions.publisherName=Ionity (Pty) Ltd"
+            )
+          } elseif ($env:WIN_CSC_LINK) {
+            Write-Host "signing with the Authenticode certificate from repository secrets"
+            $env:CSC_LINK = $env:WIN_CSC_LINK
+            $env:CSC_KEY_PASSWORD = $env:WIN_CSC_KEY_PASSWORD
+          } else {
+            Write-Host "::notice::no Windows signing secrets - building unsigned (SmartScreen will warn until the app is signed)"
+          }
+          npx electron-builder @ebArgs
+          if ($LASTEXITCODE -ne 0) { throw "electron-builder exited $LASTEXITCODE" }
       - name: Report what the installer bundles
         shell: pwsh
         run: |
           $bundled = Get-ChildItem 'dist/win-unpacked/resources/programs' -File -ErrorAction SilentlyContinue
-          if ($bundled) { Write-Host "bundled utilities:"; $bundled | Format-Table Name, Length -AutoSize | Out-String | Write-Host }
-          else { Write-Host "::notice::no utilities bundled - the app downloads them on first launch" }
+          if ($bundled) { Write-Host "integrated Ionity tools in this build:"; $bundled | Format-Table Name, Length -AutoSize | Out-String | Write-Host }
+          else { Write-Host "::notice::no integrated tools in this build (PAYLOAD_TOKEN absent or payload unavailable)" }
+          $signed = Get-ChildItem dist -Filter *.exe -File | ForEach-Object { $sig = Get-AuthenticodeSignature $_.FullName; "{0,-45} {1}" -f $_.Name, $sig.Status }
+          Write-Host "Authenticode status:"; $signed | Write-Host
           Get-ChildItem dist -File | Format-Table Name, Length -AutoSize | Out-String | Write-Host
       - uses: actions/upload-artifact@v4
         with:
@@ -279,12 +324,14 @@ jobs:
             | Debian / Ubuntu | `programerly_*_amd64.deb` |
             | Fedora / RHEL / openSUSE | `programerly-*.x86_64.rpm` |
 
-            **Bundled Ionity utilities (Windows).** The Command Center launcher ships
-            Fanzi FanControl, IONITY AiOS Demo 1.6.0, CiC and MCP-AUDIT 1.15.0 inside the
-            Windows installer when the [`programs-v1`](https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/tag/programs-v1)
-            payload is available to the build, and otherwise downloads each one from that
-            release on first launch. Either way every executable is checked against the
-            byte size and SHA-256 pinned in `src/main/data/programs.json` before it runs.
+            **What is inside.** ProGramerly is the combined Ionity workstation: the Command
+            Center (AiOS operator layout, live telemetry, Ctrl+K), fan control and CiC built in
+            on Windows and verified against their SHA-256 pins before they run, and local AI
+            through Ollama with a small default model (`llama3.2:1b`) that works on CPU.
+
+            Windows builds are unsigned until a code-signing certificate is added to the
+            repository secrets, so SmartScreen shows "Windows protected your PC" - choose
+            *More info > Run anyway*. The SHA256.txt above lets you verify the file first.
 
             Download page: https://www.ionity.fun
 

@@ -30,8 +30,8 @@
   ];
 
   const PROGRAM_GLYPHS = {
-    fanzi: 'FZ',
-    'aios-demo': 'AI',
+    fanzi: 'FAN',
+    'aios-demo': 'AiOS',
     cic: 'CiC',
     'mcp-audit': 'MCP',
   };
@@ -167,14 +167,14 @@
     if (program.integrity === 'invalid') return { label: 'integrity failed', className: 'bad' };
     if (program.downloading) return { label: `downloading ${program.progress && program.progress.pct != null ? `${program.progress.pct}%` : '…'}`, className: 'ready' };
     if (!program.available && program.downloadable) return { label: 'downloads on launch · SHA-256 pinned', className: 'ready' };
-    if (!program.available) return { label: 'not included', className: 'missing' };
+    if (!program.available) return { label: 'not in this build', className: 'missing' };
     if (program.verified) return { label: 'SHA-256 verified', className: 'ok' };
     if (program.staged || program.installed) return { label: 'staged · verifies on launch', className: 'ready' };
     return { label: 'bundled · verifies on launch', className: 'ready' };
   }
 
   function programButtonLabel(program) {
-    if (!program.launchable) return 'Windows only';
+    if (!program.launchable) return program.available || program.downloadable ? 'Windows only' : 'Full release';
     if (!program.available && program.downloadable) return program.requiresConfirmation ? 'Get & install' : 'Get & launch';
     return program.requiresConfirmation ? 'Install' : 'Launch';
   }
@@ -211,9 +211,12 @@
       paintPrograms();
       const available = dashboardPrograms.filter((program) => program.available).length;
       const remote = dashboardPrograms.filter((program) => !program.available && program.downloadable).length;
+      const missing = dashboardPrograms.length - available - remote;
       setText('homeProgramMessage', remote
-        ? `${available} of ${dashboardPrograms.length} utilities bundled · ${remote} fetched on first launch from the pinned programs release · every executable is SHA-256 checked before it runs`
-        : `${available} of ${dashboardPrograms.length} utilities available · executable hashes are checked before launch`);
+        ? `${available} of ${dashboardPrograms.length} tools in this build · ${remote} fetched on first launch · every executable is SHA-256 checked before it runs`
+        : missing
+          ? `${available} of ${dashboardPrograms.length} tools in this build · the rest ship only with the full Windows release · every executable is SHA-256 checked before it runs`
+          : `All ${dashboardPrograms.length} Ionity tools are part of this build · every executable is SHA-256 checked before it runs`);
       if ($('homeCommand').matches(':focus')) paintCommandResults($('homeCommand').value);
     } catch (error) {
       setText('homeProgramMessage', `Launcher unavailable: ${error.message || error}`);
@@ -251,22 +254,82 @@
     if (button) setTimeout(() => { button.textContent = original; button.disabled = !program.launchable; }, 1800);
   }
 
+  /* Local AI is Ollama on this machine. The Command Center keeps one small
+     default model (settings.aiDefaultModel, llama3.2:1b ~1.3 GB, CPU-friendly)
+     so the copilot works out of the box; bigger models stay a choice in the AI
+     workspace. aiSetup = null | 'install' | 'pull' | 'busy'. */
+  let aiSetup = null;
+  let aiPulling = false;
+
+  function defaultModel() {
+    return (dashboardSettings && dashboardSettings.aiDefaultModel) || 'llama3.2:1b';
+  }
+
+  function showAiSetup(mode, label) {
+    aiSetup = mode;
+    const button = $('homeAiSetup');
+    button.hidden = !mode;
+    if (label) button.textContent = label;
+    button.disabled = mode === 'busy';
+  }
+
   async function refreshAiState() {
+    if (aiPulling) return;
     setText('homeAiState', 'Scanning local inference services…');
     $('homeAiLamp').classList.remove('online');
     try {
-      const targets = await api.aiTargets();
+      const [endpoints, targets] = await Promise.all([api.aiEndpoints(), api.aiTargets()]);
+      const ollama = (endpoints || []).find((endpoint) => endpoint.id === 'ollama' || endpoint.kind === 'ollama');
+      const model = defaultModel();
       if (targets.length) {
         $('homeAiLamp').classList.add('online');
+        const preferred = targets.find((target) => String(target.model || '').startsWith(model.split(':')[0]));
         setText('homeAiState', `${targets.length} local model${targets.length === 1 ? '' : 's'} ready`);
-        setText('homeAiDetail', targets.slice(0, 3).map((target) => target.model).join(' · '));
+        setText('homeAiDetail', (preferred ? [preferred.model, ...targets.filter((target) => target !== preferred).map((target) => target.model)] : targets.map((target) => target.model)).slice(0, 3).join(' · '));
+        showAiSetup(preferred ? null : 'pull', `Add ${model}`);
+      } else if (ollama && ollama.up) {
+        setText('homeAiState', 'Ollama is running - no model yet');
+        setText('homeAiDetail', `One click pulls ${model} (~1.3 GB), a small model that runs on CPU.`);
+        showAiSetup('pull', `Get ${model}`);
       } else {
-        setText('homeAiState', 'No local model online');
-        setText('homeAiDetail', 'Open Local AI to start Ollama or LM Studio and choose a model.');
+        setText('homeAiState', 'Ollama is not running');
+        setText('homeAiDetail', `Install Ollama and ${model} from the Software workspace - ProGramerly does it in one pass.`);
+        showAiSetup('install', 'Set up local AI');
       }
     } catch {
       setText('homeAiState', 'Local AI check unavailable');
       setText('homeAiDetail', 'The rest of the command center remains fully available.');
+      showAiSetup(null);
+    }
+  }
+
+  async function runAiSetup() {
+    const model = defaultModel();
+    if (aiSetup === 'install') {
+      // Same path as ticking the items in Software: the installer engine,
+      // dependency order, one elevation. Ollama first, then the small model.
+      ['ollama', 'ollama-small'].forEach((id) => { if (CATALOG.items.some((item) => item.id === id)) selected.add(id); });
+      renderItems();
+      showTab('software');
+      setText('homeAiDetail', 'Ollama and the starter model are ticked in Software - press Install.');
+      return;
+    }
+    if (aiSetup === 'pull') {
+      aiPulling = true;
+      showAiSetup('busy', `Pulling ${model}…`);
+      $('homeAiLamp').classList.remove('online');
+      setText('homeAiState', `Pulling ${model}`);
+      setText('homeAiDetail', 'Ollama is downloading the model - progress is in the AI workspace log.');
+      try {
+        const result = await api.aiPull(model);
+        if (!result || !result.ok) setText('homeAiDetail', `Pull failed: ${(result && (result.error || result.code)) || 'unknown'}`);
+      } catch (error) {
+        setText('homeAiDetail', `Pull failed: ${error.message || error}`);
+      } finally {
+        aiPulling = false;
+        showAiSetup(null);
+        refreshAiState();
+      }
     }
   }
 
@@ -282,8 +345,8 @@
       type: 'program',
       id: program.id,
       label: program.name,
-      detail: program.available ? 'Launch verified local utility'
-        : program.downloadable ? `Download ${humanBytes(program.sizeBytes)}, verify and launch` : 'Not available in this build',
+      detail: program.available ? `Open ${program.product || program.name} (verified)`
+        : program.downloadable ? `Download ${humanBytes(program.sizeBytes)}, verify and launch` : 'Not in this build',
       glyph: PROGRAM_GLYPHS[program.id] || 'APP',
       keys: `${program.id} ${(program.tags || []).join(' ')} ${program.desc}`,
       disabled: !program.launchable,
@@ -366,6 +429,7 @@
     $('homeProgramsFolder').addEventListener('click', () => api.programs.openFolder());
     $('homeAiOpen').addEventListener('click', () => openAiWorkspace($('homeAiPrompt').value.trim()));
     $('homeAiRefresh').addEventListener('click', refreshAiState);
+    $('homeAiSetup').addEventListener('click', runAiSetup);
     $('homeAiPrompt').addEventListener('keydown', (event) => {
       if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();

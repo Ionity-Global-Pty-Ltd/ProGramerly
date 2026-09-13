@@ -8,12 +8,14 @@
  * digests, and only then handed to the OS shell. Renderer input is always a
  * catalogue id; it can never provide a path or executable name.
  *
- * Where a build ships without the payload (the portable .exe, a source
- * checkout, or a CI installer built while the payload release was still a
- * draft) the same pinned manifest drives a download from the dedicated
- * `programs-v1` GitHub Release. The download lands in a temporary file, is
- * byte-counted and SHA-256 checked, and only then renamed into the managed
- * folder. Nothing that fails the pin is ever launched or kept.
+ * These are integrated capabilities of ProGramerly, not separate products.
+ * The payload lives in a PRIVATE repository and ships only inside the Windows
+ * installer; `payload.download` in the manifest is false, so a build without
+ * the payload reports each tool as "not in this build" and never reaches for
+ * the network. The download path below stays in place for a future public
+ * payload: it lands in a temporary file, is byte-counted and SHA-256 checked,
+ * and only then renamed into the managed folder. Nothing that fails the pin is
+ * ever launched or kept.
  */
 
 const crypto = require('node:crypto');
@@ -33,7 +35,10 @@ const MANIFEST = require('../data/programs.json');
 const PAYLOAD = MANIFEST.payload;
 const PROGRAMS = MANIFEST.programs;
 
+const DOWNLOAD_ENABLED = PAYLOAD.download === true && PAYLOAD.private !== true;
+
 function payloadUrl(file) {
+  if (!DOWNLOAD_ENABLED) return null;
   return `https://github.com/${PAYLOAD.repo}/releases/download/${PAYLOAD.tag}/${encodeURIComponent(file)}`;
 }
 
@@ -177,10 +182,18 @@ async function stageProgram(program) {
         await fs.promises.rm(temporary, { force: true });
         return { dest: destination, installed: false, verified: false, source, error: `The staged copy of ${program.file} failed verification.` };
       }
-    } else {
+    } else if (DOWNLOAD_ENABLED) {
       // Not in this build: fetch the pinned payload from the programs release.
       origin = 'downloaded';
       temporary = await downloadProgram(program, destinationDir);
+    } else {
+      return {
+        dest: destination,
+        installed: false,
+        verified: false,
+        source: null,
+        error: `${program.name} is not included in this build of ProGramerly. Install the full Windows release to use it.`,
+      };
     }
 
     // The temporary copy is complete and verified before the previous managed
@@ -231,10 +244,14 @@ function list() {
     const verified = sourceState.verified || destinationState.verified;
     const malformed = !available && (sourceState.exists || destinationState.exists);
     const progress = downloadProgress.get(program.id) || null;
+    const downloadable = IS_WIN && !available && DOWNLOAD_ENABLED;
     return {
       id: program.id,
       name: program.name,
+      product: program.product || program.name,
       desc: program.desc,
+      role: program.role || 'tools',
+      public: program.public !== false,
       tags: program.tags,
       kind: program.kind,
       version: program.version,
@@ -245,13 +262,13 @@ function list() {
       staged: destinationState.exists,
       installed: destinationState.exists,
       verified,
-      // Not bundled in this build, but fetchable from the pinned payload release.
-      downloadable: IS_WIN && !available,
+      // Only true for a public payload; the private payload ships in the installer alone.
+      downloadable,
       downloadUrl: payloadUrl(program.file),
       downloading: Boolean(progress),
       progress,
-      integrity: malformed ? 'invalid' : verified ? 'verified' : available ? 'pending' : 'remote',
-      launchable: IS_WIN && !malformed,
+      integrity: malformed ? 'invalid' : verified ? 'verified' : available ? 'pending' : downloadable ? 'remote' : 'missing',
+      launchable: IS_WIN && !malformed && (available || downloadable),
       sizeBytes: program.expectedBytes,
       sha256: program.sha256,
       platform: 'win',
@@ -302,6 +319,7 @@ module.exports = {
   managedDir,
   setProgressSink,
   payloadUrl,
+  DOWNLOAD_ENABLED,
   PAYLOAD,
   PROGRAMS,
 };

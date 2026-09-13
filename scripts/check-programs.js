@@ -66,14 +66,14 @@ async function main() {
   const folder = path.join(root, payload.localFolder || 'PROGRAMS TO REF AND USE');
   if (!fs.existsSync(folder)) {
     if (strict) problems.push(`payload folder is missing: ${folder}`);
-    else say(`payload folder not present (${payload.localFolder}) - installers built from this tree download utilities on first launch`);
+    else say(`payload folder not present (${payload.localFolder}) - installers built from this tree ship without the integrated Ionity tools`);
   } else {
     const sums = [];
     for (const p of programs) {
       const file = path.join(folder, p.file);
       if (!fs.existsSync(file)) {
         (strict ? problems : []).push(`${p.file} is missing from the payload folder`);
-        say(`  - ${p.file}: absent${strict ? '' : ' (will be downloaded on first launch)'}`);
+        say(`  - ${p.file}: absent${strict ? '' : ' (not in this build)'}`);
         continue;
       }
       const size = fs.statSync(file).size;

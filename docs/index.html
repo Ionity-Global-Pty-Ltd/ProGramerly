@@ -134,18 +134,14 @@ h2{font-size:clamp(1.6rem,3.4vw,2.4rem);font-weight:700;letter-spacing:-.03em;ma
 .dl-table a{color:var(--accent);font-weight:600;text-decoration:none}
 .dl-table a:hover{text-decoration:underline}
 .dl-table code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--text-sub)}
-.dl-table .sha{display:block;max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--text-faint)}
-.dl-table .sha:hover{max-width:none;overflow:visible;white-space:normal;word-break:break-all}
 .win{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.03em;vertical-align:middle;margin-left:6px}
 .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.util-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:26px}
-.util{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:8px}
-.util .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--text-faint)}
-.util .glyph{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:13px;letter-spacing:.02em;background:linear-gradient(135deg,#3366FF,#00D4FF);color:#fff}
-.util h3{font-size:15px;font-weight:700;letter-spacing:-.01em}
-.util p{font-size:13.5px;line-height:1.55;color:var(--text-sub);flex:1}
-.util a.get{align-self:flex-start;font-size:13px;font-weight:700;color:var(--accent);text-decoration:none}
-.util a.get:hover{text-decoration:underline}
+.suite-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.suite{background:var(--surface);border:1px solid var(--line-soft);border-radius:14px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:8px}
+.suite .glyph{width:44px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:12px;letter-spacing:.02em;background:linear-gradient(135deg,#3366FF,#00D4FF);color:#fff}
+.suite h3{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.suite p{font-size:13.5px;line-height:1.55;color:var(--text-sub);flex:1}
+.suite code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
 footer{border-top:1px solid var(--line-soft);background:var(--surface-2)}
 footer .wrap{padding-top:44px;padding-bottom:44px}
 .foot-row{display:flex;flex-wrap:wrap;gap:22px;justify-content:space-between;align-items:flex-start}
@@ -193,7 +189,7 @@ footer ul{list-style:none}
         <span id="dlPrimaryLabel">Download for Windows</span>
       </a>
       <a class="btn btn-ghost" href="#downloads">All platforms</a>
-      <a class="btn btn-ghost" href="#utilities">Ionity utilities</a>
+      <a class="btn btn-ghost" href="#suite">What is inside</a>
       <a class="btn btn-ghost" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly">
         <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.49-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.81.06 1.23.83 1.23.83.72 1.23 1.89.87 2.35.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.96 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.52.56.83 1.28.83 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
         Source
@@ -239,8 +235,8 @@ footer ul{list-style:none}
         </div>
         <div class="card">
           <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 18v3"/><path d="m7 9 3 2-3 2"/><path d="M12 13h4"/></svg></div>
-          <h3>Command Center &amp; Ionity utilities</h3>
-          <p>A live home screen — CPU, memory, thermals, disk, network, local AI — with a launcher for the bundled Ionity utilities. Every executable is pinned by size and SHA-256 and verified before it runs. Opt-in kiosk mode, Ctrl+Shift+K to leave.</p>
+          <h3>Command Center</h3>
+          <p>A live home screen — CPU, memory, thermals, disk, network, local AI — laid out the AiOS way, with the Ionity tools (fan control, CiC) built in and verified before they run. Opt-in kiosk mode, Ctrl+Shift+K to leave.</p>
         </div>
       </div>
     </div>
@@ -281,61 +277,38 @@ footer ul{list-style:none}
     </div>
   </section>
 
-  <section class="sheet" id="utilities">
+  <section class="sheet" id="suite">
     <div class="wrap">
-      <h2>Bundled Ionity utilities <span class="win">WINDOWS</span></h2>
+      <h2>One suite, not a folder of tools</h2>
       <p class="lede">
-        The Command Center inside ProGramerly launches these four Ionity programs. The Windows installer
-        carries them in <code>resources/programs</code>; the portable build and any installer produced without
-        the payload fetch each one on first launch from the
-        <a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/tag/programs-v1" id="payloadLink">programs-v1</a>
-        release. In both cases the executable is checked against the byte size and SHA-256 pinned in
-        <code>src/main/data/programs.json</code> before it is handed to Windows — a mismatch is discarded, never run.
-        You can also download them directly here.
+        ProGramerly is the combined workstation: the Ionity tools below are built into it as
+        capabilities of the Command Center, not shipped as separate downloads. They arrive with the
+        Windows release, are pinned by size and SHA-256 inside the app, and are verified every time
+        before they run.
       </p>
-      <div class="util-grid" id="utilGrid">
-        <div class="util" data-file="Fanzi.FanControl.exe">
-          <div class="glyph">FZ</div>
-          <h3>Fanzi FanControl</h3>
-          <p>Fan curve and cooling control — the Ionity build of FanControl.</p>
-          <span class="mono">Fanzi.FanControl.exe · 139.9 MB</span>
-          <a class="get" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/Fanzi.FanControl.exe">Download ↓</a>
+      <div class="suite-grid">
+        <div class="suite">
+          <div class="glyph">FAN</div>
+          <h3>Fan control</h3>
+          <p>Fan curves and cooling for the machine you are on, opened from the Hardware workspace next to the sensors it reads — the Ionity FanControl build (<em>Fanzi</em>).</p>
         </div>
-        <div class="util" data-file="IONITY-AiOS-Demo-v1.6.0.exe">
-          <div class="glyph">AI</div>
-          <h3>IONITY AiOS Demo 1.6.0</h3>
-          <p>The IONITY AiOS demonstration environment.</p>
-          <span class="mono">IONITY-AiOS-Demo-v1.6.0.exe · 114.0 MB</span>
-          <a class="get" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/IONITY-AiOS-Demo-v1.6.0.exe">Download ↓</a>
+        <div class="suite">
+          <div class="glyph">AiOS</div>
+          <h3>AiOS operator layout</h3>
+          <p>The IONITY AiOS shell sets the layout the Command Center follows: live telemetry on top, one command box, tools as tiles, an opt-in kiosk mode that never traps you.</p>
         </div>
-        <div class="util" data-file="CiC.exe">
+        <div class="suite">
           <div class="glyph">CiC</div>
           <h3>CiC</h3>
-          <p>IONITY CiC workstation utility.</p>
-          <span class="mono">CiC.exe · 30.7 MB</span>
-          <a class="get" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/CiC.exe">Download ↓</a>
+          <p>The IONITY CiC workstation utility, one tile away in the Command Center.</p>
         </div>
-        <div class="util" data-file="MCP-AUDIT.Setup.1.15.0.exe">
-          <div class="glyph">MCP</div>
-          <h3>MCP-AUDIT 1.15.0</h3>
-          <p>MCP server security auditor and setup package. Runs as an installer; ProGramerly asks before starting it.</p>
-          <span class="mono">MCP-AUDIT.Setup.1.15.0.exe · 187.2 MB</span>
-          <a class="get" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/MCP-AUDIT.Setup.1.15.0.exe">Download ↓</a>
+        <div class="suite">
+          <div class="glyph">AI</div>
+          <h3>Local AI, ready on first run</h3>
+          <p>Ollama with a small default model (<code>llama3.2:1b</code>, about 1.3&nbsp;GB, runs on CPU) so the copilot answers on a laptop without sending anything anywhere. Larger models are one click away in the AI workspace.</p>
         </div>
       </div>
-      <div class="scroller">
-        <table class="dl-table" id="utilTable">
-          <thead><tr><th>Utility</th><th>File</th><th>SHA-256</th><th>Get it</th></tr></thead>
-          <tbody id="utilBody">
-            <tr><td>Fanzi FanControl</td><td><code>Fanzi.FanControl.exe</code></td><td><code class="sha">eb3c46043a0c113b56a64fcab81496e556b99756452a25185cca12240c5aa3cc</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/Fanzi.FanControl.exe">Download</a></td></tr>
-            <tr><td>IONITY AiOS Demo 1.6.0</td><td><code>IONITY-AiOS-Demo-v1.6.0.exe</code></td><td><code class="sha">6055982fda322c42d7619346f6edd3d9cafb040b9a5e37030d7e75d3163cfe80</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/IONITY-AiOS-Demo-v1.6.0.exe">Download</a></td></tr>
-            <tr><td>CiC</td><td><code>CiC.exe</code></td><td><code class="sha">f53659597150a11d71efabeec7d992785495c2b78349f38b994f03ae57131201</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/CiC.exe">Download</a></td></tr>
-            <tr><td>MCP-AUDIT 1.15.0</td><td><code>MCP-AUDIT.Setup.1.15.0.exe</code></td><td><code class="sha">086cd9c1b52584f3297223399273700e2d8aad3851214f02c3ab961e221bd6b4</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/MCP-AUDIT.Setup.1.15.0.exe">Download</a></td></tr>
-            <tr><td>Checksums</td><td><code>SHA256-programs.txt</code></td><td><code class="sha">—</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/download/programs-v1/SHA256-programs.txt">Download</a></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="relmeta" id="utilmeta" style="text-align:left;margin-top:14px">Checking the programs-v1 payload release…</p>
+      <p class="relmeta" style="text-align:left;margin-top:14px">Windows release. macOS and Linux builds carry every other workspace; the Windows-only tools show as “not in this build” there.</p>
     </div>
   </section>
 
@@ -354,7 +327,7 @@ footer ul{list-style:none}
           <li><a href="https://www.ionity.world">ionity.world — profile</a></li>
           <li><a href="https://www.ionity.fun">www.ionity.fun — this page</a></li>
           <li><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly">github.com/Ionity-Global-Pty-Ltd/ProGramerly</a></li>
-          <li><a href="#utilities">Bundled Ionity utilities</a></li>
+          <li><a href="#suite">What is inside</a></li>
         </ul>
       </div>
     </div>
@@ -591,38 +564,6 @@ footer ul{list-style:none}
       meta.innerHTML='No published release yet — <a href="https://github.com/'+REPO+'">browse the source</a> in the meantime.';
     });
 
-  /* -------------------------------------------- bundled utilities payload */
-  var PAYLOAD_TAG='programs-v1';
-  var utilMeta=document.getElementById('utilmeta');
-  fetch('https://api.github.com/repos/'+REPO+'/releases/tags/'+PAYLOAD_TAG,{headers:{Accept:'application/vnd.github+json'}})
-    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function(rel){
-      var assets=rel.assets||[], live=0;
-      /* Cards: real size + real URL for every file that is actually published. */
-      Array.prototype.forEach.call(document.querySelectorAll('#utilGrid .util'),function(card){
-        var asset=pick(assets,new RegExp('^'+card.getAttribute('data-file').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$'));
-        if(!asset) return;
-        live++;
-        var mono=card.querySelector('.mono'), get=card.querySelector('a.get');
-        if(mono) mono.textContent=asset.name+' · '+mb(asset.size)+' · '+asset.download_count+' downloads';
-        if(get) get.href=asset.browser_download_url;
-      });
-      /* Table: sizes on the links, checksum file if published. */
-      Array.prototype.forEach.call(document.querySelectorAll('#utilBody tr'),function(row){
-        var code=row.querySelector('td:nth-child(2) code'); if(!code) return;
-        var asset=pick(assets,new RegExp('^'+code.textContent.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$'));
-        var link=row.querySelector('td:nth-child(4) a'); if(!link) return;
-        if(asset){ link.href=asset.browser_download_url; link.textContent='Download · '+mb(asset.size); }
-        else { link.textContent='Not in payload'; }
-      });
-      var when=new Date(rel.published_at||rel.created_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-      utilMeta.innerHTML='Payload <strong>'+rel.tag_name+'</strong> · '+live+' of 4 utilities published · '+when+
-                         ' · <a href="'+rel.html_url+'">release page</a>';
-    })
-    .catch(function(){
-      utilMeta.innerHTML='The <strong>'+PAYLOAD_TAG+'</strong> payload release is not published yet — the links above go live the moment it is. '+
-                         'Until then ProGramerly reports each utility as "not included" and the Windows installer ships without them.';
-    });
 })();
 </script>
 </body>
