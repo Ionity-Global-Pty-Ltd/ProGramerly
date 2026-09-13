@@ -96,7 +96,7 @@ body.kiosk-shell #shell{grid-template-rows:56px minmax(0,1fr) 76px}
 #topbar .badge-btn:hover{background:rgba(0,200,240,.16)}
 
 /* ------------------------------------------------------------------- main */
-#shell #main{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:clamp(12px,2vh,26px);min-height:0;min-width:0;padding-top:clamp(8px,2.4vh,30px);flex:none}
+#shell #main{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);gap:clamp(12px,2vh,26px);min-height:0;min-width:0;padding-top:clamp(8px,2.4vh,30px);flex:none}
 #hero{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
 #hero .eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--sh-cyan);display:flex;align-items:center;gap:12px}
 #hero .eyebrow::before,#hero .eyebrow::after{content:'';width:34px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,200,240,.5))}
@@ -188,7 +188,7 @@ body.kiosk-shell #shell{grid-template-rows:56px minmax(0,1fr) 76px}
 .stat.warn .k{color:var(--sh-amber)} .stat.warn .bar i{background:var(--sh-amber)}
 .stat.err .k{color:var(--sh-red)} .stat.err .bar i{background:var(--sh-red)}
 
-#modules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:clamp(8px,0.8vw,14px);min-height:0;min-width:0}
+#modules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(78px,1fr);gap:clamp(8px,0.8vw,14px);min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain}
 .tile{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:15px 16px 13px;border-radius:var(--sh-r-md);border:1px solid var(--sh-line);
   background:linear-gradient(165deg,rgba(148,196,222,.06),rgba(148,196,222,.015));text-align:left;overflow:hidden;transition:transform .35s var(--sh-ease),border-color .35s var(--sh-ease);min-width:0}
 .tile::before{content:'';position:absolute;inset:0;opacity:.55;pointer-events:none;
@@ -331,8 +331,12 @@ body.aios .sheet{z-index:80}
 .dome-segs.wide{padding:0;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
 .dome-seg{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:11px;padding:12px 13px;border-radius:var(--sh-r-md);border:1px solid var(--sh-line);background:rgba(148,196,222,.035);text-align:left;transition:border-color .25s,transform .25s var(--sh-ease),background .25s}
 .dome-seg:hover{border-color:var(--sh-line2);background:var(--sh-glass2);transform:translateY(-2px)}
-.seg-ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;border:1px solid rgba(0,200,240,.22);background:rgba(0,200,240,.07)}
-.seg-ico svg{width:17px;height:17px;stroke:var(--sh-cyan);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dome-stratum{--seg-hue:var(--sh-cyan)}
+.seg-ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid color-mix(in srgb, var(--seg-hue) 34%, transparent);
+  background:color-mix(in srgb, var(--seg-hue) 9%, transparent)}
+.seg-ico svg{width:17px;height:17px;stroke:var(--seg-hue);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.dome-seg .seg-foot .dot{background:var(--seg-hue)}
 .dome-seg.warn .seg-ico{border-color:rgba(240,160,60,.32);background:rgba(240,160,60,.09)}
 .dome-seg.warn .seg-ico svg{stroke:var(--sh-amber)}
 .dome-seg.err .seg-ico{border-color:rgba(240,104,106,.35);background:rgba(240,104,106,.09)}
@@ -500,3 +504,120 @@ body.aios .sheet{z-index:80}
   .st-meter,.st-read{display:none}
   .fp-body,.ed-curve{grid-template-columns:1fr}
 }
+
+/* ====================================================================== *
+ *  v3.3.0 - the mark, the launch brief, the orb menu, the options card
+ *  The shell reads as Ionity: one accent variable, the wordmark bottom
+ *  left, and the local core reachable from every surface rather than
+ *  parked in one workspace.
+ * ====================================================================== */
+
+/* ------------------------------------------------------------- the mark */
+/* The official transparent IONITY GLOBAL wordmark. It sits under the shell,
+   bottom left, quiet enough to read as a watermark and never in the way. */
+.shell-mark{position:fixed;left:clamp(20px,2.2vw,44px);bottom:clamp(14px,1.4vh,22px);z-index:1;
+  width:clamp(112px,11vw,168px);height:auto;opacity:.15;pointer-events:none;user-select:none;
+  filter:drop-shadow(0 0 22px rgba(0,200,240,.28));
+  transition:opacity .6s var(--sh-ease)}
+body.kiosk-shell .shell-mark{opacity:.1}
+.shell-mark[hidden]{display:none}
+
+/* ----------------------------------------------------------- the accent */
+/* Set from Settings through the CSSOM. Everything that used to be hard-cyan
+   follows it; the fallbacks keep the shell correct before the first paint. */
+body.aios{--sh-accent:#00c8f0;--sh-accent-soft:rgba(0,200,240,.16);--sh-accent-line:rgba(0,200,240,.42)}
+.ai-orb{background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.85),transparent 32%),
+  conic-gradient(from 210deg,var(--sh-blue),var(--sh-accent),#7fd8ee,var(--sh-blue));
+  box-shadow:0 0 18px var(--sh-accent-soft),inset 0 0 8px rgba(255,255,255,.25)}
+.ai-orb::after{border-color:var(--sh-accent-line)}
+#ask:focus-within{border-color:var(--sh-accent-line);box-shadow:0 0 0 1px var(--sh-accent-soft),0 14px 44px -18px var(--sh-accent-soft)}
+#thread .msg .cursor{background:var(--sh-accent)}
+#engine-chip{border-color:var(--sh-accent-line);background:var(--sh-accent-soft)}
+#engine-chip i{background:var(--sh-accent);box-shadow:0 0 8px var(--sh-accent)}
+.chip-btn:hover{border-color:var(--sh-accent-line);background:var(--sh-accent-soft)}
+.dome-answer{border-color:var(--sh-accent-line);background:var(--sh-accent-soft)}
+
+/* ------------------------------------------------------- preset chips */
+#suggest button.preset-chip{color:#cfe6f1;border-color:var(--sh-accent-line);background:var(--sh-accent-soft)}
+#suggest button.preset-chip:hover{color:#fff;border-color:var(--sh-accent);background:var(--sh-accent-soft);
+  box-shadow:0 10px 26px -16px var(--sh-accent)}
+#suggest button.preset-chip:disabled{opacity:.38;cursor:default;box-shadow:none}
+
+/* -------------------------------------------------------- launch brief */
+/* The machine reading itself, once, on the deck. It is a panel and not a
+   toast because the answer is worth keeping on screen while you work. */
+#brief{margin:0 auto clamp(10px,1.2vh,18px);width:min(980px,100%);border-radius:var(--sh-r-md);
+  border:1px solid var(--sh-accent-line);background:linear-gradient(165deg,var(--sh-accent-soft),rgba(148,196,222,.02));
+  backdrop-filter:blur(16px);padding:12px 15px 14px;display:grid;gap:9px;
+  opacity:0;transform:translateY(-6px);transition:opacity .5s var(--sh-ease),transform .5s var(--sh-ease)}
+#brief.on{opacity:1;transform:none}
+#brief[hidden]{display:none}
+.brief-head{display:flex;align-items:center;gap:10px}
+.brief-head .ai-orb{width:24px;height:24px;cursor:pointer}
+.brief-head .ai-orb::after{display:none}
+.brief-head b{font-size:12.5px;font-family:var(--sh-display);letter-spacing:.01em}
+.brief-head .chip-btn{margin-left:auto}
+.brief-meta{font-size:10px;letter-spacing:.06em;color:var(--sh-tx3);font-variant-numeric:tabular-nums}
+.brief-body{font-size:12.5px;line-height:1.72;color:#dceaf2;white-space:pre-wrap;
+  max-height:16vh;overflow-y:auto;font-variant-numeric:tabular-nums}
+/* With the brief open the hero gives up the room it does not need, and the
+   main column becomes scrollable with the deck holding a floor height, so the
+   dome, the four gauges and the tiles are never crushed or hidden under the
+   dock - they are simply below the fold until you scroll. */
+body.brief-on #main{overflow-y:auto;overscroll-behavior:contain;padding-right:4px}
+body.brief-on #deck{min-height:clamp(300px,40vh,440px)}
+body.brief-on #hero{gap:10px}
+body.brief-on #greeting{font-size:clamp(23px,2.5vw,37px)}
+body.brief-on #hero .sub{display:none}
+body.brief-on #hero .eyebrow{display:none}
+body.brief-on #ask{height:54px}
+body.brief-on #chat{gap:9px}
+.brief-body:empty::after{content:'Reading the registered sets on this machine…';color:var(--sh-tx3)}
+
+/* ------------------------------------------------------------ orb menu */
+/* Every analysis preset in the registry, one click from the dock orb or the
+   engine chip. The model line is the honest name of what will answer. */
+#orbmenu{position:fixed;left:50%;bottom:104px;transform:translate(-50%,10px);z-index:60;
+  width:min(440px,92vw);max-height:min(62vh,560px);overflow:hidden auto;border-radius:18px;
+  border:1px solid var(--sh-accent-line);
+  background:linear-gradient(180deg,rgba(9,16,23,.985),rgba(6,11,16,.985));backdrop-filter:blur(22px);
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.9);padding:10px;display:grid;gap:4px;
+  opacity:0;visibility:hidden;transition:opacity .22s var(--sh-ease),transform .22s var(--sh-ease),visibility .22s}
+#orbmenu.on{opacity:1;visibility:visible;transform:translate(-50%,0)}
+#orbmenu[hidden]{display:none}
+.om-head{display:flex;align-items:center;gap:11px;padding:8px 10px 12px}
+.om-head .ai-orb{width:28px;height:28px}
+.om-head .ai-orb::after{display:none}
+.om-head b{display:block;font-size:12.5px;font-family:var(--sh-display)}
+.om-head small{display:block;font-size:10.5px;color:var(--sh-tx3);margin-top:2px}
+.om-list{display:grid;gap:3px;max-height:42vh;overflow-x:hidden;overflow-y:auto}
+#orbmenu button{display:block;width:100%;min-width:0;overflow:hidden;text-align:left;
+  padding:9px 11px;border-radius:11px;color:var(--sh-tx2);font-size:12.5px;
+  transition:background .18s,color .18s}
+#orbmenu button:hover{background:var(--sh-accent-soft);color:var(--sh-tx)}
+.om-list button b{display:block;font-size:12.5px;color:var(--sh-tx)}
+.om-list button small{display:block;max-width:100%;font-size:10.5px;color:var(--sh-tx3);
+  margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#orbmenu .pm-sep{height:1px;background:var(--sh-line);margin:7px 8px}
+
+/* --------------------------------------- Ask inside every workspace */
+.aw-ask-btn{white-space:nowrap}
+.aw-answer{margin:0 0 14px}
+
+/* ---------------------------------------------------- the options card */
+/* Lives in the Settings workspace, so it is styled with styles.css cards but
+   laid out here with the shell's own rows and fields. */
+.opt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:4px}
+.opt-row{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-radius:12px;
+  border:1px solid var(--sh-line);background:rgba(148,196,222,.035);cursor:pointer;
+  transition:border-color .2s,background .2s}
+.opt-row:hover{border-color:var(--sh-accent-line);background:var(--sh-accent-soft)}
+.opt-row input{margin-top:2px;accent-color:var(--sh-accent);width:15px;height:15px;flex:none;cursor:pointer}
+.opt-row b{display:block;font-size:12.5px;color:var(--sh-tx)}
+.opt-row small{display:block;font-size:10.5px;line-height:1.55;color:var(--sh-tx3);margin-top:3px}
+.opt-grid.cols{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.opt-field{display:grid;gap:5px}
+.opt-field>span{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sh-tx3)}
+.opt-field select{width:100%;height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--sh-line);
+  background:rgba(6,11,19,.8);color:var(--sh-tx);font-family:inherit;font-size:12.5px;cursor:pointer}
+.opt-field select:focus{outline:0;border-color:var(--sh-accent-line)}

@@ -891,6 +891,47 @@ Ask one from the dome, a stratum, a segment, or the data-set registry; the
 answer streams back in place with the model, the set count and the context size
 shown above it.
 
+### The local core, everywhere — 3.3.0
+
+From 3.3.0 the model is not a workspace you visit. It is on the deck.
+
+**The launch brief.** As soon as the shell is up, ProGramerly asks the local
+model one standing question — *State of the machine* by default — and the
+answer opens as a panel on the deck, streaming, with the model that answered,
+how many of the brief's sets were readable, and the tokens per second it
+managed. The question is any preset you like, the panel dismisses with × and
+comes back from the orb, and the whole thing is one switch in Settings for
+anyone who would rather launch to silence.
+
+**Ask, scoped, in every workspace.** Each workspace window carries its own Ask
+control bound to what that workspace covers: Hardware asks about thermal,
+Projects about repositories, Doctor about the last scan, Storage about disk
+pressure. The answer opens inside that window, built from that scope's sets.
+
+**The orb.** The dock orb and the engine chip open the preset menu: all ten
+standing questions, each with the question it will actually ask, and the name
+of the model that will answer. **Ctrl+/** runs the launch brief from anywhere.
+
+**Settings — Ionity DOME and local AI.** One card: launch brief on or off and
+which preset it asks, which local model answers, how often the dome re-reads
+(20 s to only-when-asked), the shell accent, the Ionity mark, kiosk, and five
+actions — re-read the dome, write a DOME report to Markdown, open the report
+folder, open the fan profile folder, open the data-set registry.
+
+**Two-pass dome.** The first pass skips any scan-cost set that is not already
+cached, so the deck is complete the moment the shell is up; the full pass —
+which walks the drives, the listening ports and every repository under the
+development root — lands behind it and repaints. A segment that has not been
+scanned yet says so rather than guessing.
+
+**The shell has a colour.** Five accents (Ionity cyan, signal blue, violet,
+lime, amber) drive the orb, the ask box, the chips, the brief and every primary
+control through one variable; the dome's five strata each carry their own hue
+in the band, the legend and the segment icons; the four gauges are coloured by
+what they measure. The official transparent IONITY GLOBAL wordmark sits bottom
+left, and the intro assembles the dome arc by arc from the real machine facts
+before the shell appears.
+
 ### Fan control
 
 The fan surface is the sensor tree folded into something you can work with:

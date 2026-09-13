@@ -75,21 +75,8 @@ body{
 @keyframes blink{50%{opacity:0}}
 
 /* -------------------------------------------------------------- bar -- */
-.barwrap{
-  margin-top:26px; display:flex; align-items:center; gap:6px; opacity:0;
-  transition:opacity .2s ease;
-}
-.barwrap.on{opacity:1}
-.bracket{color:#4a5c6e; font-size:16px}
-.bar{width:360px; height:12px; background:rgba(255,255,255,.05); overflow:hidden}
-.fill{
-  height:100%; width:0%;
-  background:repeating-linear-gradient(90deg, var(--dark-cyan) 0 6px, rgba(8,127,158,.55) 6px 9px);
-  box-shadow:0 0 14px rgba(0,198,255,.5);
-  transition:width .04s linear;
-}
 .status{
-  margin-top:10px; min-height:16px; font-size:12px; letter-spacing:1.6px; color:#7e93a7;
+  margin-top:12px; min-height:16px; font-size:11.5px; letter-spacing:1.8px; color:#a9e6f6; text-shadow:0 0 12px rgba(0,198,255,.35);
 }
 
 /* --------------------------------------------------------- colophon -- */
@@ -115,3 +102,57 @@ body{
   border-radius:99px; padding:5px 12px; cursor:pointer; opacity:.55;
 }
 .skip:hover{opacity:1; color:var(--cyan); border-color:rgba(0,198,255,.6)}
+
+
+/* ======================================================================== *
+ *  THE DOME - five strata, drawn as they are read
+ * ======================================================================== */
+.domewrap{
+  display:grid; grid-template-columns:minmax(0,520px) minmax(210px,300px);
+  align-items:end; gap:clamp(18px,3vw,44px);
+  margin-top:14px; opacity:0; transform:translateY(10px);
+  transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1);
+}
+.domewrap.on{opacity:1; transform:none}
+.dome{width:100%; height:auto; max-height:250px; display:block; overflow:visible}
+.dome .arc{
+  fill:none; stroke-width:3; stroke-linecap:round; opacity:0;
+  transition:opacity .3s ease;
+  filter:drop-shadow(0 0 7px currentColor);
+}
+.dome .arc.on{opacity:.95}
+.dome .ground{stroke:rgba(160,200,225,.22); stroke-width:1; stroke-dasharray:4 6}
+.dome .segdot{fill:#e9f1f6; opacity:0; transition:opacity .25s ease}
+.dome .segdot.on{opacity:.75}
+.dome .apex{fill:#00c6ff; opacity:0; transition:opacity .5s ease, r .5s ease}
+.dome .apex.on{opacity:1; filter:drop-shadow(0 0 14px #00c6ff)}
+
+.strata{list-style:none; margin:0; padding:0 0 18px; display:flex; flex-direction:column; gap:9px}
+.strata li{
+  display:grid; grid-template-columns:9px minmax(0,1fr); grid-template-rows:auto auto auto;
+  column-gap:10px; align-items:baseline; text-align:left;
+  opacity:0; transform:translateX(-8px);
+  transition:opacity .45s ease, transform .45s cubic-bezier(.22,1,.36,1);
+}
+.strata li.on{opacity:1; transform:none}
+.strata li i{
+  grid-row:1 / span 3; width:9px; height:9px; border-radius:50%;
+  align-self:center; box-shadow:0 0 10px currentColor;
+}
+.strata li b{font-size:12.5px; letter-spacing:2.2px; color:#e9f1f6; font-weight:600; text-transform:uppercase}
+.strata li span{font-size:10.5px; color:#7e94a8; letter-spacing:.4px}
+.strata li em{font-style:normal; font-size:10.5px; color:var(--cyan); letter-spacing:.3px; font-variant-numeric:tabular-nums}
+
+/* ------------------------------------------------------- the Ionity mark */
+.watermark{
+  position:absolute; left:26px; bottom:22px; width:132px; height:auto;
+  opacity:.34; filter:drop-shadow(0 0 20px rgba(0,198,255,.45));
+  pointer-events:none; user-select:none;
+  animation:mark-breathe 7s ease-in-out infinite;
+}
+@keyframes mark-breathe{50%{opacity:.62}}
+
+@media (max-width:860px){
+  .domewrap{grid-template-columns:1fr}
+  .strata{padding-bottom:0}
+}

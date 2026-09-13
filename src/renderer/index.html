@@ -11,11 +11,12 @@
 <body class="aios">
   <div id="field" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
   <div id="grain" aria-hidden="true"></div>
+  <img class="shell-mark" id="shellMark" src="assets/ionity-mark.png" alt="" aria-hidden="true" />
 
   <div id="shell">
     <header id="topbar">
       <div class="tb-side">
-        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.1.0</span></span>
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.3.0</span></span>
         <span class="tb-divider"></span>
         <span id="clock">--:--</span>
         <span id="date">Local time</span>
@@ -48,14 +49,22 @@
             <button class="send" id="ask-send" title="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </div>
           <div id="suggest">
-            <button data-say="How healthy is this workstation right now?">Health brief</button>
-            <button data-say="Plan my next coding task as a short checklist.">Plan a task</button>
-            <button data-say="I will paste an error log next - find the likely root cause.">Debug a log</button>
+            <button data-open="dome">Open the DOME</button>
             <button data-open="software">Install software</button>
-            <button data-open="fans">Fan control</button>
             <button class="setup" id="ai-setup-chip" hidden>Set up local AI</button>
           </div>
         </div>
+      </section>
+
+      <section id="brief" hidden>
+        <div class="brief-head">
+          <span class="ai-orb" id="brief-orb"></span>
+          <b id="brief-title">Reading the machine…</b>
+          <span class="brief-meta" id="brief-meta"></span>
+          <button class="chip-btn" id="brief-more">Open the DOME</button>
+          <button class="aw-close" id="brief-close" title="Dismiss">✕</button>
+        </div>
+        <div class="brief-body" id="brief-body"></div>
       </section>
 
       <section id="deck">
@@ -120,6 +129,14 @@
       </div>
       <div id="aw-content"></div>
     </div>
+  </div>
+
+  <div id="orbmenu" hidden>
+    <div class="om-head"><span class="ai-orb"></span><div><b>Ask the local core</b><small id="om-model">no model</small></div></div>
+    <div class="om-list" id="om-list"></div>
+    <div class="pm-sep"></div>
+    <button id="om-open-ai">Open the Local AI workspace</button>
+    <button id="om-open-dome">Open the DOME</button>
   </div>
 
   <div id="powermenu" hidden>
@@ -665,6 +682,42 @@
 
 <!-- ============================ SETTINGS ============================= -->
   <main id="settingsView" class="view pad" hidden>
+    <section class="card" id="domeOptions">
+      <div class="cardhead"><h3>Ionity DOME and local AI</h3><span class="muted" id="optMeta">—</span></div>
+      <div class="opt-grid">
+        <label class="opt-row"><input type="checkbox" id="optAutoBrief" /><span><b>Read the machine on launch</b><small>The local model reports once, on the deck, as soon as the shell is up.</small></span></label>
+        <label class="opt-row"><input type="checkbox" id="optAskEverywhere" /><span><b>Ask button in every workspace</b><small>Each window gets an Ask control scoped to what that workspace covers.</small></span></label>
+        <label class="opt-row"><input type="checkbox" id="optWatermark" /><span><b>Ionity mark</b><small>The wordmark, bottom left.</small></span></label>
+        <label class="opt-row"><input type="checkbox" id="optKiosk" /><span><b>Kiosk shell</b><small>Full screen, escapable with Ctrl+Shift+K.</small></span></label>
+      </div>
+      <div class="opt-grid cols">
+        <label class="opt-field"><span>Launch brief</span><select id="optBriefPreset"></select></label>
+        <label class="opt-field"><span>Local model</span><select id="optModel"></select></label>
+        <label class="opt-field"><span>Dome re-read</span><select id="optInterval">
+          <option value="20">every 20 seconds</option>
+          <option value="45">every 45 seconds</option>
+          <option value="120">every 2 minutes</option>
+          <option value="600">every 10 minutes</option>
+          <option value="0">only when asked</option>
+        </select></label>
+        <label class="opt-field"><span>Accent</span><select id="optAccent">
+          <option value="cyan">Ionity cyan</option>
+          <option value="blue">Signal blue</option>
+          <option value="violet">Violet</option>
+          <option value="lime">Lime</option>
+          <option value="amber">Amber</option>
+        </select></label>
+      </div>
+      <div class="cardactions left">
+        <button class="btn ghost" id="optReread">Re-read the dome</button>
+        <button class="btn ghost" id="optReport">Write a DOME report</button>
+        <button class="btn ghost" id="optReports">Report folder</button>
+        <button class="btn ghost" id="optFanFolder">Fan profiles</button>
+        <button class="btn ghost" id="optDatasets">Data sets</button>
+      </div>
+      <p class="muted" id="optNote">Every figure the model quotes carries the class of the set it came from. It reads only the sets in the registry.</p>
+    </section>
+
     <section class="card wide" id="profileCard">
       <div class="cardhead">
         <h3>Profile</h3>

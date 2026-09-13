@@ -48,15 +48,30 @@ function buildLogo() {
 }
 
 const SUBTITLE = 'ANYTHING IS POSSIBLE | BY CREATOR FOR CREATION';
-const STATUS = [
-  '  Initializing Core',
-  '  ...Allocating RAM...',
-  '  ...Injecting DLLs...',
-  '.......3......',
-  '.......2......',
-  '......1......',
-  '<......READY.....>',
-];
+
+/* The colour each stratum draws in. The dome is the first thing anyone sees,
+   so it arrives in the palette the shell keeps using - not in grey. */
+const STRATUM_HUE = {
+  hardware: '#f0a03c',
+  system: '#8b7cf5',
+  storage: '#bdd631',
+  toolchain: '#2f7ff0',
+  intelligence: '#00c8f0',
+};
+
+/** Facts are read from the machine this is starting on - see intro:config. */
+let CFG = {};
+
+function factFor(st) {
+  switch (st.id) {
+    case 'hardware': return `${CFG.cores || '?'} threads · ${CFG.memGb || '?'} GB · ${CFG.disks || 0} volumes`;
+    case 'system': return `${CFG.os || 'this machine'}`;
+    case 'storage': return `${CFG.tools || 0}/${CFG.toolsTotal || 0} tools verified`;
+    case 'toolchain': return `${CFG.catalogue || 0} catalogue items · ${CFG.installed || 0} installed`;
+    case 'intelligence': return `${CFG.datasets || 0} data sets · ${CFG.presets || 0} presets`;
+    default: return `${st.segments} segments`;
+  }
+}
 
 let sound = true;
 let ctx = null;
@@ -216,28 +231,113 @@ async function typeSubtitle() {
   el.classList.add('done');
 }
 
-async function loaderBar() {
-  $('barwrap').classList.add('on');
-  const fill = $('fill');
-  const status = $('status');
-  const steps = 40;
-  for (let p = 0; p <= steps; p += 1) {
+
+/* ------------------------------------------------------- the DOME, drawn -- */
+
+const CX = 260;
+const CY = 232;
+
+function arcPath(r) {
+  return `M${CX - r},${CY} A${r},${r} 0 0 1 ${CX + r},${CY}`;
+}
+
+/**
+ * Draw the dome one stratum at a time, base first, narrating each with a fact
+ * read off this machine. Each arc is stroked in by animating its dash offset
+ * through the CSSOM - a parsed style attribute would be dropped by the CSP.
+ */
+async function assembleDome() {
+  const strata = Array.isArray(CFG.strata) && CFG.strata.length ? CFG.strata : [
+    { id: 'hardware', label: 'Hardware', strap: 'the machine itself', segments: 5 },
+    { id: 'system', label: 'System', strap: 'the operating system', segments: 5 },
+    { id: 'storage', label: 'Storage', strap: 'what is on disk', segments: 4 },
+    { id: 'toolchain', label: 'Toolchain', strap: 'the installed code base', segments: 5 },
+    { id: 'intelligence', label: 'Intelligence', strap: 'the local model layer', segments: 5 },
+  ];
+
+  const wrap = $('domewrap');
+  const arcs = $('arcs');
+  const list = $('strata');
+  const outer = 196;
+  const step = Math.floor((outer - 42) / strata.length);
+
+  arcs.innerHTML = '';
+  list.innerHTML = '';
+  strata.forEach((st, i) => {
+    const r = outer - i * step;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', arcPath(r));
+    path.setAttribute('class', 'arc');
+    path.dataset.stratum = st.id;
+    path.style.stroke = STRATUM_HUE[st.id] || '#00c8f0';
+    arcs.appendChild(path);
+
+    const li = document.createElement('li');
+    li.dataset.stratum = st.id;
+    li.innerHTML = `<i></i><b>${st.label}</b><span>${st.strap}</span><em></em>`;
+    li.querySelector('i').style.background = STRATUM_HUE[st.id] || '#00c8f0';
+    list.appendChild(li);
+  });
+
+  wrap.classList.add('on');
+  await wait(140);
+
+  for (let i = 0; i < strata.length; i += 1) {
     if (finished) break;
-    fill.style.width = `${Math.round((p / steps) * 100)}%`;
-    if (p % 6 === 0) {
-      const idx = Math.min(STATUS.length - 1, Math.floor((p / steps) * (STATUS.length - 1)));
-      status.textContent = STATUS[idx];
-      beep(520 + idx * 90, 18, 0.02);
-    }
+    const st = strata[i];
+    const path = arcs.children[i];
+    const li = list.children[i];
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = `${len}`;
+    path.style.strokeDashoffset = `${len}`;
+    // Force the starting offset to be committed before the transition begins.
+    void path.getBoundingClientRect();
+    path.style.transition = 'stroke-dashoffset .62s cubic-bezier(.22,1,.36,1), opacity .3s';
+    path.style.strokeDashoffset = '0';
+    path.classList.add('on');
+    li.classList.add('on');
+    li.querySelector('em').textContent = factFor(st);
+    $('status').textContent = `${st.label.toUpperCase()} · ${st.segments} segments · ${factFor(st)}`;
+    beep(420 + i * 130, 42, 0.03);
     // eslint-disable-next-line no-await-in-loop
-    await wait(28);
+    await wait(300);
   }
-  status.textContent = STATUS[STATUS.length - 1];
+
+  // The segment ring: one dot per segment, sweeping the apex arc.
+  if (!finished) {
+    const dots = $('segdots');
+    const total = strata.reduce((a, st) => a + st.segments, 0);
+    dots.innerHTML = '';
+    for (let i = 0; i < total; i += 1) {
+      const a = Math.PI - (i / (total - 1)) * Math.PI;
+      const r = outer + 14;
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', (CX + Math.cos(a) * r).toFixed(1));
+      c.setAttribute('cy', (CY - Math.sin(a) * r).toFixed(1));
+      c.setAttribute('r', '2.2');
+      c.setAttribute('class', 'segdot');
+      dots.appendChild(c);
+      // eslint-disable-next-line no-await-in-loop
+      if (i % 3 === 0) await wait(16);
+      c.classList.add('on');
+    }
+    beep(2600, 60, 0.035);
+    // The apex sits on the innermost arc, not at a guessed height.
+    const apex = $('apex');
+    apex.setAttribute('cx', String(CX));
+    apex.setAttribute('cy', String(CY - (outer - (strata.length - 1) * step)));
+    apex.setAttribute('r', '5');
+    apex.classList.add('on');
+    $('status').textContent = `${total} SEGMENTS BOUND · ${CFG.datasets || 0} DATA SETS IN REACH`;
+  }
 }
 
 async function finalPulse() {
   const logo = $('logo');
   $('colophon').classList.add('on');
+  if (CFG.version) {
+    $('colo-meta').textContent = `v${CFG.version} · ${CFG.host || ''} · Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd`;
+  }
   for (let p = 0; p < 6; p += 1) {
     if (finished) break;
     logo.classList.toggle('pulse-white', p % 2 === 0);
@@ -247,21 +347,23 @@ async function finalPulse() {
     await wait(125);
   }
   logo.classList.remove('pulse-white');
+  $('status').textContent = '<......READY.....>';
 }
 
 async function play() {
   try {
-    const cfg = await api.introConfig();
-    sound = cfg && cfg.sound !== false;
-  } catch { sound = true; }
+    CFG = await api.introConfig() || {};
+    sound = CFG.sound !== false;
+  } catch { sound = true; CFG = {}; }
+  if (CFG.watermark === false) $('watermark').remove();
 
   await chargingBeam();
   if (!finished) await impact();
   if (!finished) await revealLogo();
   if (!finished) await typeSubtitle();
-  if (!finished) await loaderBar();
+  if (!finished) await assembleDome();
   if (!finished) await finalPulse();
-  if (!finished) await wait(280);
+  if (!finished) await wait(320);
   done();
 }
 

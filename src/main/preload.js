@@ -166,7 +166,7 @@ contextBridge.exposeInMainWorld('programerly', {
 
   /* ---------------------------------------------------------- the DOME */
   dome: {
-    overview: () => ipcRenderer.invoke('dome:overview'),
+    overview: (opts) => ipcRenderer.invoke('dome:overview', opts),
     stratum: (id) => ipcRenderer.invoke('dome:stratum', id),
     segment: (id) => ipcRenderer.invoke('dome:segment', id),
     datasets: () => ipcRenderer.invoke('dome:datasets'),
@@ -174,6 +174,8 @@ contextBridge.exposeInMainWorld('programerly', {
     presets: (scope) => ipcRenderer.invoke('dome:presets', scope),
     refresh: (prefix) => ipcRenderer.invoke('dome:refresh', prefix),
     ask: (req) => ipcRenderer.invoke('dome:ask', req),
+    report: () => ipcRenderer.invoke('dome:report'),
+    openReports: () => ipcRenderer.invoke('dome:openReports'),
     onToken: (cb) => on('dome:token', cb),
   },
 

@@ -82,6 +82,12 @@
    *  THE DOME
    * ====================================================================== */
 
+  /* One hue per stratum, the same five the deck's dome carries. */
+  const STRATUM_HUE = {
+    hardware: '#f0a03c', system: '#8b7cf5', storage: '#bdd631',
+    toolchain: '#2f7ff0', intelligence: '#00c8f0',
+  };
+
   const dome = {
     /**
      * @param {HTMLElement} host
@@ -141,11 +147,18 @@
               </section>`).join('')}
           </div>
           <div class="dome-answer" hidden></div>`;
-        // Meters are painted through the CSSOM: a parsed style attribute is
-        // dropped by this renderer's CSP and the bar would sit at zero.
+        // Meters and hues are painted through the CSSOM: a parsed style
+        // attribute is dropped by this renderer's CSP, so the bar would sit at
+        // zero and every stratum would look the same shade of nothing.
+        const cards = root.querySelectorAll('.dome-stratum');
         s.strata.forEach((st, i) => {
           const fill = root.querySelectorAll('.st-meter .fill')[i];
-          if (fill) fill.style.width = `${st.value == null ? 0 : st.value}%`;
+          if (fill) {
+            fill.style.width = `${st.value == null ? 0 : st.value}%`;
+            if (st.level === 'ok' || st.level === 'idle') fill.style.background = STRATUM_HUE[st.id] || '';
+          }
+          const card = cards[i];
+          if (card && STRATUM_HUE[st.id]) card.style.setProperty('--seg-hue', STRATUM_HUE[st.id]);
         });
         wire();
       }
@@ -320,17 +333,29 @@
         root.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); ask({ presetId: b.dataset.preset }); }));
       }
 
+      /* The quick pass paints the strata from everything that can be read
+         without a scan; the full pass follows and repaints in place, so the
+         surface is never a spinner while the drives are walked. */
       async function load() {
         root.innerHTML = '<div class="dome-loading">Reading this machine…</div>';
         try {
-          data = await api.dome.overview();
+          data = await api.dome.overview({ quick: true });
           view = { level: 'overview', id: null };
           overview();
         } catch (e) {
           root.innerHTML = `<div class="dome-loading err">The dome could not be read: ${esc(e.message || e)}</div>`;
+          return;
         }
+        if (!data.deferred || !data.deferred.length) return;
+        try {
+          const full = await api.dome.overview();
+          if (view.level !== 'overview') { data = full; return; }
+          data = full;
+          overview();
+        } catch { /* the quick pass stays on screen */ }
       }
 
+      if (h.focus === 'datasets') { await datasets(); return; }
       if (h.focus) {
         try { await stratum(h.focus); return; } catch { /* fall through to the overview */ }
       }

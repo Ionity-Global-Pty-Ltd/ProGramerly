@@ -63,17 +63,28 @@ const cache = new Map();
 const TTL_LIVE = 3000;
 const TTL_SCAN = 90000;
 
+// A read already in flight is joined rather than started again: the deck, the
+// DOME surface and a question from the model can all want the same set within
+// the same second, and a registry scan or a repository sweep must run once.
+const inflight = new Map();
+
 async function cached(key, ttl, fn) {
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < ttl) return hit.value;
-  let value;
-  try {
-    value = await fn();
-  } catch (error) {
-    value = { available: false, reason: error.message || String(error) };
-  }
-  cache.set(key, { at: Date.now(), value });
-  return value;
+  const running = inflight.get(key);
+  if (running) return running;
+  const job = (async () => {
+    let value;
+    try {
+      value = await fn();
+    } catch (error) {
+      value = { available: false, reason: error.message || String(error) };
+    }
+    cache.set(key, { at: Date.now(), value });
+    return value;
+  })().finally(() => inflight.delete(key));
+  inflight.set(key, job);
+  return job;
 }
 function invalidate(prefix) {
   for (const k of [...cache.keys()]) if (!prefix || k.startsWith(prefix)) cache.delete(k);
@@ -585,25 +596,64 @@ const SCORERS = {
 
 /* ------------------------------------------------------------- surfaces */
 
-function getter() {
+/**
+ * One reader per set per pass, memoised.
+ *
+ * In `quick` mode a scan-cost set that is not already cached is not run: it
+ * comes back deferred, so the deck can paint the dome the instant the shell
+ * is up while the full read - which walks the development root, the drives
+ * and the listening ports - runs behind it. Nothing is invented for a
+ * deferred set; its segment simply reports that it has not been read yet.
+ */
+function getter(opts = {}) {
   const seen = new Map();
-  return async (id) => {
-    if (!seen.has(id)) seen.set(id, await dataset(id));
+  const quick = opts.quick === true;
+  const deferred = new Set();
+  const get = async (id) => {
+    if (!seen.has(id)) {
+      const def = datasetDef(id);
+      if (quick && def && def.cost === 'scan' && !cache.get(`ds:${id}`)) {
+        deferred.add(id);
+        seen.set(id, {
+          id, name: def.name, class: def.class, about: def.about, source: def.source,
+          available: false, rows: [], deferred: true,
+          reason: 'Not scanned yet - the full read is still running.',
+        });
+      } else {
+        seen.set(id, await dataset(id));
+      }
+    }
     return seen.get(id);
   };
+  get.deferred = deferred;
+  return get;
 }
 
 async function scoreSegment(seg, get) {
   const fn = SCORERS[seg.id];
   if (typeof fn !== 'function') return IDLE('no scorer', 'assessment');
-  try { return await fn(get); } catch (e) { return IDLE('reader failed', 'measured', e.message); }
+  try {
+    // A segment whose sets have not been scanned yet says so. Scoring it from
+    // an empty read would turn "not looked at" into "nothing there", which is
+    // exactly the kind of claim this module exists to avoid.
+    const reads = await Promise.all((seg.reads || []).map((id) => get(id)));
+    if (reads.some((r) => r && r.deferred)) return IDLE('not scanned yet', 'measured');
+    return await fn(get);
+  } catch (e) { return IDLE('reader failed', 'measured', e.message); }
 }
 
 const WORST = { err: 3, warn: 2, ok: 1, idle: 0 };
 
 /** The whole dome: five strata, each scored from its segments. */
-async function overview() {
-  const get = getter();
+async function overview(opts = {}) {
+  const get = getter(opts);
+
+  // Every set the 24 segments declare, read once and in parallel. Scoring then
+  // runs against memoised results, so a pass costs the slowest reader rather
+  // than the sum of all of them.
+  const wanted = [...new Set(FRAMEWORK.strata.flatMap((s) => s.segments.flatMap((g) => g.reads || [])))];
+  await Promise.all(wanted.map((id) => get(id).catch(() => null)));
+
   const strata = [];
   for (const s of FRAMEWORK.strata) {
     const segments = [];
@@ -631,6 +681,8 @@ async function overview() {
     at: Date.now(),
     host: os.hostname(),
     strata,
+    quick: opts.quick === true,
+    deferred: [...get.deferred],
     counts: {
       strata: strata.length,
       segments: strata.reduce((a, s) => a + s.segments.length, 0),

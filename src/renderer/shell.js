@@ -41,25 +41,39 @@
      app shows (fans reuses the Hardware workspace); `tool` is a programs.json
      id; `launch` means the app is the tool itself and opens no window. */
   const APPS = {
-    software: { name: 'Software', sub: 'Provision a complete toolchain', view: 'softwareApp', tab: 'software', hue: '#2f7ff0', desc: 'Profiles, catalogue, one elevated install run.' },
-    ai: { name: 'Local AI', sub: 'Models, chat, GPU and environments', view: 'aiView', tab: 'ai', hue: '#00c8f0', desc: 'Ollama on this machine. Nothing leaves it.' },
-    projects: { name: 'Projects', sub: 'Git state across every workspace', view: 'projectsView', tab: 'projects', hue: '#8b7cf5', desc: 'Every repository under the dev root, live.' },
-    monitor: { name: 'Monitor', sub: 'Telemetry, disks and network history', view: 'monitorView', tab: 'monitor', hue: '#bdd631', desc: 'The gauges behind the dome, in detail.' },
-    network: { name: 'Network', sub: 'Sweep, throughput and official links', view: 'networkView', tab: 'network', hue: '#2f7ff0', desc: 'Regions, speed test, link registry.' },
-    hardware: { name: 'Hardware', sub: 'Sensors, cooling, RGB and memory', view: 'hardwareView', tab: 'hardware', hue: '#f0a03c', desc: 'Sensors, fans, RGB and RAM.' },
-    doctor: { name: 'Doctor', sub: 'Diagnostics, cleanup and ports', view: 'doctorView', tab: 'doctor', hue: '#f0686a', desc: 'Scan, then fix - with a report folder.' },
-    terminals: { name: 'Terminals', sub: 'Open a real installed shell', view: 'terminalsView', tab: 'terminals', hue: '#5d7181', desc: 'PowerShell, cmd, Git Bash, WSL, Nushell.' },
-    maintenance: { name: 'Maintenance', sub: 'Registry repair and system tools', view: 'maintView', tab: 'maintenance', hue: '#a9762d', desc: 'Documented registry fixes, exported first.' },
-    updates: { name: 'Operations', sub: 'Updates, sync and releases', view: 'updatesView', tab: 'updates', hue: '#3d8f63', desc: 'Update checks, scheduled sync, push & release.' },
+    software: { name: 'Software', sub: 'Provision a complete toolchain', view: 'softwareApp', tab: 'software', hue: '#2f7ff0', scope: 'toolchain', desc: 'Profiles, catalogue, one elevated install run.' },
+    ai: { name: 'Local AI', sub: 'Models, chat, GPU and environments', view: 'aiView', tab: 'ai', hue: '#00c8f0', scope: 'intelligence', desc: 'Ollama on this machine. Nothing leaves it.' },
+    projects: { name: 'Projects', sub: 'Git state across every workspace', view: 'projectsView', tab: 'projects', hue: '#8b7cf5', scope: 'repos', desc: 'Every repository under the dev root, live.' },
+    monitor: { name: 'Monitor', sub: 'Telemetry, disks and network history', view: 'monitorView', tab: 'monitor', hue: '#bdd631', scope: 'all', desc: 'The gauges behind the dome, in detail.' },
+    network: { name: 'Network', sub: 'Sweep, throughput and official links', view: 'networkView', tab: 'network', hue: '#2f7ff0', scope: 'services-ports', desc: 'Regions, speed test, link registry.' },
+    hardware: { name: 'Hardware', sub: 'Sensors, cooling, RGB and memory', view: 'hardwareView', tab: 'hardware', hue: '#f0a03c', scope: 'hardware', desc: 'Sensors, fans, RGB and RAM.' },
+    doctor: { name: 'Doctor', sub: 'Diagnostics, cleanup and ports', view: 'doctorView', tab: 'doctor', hue: '#f0686a', scope: 'health-scan', desc: 'Scan, then fix - with a report folder.' },
+    terminals: { name: 'Terminals', sub: 'Open a real installed shell', view: 'terminalsView', tab: 'terminals', hue: '#5d7181', scope: 'env-path', desc: 'PowerShell, cmd, Git Bash, WSL, Nushell.' },
+    maintenance: { name: 'Maintenance', sub: 'Registry repair and system tools', view: 'maintView', tab: 'maintenance', hue: '#a9762d', scope: 'registry', desc: 'Documented registry fixes, exported first.' },
+    updates: { name: 'Operations', sub: 'Updates, sync and releases', view: 'updatesView', tab: 'updates', hue: '#3d8f63', scope: 'toolchain', desc: 'Update checks, scheduled sync, push & release.' },
     settings: { name: 'Settings', sub: 'Profile, startup and application controls', view: 'settingsView', tab: 'settings', hue: '#5d7181', desc: 'Startup, tray, kiosk, profile.' },
     // Ionity tools - capabilities of ProGramerly, laid out the Ai-OS way
-    dome: { name: 'The Ionity DOME', sub: 'Five strata · 24 segments · the sets behind them', builtin: 'dome', hue: '#00c8f0', desc: 'The workstation as structure, drillable, with the local model reporting from the real sets.' },
-    fans: { name: 'Fan control', sub: 'Channels · curves · thermal sources', builtin: 'fans', tool: 'fanzi', hue: '#00c8f0', desc: 'Every fan channel, the curves that drive them, and what each would command right now.' },
+    dome: { name: 'The Ionity DOME', sub: 'Five strata · 24 segments · the sets behind them', builtin: 'dome', hue: '#00c8f0', scope: 'all', desc: 'The workstation as structure, drillable, with the local model reporting from the real sets.' },
+    fans: { name: 'Fan control', sub: 'Channels · curves · thermal sources', builtin: 'fans', tool: 'fanzi', hue: '#00c8f0', scope: 'thermal', desc: 'Every fan channel, the curves that drive them, and what each would command right now.' },
     cic: { name: 'CiC', sub: 'Central Ionity Control', tool: 'cic', launch: true, hue: '#0e9ab8', desc: 'The IONITY CiC workstation utility.' },
     mcp: { name: 'MCP audit', sub: 'Internal side tool · maintainers', tool: 'mcp-audit', launch: true, side: true, hue: '#8b7cf5', desc: 'Internal. Asks before it runs.' },
     about: { name: 'About ProGramerly', sub: 'Ionity (Pty) Ltd · AEDI', about: true, hue: '#00c8f0', desc: '' },
   };
   const TILE_ORDER = ['dome', 'software', 'ai', 'projects', 'fans', 'cic', 'monitor', 'doctor'];
+
+  /* One hue per stratum. The dome, its legend and every segment icon carry it,
+     so the deck reads as five subjects rather than five grey rings. */
+  const STRATUM_HUE = {
+    hardware: '#f0a03c', system: '#8b7cf5', storage: '#bdd631',
+    toolchain: '#2f7ff0', intelligence: '#00c8f0',
+  };
+  const STAT_HUE = { cpu: '#00c8f0', mem: '#8b7cf5', disk: '#bdd631', net: '#2f7ff0' };
+
+  /* The five shell accents. Chosen in Settings; applied to the ambient field,
+     the orb, the ask box and every primary control through one variable. */
+  const ACCENTS = {
+    cyan: '#00c8f0', blue: '#2f7ff0', violet: '#8b7cf5', lime: '#bdd631', amber: '#f0a03c',
+  };
 
   let tools = [];                 // programs.list()
   let mounted = null;             // { id, el } currently in the app window
@@ -68,6 +82,11 @@
   let aiSetup = null;             // null | 'install' | 'pull' | 'busy'
   let aiPulling = false;
   let preferredTarget = null;
+  let aiList = [];                // api.aiTargets() - the models on this machine
+  let domePresets = [];           // the analysis presets in the registry
+  let domeTimer = null;           // the re-read interval, rebuilt when it changes
+  let briefBusy = false;
+  let askSeq = 0;
 
   const safe = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const clamp = (v, a = 0, b = 100) => Math.max(a, Math.min(b, Number(v) || 0));
@@ -104,6 +123,7 @@
 
   function closeApp() {
     if (teardown) { try { teardown(); } catch { /* best effort */ } teardown = null; }
+    detachAwAnswer();
     if (mounted) {
       // Park the workspace again; renderer.js state inside it is untouched.
       store().appendChild(mounted.el);
@@ -128,6 +148,7 @@
       b.addEventListener('click', () => launchTool(app.tool, b));
       extra.appendChild(b);
     }
+    addAskControl(id, app, extra);
   }
 
   /* Built-in surfaces (the DOME, fan control) are mounted into their own
@@ -136,7 +157,10 @@
   const builtinEls = new Map();
   let teardown = null;
 
-  async function mountBuiltin(id, kind, opts = {}) {
+  /* The window is shown first and the surface loads inside it. A built-in
+     surface reads this machine to draw itself; making the operator wait on a
+     blank deck for that read would be the wrong way round. */
+  function mountBuiltin(id, kind, opts = {}) {
     if (!window.PGApps || !window.PGApps[kind]) {
       toast(`The ${APPS[id].name} surface did not load.`, 'bad');
       return false;
@@ -152,17 +176,17 @@
     $('aw-content').appendChild(el);
     mounted = { id, el, builtin: true };
     activeTab = id;
-    try {
-      teardown = await window.PGApps[kind].mount(el, {
-        api, toast, openApp, focus: opts.focus, safe,
-      }) || null;
-    } catch (error) {
-      el.innerHTML = '';
-      const p = document.createElement('p');
-      p.className = 'muted';
-      p.textContent = `This surface failed to open: ${error.message || error}`;
-      el.appendChild(p);
-    }
+    Promise.resolve()
+      .then(() => window.PGApps[kind].mount(el, { api, toast, openApp, focus: opts.focus, safe }))
+      .then((fn) => { if (mounted && mounted.id === id) teardown = fn || null; })
+      .catch((error) => {
+        if (!mounted || mounted.id !== id) return;
+        el.innerHTML = '';
+        const p = document.createElement('p');
+        p.className = 'muted';
+        p.textContent = `This surface failed to open: ${error.message || error}`;
+        el.appendChild(p);
+      });
     return true;
   }
 
@@ -172,7 +196,7 @@
     if (app.launch) { await launchTool(app.tool); return; }
     if (mounted && mounted.id !== id) closeApp();
     if (app.builtin) {
-      const done = await mountBuiltin(id, app.builtin, opts);
+      const done = mountBuiltin(id, app.builtin, opts);
       if (!done) return;
     } else if (app.about) {
       mountAbout();
@@ -264,6 +288,8 @@
       t.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
     });
   }
+  const hueFill = (hex, a) => hexToRgba(hex, a);
+
   function hexToRgba(hex, a) {
     const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || '');
     if (!m) return `rgba(0,200,240,${a})`;
@@ -310,6 +336,11 @@
     });
     html += `<circle class="apex" cx="${CX}" cy="${CY - (outer - (strata.length - 1) * step) + 6}" r="3"/>`;
     svg.innerHTML = html;
+    // Each band is stroked in its stratum's colour through the CSSOM.
+    svg.querySelectorAll('.band').forEach((b) => {
+      const hue = STRATUM_HUE[b.dataset.stratum];
+      if (hue) { b.style.stroke = hue; b.style.fill = hueFill(hue, 0.1); }
+    });
     svg.querySelectorAll('.band').forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation();
       openApp('dome', { focus: b.dataset.stratum });
@@ -318,10 +349,14 @@
     const legend = $('dome-legend');
     legend.innerHTML = strata.map((st) => `
       <button data-stratum="${safe(st.id)}" title="${safe(st.summary)}">
-        <i></i>
+        <i data-hue="${safe(st.id)}"></i>
         <span><b>${safe(st.label)}</b><small>reading…</small></span>
         <em>—</em>
       </button>`).join('');
+    legend.querySelectorAll('i[data-hue]').forEach((i) => {
+      const hue = STRATUM_HUE[i.dataset.hue];
+      if (hue) { i.style.background = hue; i.style.boxShadow = `0 0 9px ${hueFill(hue, 0.75)}`; }
+    });
     legend.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation();
       openApp('dome', { focus: b.dataset.stratum });
@@ -334,9 +369,16 @@
     data.strata.forEach((st) => {
       const band = document.querySelector(`#dome-svg .band[data-stratum="${st.id}"]`);
       if (band) {
-        band.classList.remove('warn', 'err', 'hot');
-        if (st.level === 'warn' || st.level === 'err') band.classList.add(st.level);
-        else if (st.value != null && st.value >= 70) band.classList.add('hot');
+        band.classList.remove('warn', 'err');
+        const hue = STRATUM_HUE[st.id] || '#00c8f0';
+        if (st.level === 'warn' || st.level === 'err') {
+          band.classList.add(st.level);
+          band.style.stroke = st.level === 'err' ? '#f0686a' : '#f0a03c';
+          band.style.fill = hueFill(st.level === 'err' ? '#f0686a' : '#f0a03c', 0.13);
+        } else {
+          band.style.stroke = hue;
+          band.style.fill = hueFill(hue, st.value != null && st.value >= 70 ? 0.16 : 0.08);
+        }
       }
       const row = document.querySelector(`#dome-legend button[data-stratum="${st.id}"]`);
       if (row) {
@@ -357,14 +399,23 @@
     setText('dome-note', `${data.counts.datasets} data sets in reach · ${data.counts.presets} presets`);
   }
 
-  async function refreshDome() {
-    if (domeBusy) return;
+  /* A quick pass skips any scan-cost set that is not already cached, so the
+     dome is on the deck immediately; the full pass follows and fills in the
+     segments that needed a scan. */
+  async function refreshDome(opts = {}) {
+    if (domeBusy) return null;
     domeBusy = true;
     try {
-      domeData = await api.dome.overview();
-      paintDome(domeData);
+      const data = await api.dome.overview(opts);
+      domeData = data;
+      paintDome(data);
+      if (data.deferred && data.deferred.length) {
+        setText('dome-note', `${data.counts.datasets} sets in reach · scanning ${data.deferred.length} more…`);
+      }
+      return data;
     } catch {
       setText('dome-note', 'the dome could not be read');
+      return null;
     } finally {
       domeBusy = false;
     }
@@ -372,8 +423,18 @@
 
   function setStat(id, k, t, pct, level) {
     setText(`st-${id}-k`, k); setText(`st-${id}-t`, t);
-    const bar = $(`st-${id}-b`); if (bar) bar.style.width = `${clamp(pct)}%`;
-    const box = $(`st-${id}`); if (box) { box.classList.remove('warn', 'err'); if (level && level !== 'ok') box.classList.add(level); }
+    const bar = $(`st-${id}-b`);
+    if (bar) {
+      bar.style.width = `${clamp(pct)}%`;
+      const hue = level === 'err' ? '#f0686a' : level === 'warn' ? '#f0a03c' : STAT_HUE[id] || '#00c8f0';
+      bar.style.background = `linear-gradient(90deg, ${hueFill(hue, 0.55)}, ${hue})`;
+    }
+    const box = $(`st-${id}`);
+    if (box) {
+      box.classList.remove('warn', 'err');
+      if (level && level !== 'ok') box.classList.add(level);
+      box.style.setProperty('--hue', hueFill(STAT_HUE[id] || '#00c8f0', 0.13));
+    }
   }
   const lvl = (v, w, e) => (v >= e ? 'err' : v >= w ? 'warn' : 'ok');
 
@@ -434,6 +495,7 @@
     if (aiPulling) return;
     try {
       const [endpoints, list] = await Promise.all([api.aiEndpoints(), api.aiTargets()]);
+      aiList = Array.isArray(list) ? list : [];
       paintTargets(list);                                  // renderer.js keeps its own select in sync
       const ollama = (endpoints || []).find((e) => e.id === 'ollama');
       preferredTarget = pickTarget(list);
@@ -457,6 +519,12 @@
     } catch {
       $('engine-chip').className = 'off'; setText('engine-label', 'Local core · unavailable'); showAiSetup(null);
     }
+    // Every surface that needs a model follows the same answer.
+    const ready = Boolean(preferredTarget);
+    const askBtn = $('aw-ask-btn'); if (askBtn) askBtn.disabled = !ready;
+    document.querySelectorAll('#suggest .preset-chip').forEach((b) => { b.disabled = !ready; });
+    setText('om-model', ready ? `${preferredTarget.model} · on this machine` : 'no local model yet');
+    paintOptions();
   }
   async function runAiSetup() {
     const model = defaultModel();
@@ -511,6 +579,279 @@
     await send(false);                                     // renderer.js - streams into aiChatLog, mirrored here
   }
 
+  /* ------------------------------------------ the local core, everywhere */
+  /* One streaming helper serves the launch brief, the orb menu and the Ask
+     control in every workspace. Each goes through dome:ask, so the answer is
+     built from registered sets only and the Local AI transcript is untouched. */
+
+  function answerShell(box, title) {
+    box.innerHTML = `<div class="ans-head"><span class="ai-orb busy"></span><b></b><span class="ans-meta"></span></div><div class="ans-body"></div>`;
+    const ui = {
+      head: box.querySelector('.ans-head b'),
+      meta: box.querySelector('.ans-meta'),
+      body: box.querySelector('.ans-body'),
+      orb: box.querySelector('.ai-orb'),
+    };
+    ui.head.textContent = title || 'Reading the sets…';
+    return ui;
+  }
+
+  async function askStream({ scope, presetId, question, box, ui, title }) {
+    const t = ui || (box ? answerShell(box, title) : null);
+    if (!t) return null;
+    if (ui) {
+      t.head.textContent = title || 'Reading the sets…';
+      t.meta.textContent = '';
+      t.body.textContent = '';
+      t.orb.classList.add('busy');
+    }
+    if (box) { box.hidden = false; box.classList.remove('err'); }
+    const mine = ++askSeq;
+    const off = api.dome.onToken((p) => {
+      if (mine !== askSeq) return;
+      if (p.start) {
+        if (p.preset) t.head.textContent = p.preset.name;
+        t.meta.textContent = `${p.model} · ${p.sets.filter((s) => s.available).length}/${p.sets.length} sets`;
+      }
+      if (p.token) { t.body.textContent += p.token; t.body.scrollTop = t.body.scrollHeight; }
+      if (p.error) { t.body.textContent += `\n${p.error}`; if (box) box.classList.add('err'); }
+      if (p.done) {
+        t.orb.classList.remove('busy');
+        if (p.stats && p.stats.tokensPerSec) t.meta.textContent += ` · ${p.stats.tokensPerSec} tok/s`;
+        t.body.scrollTop = 0;              // the answer is read from the top
+      }
+    });
+    try {
+      const res = await api.dome.ask({ scope, presetId, question });
+      if (res && !res.ok && res.error) {
+        t.body.textContent = res.error; t.orb.classList.remove('busy');
+        if (box) box.classList.add('err');
+      }
+      return res;
+    } catch (e) {
+      t.body.textContent = e.message || String(e); t.orb.classList.remove('busy');
+      if (box) box.classList.add('err');
+      return null;
+    } finally { setTimeout(off, 600); }
+  }
+
+  /* ------------------------------------------------------- launch brief */
+  /* On launch - and from any preset chip - the local model reads the machine
+     once and reports on the deck. Nothing is asked of the network. */
+
+  async function runBrief(presetId) {
+    const panel = $('brief');
+    if (!panel) return;
+    if (!preferredTarget) {
+      toast(aiSetup === 'install' ? 'Set up local AI first - one click on the chip below.' : `Get ${defaultModel()} to have the machine read itself.`, 'bad');
+      return;
+    }
+    if (briefBusy) { toast('The local core is still reporting.'); return; }
+    briefBusy = true;
+    const id = presetId || shellSettings.aiBriefPreset || 'state-of-machine';
+    const preset = domePresets.find((p) => p.id === id);
+    panel.hidden = false;
+    document.body.classList.add('brief-on');
+    requestAnimationFrame(() => panel.classList.add('on'));
+    await askStream({
+      presetId: id,
+      title: preset ? preset.name : 'State of the machine',
+      ui: { head: $('brief-title'), meta: $('brief-meta'), body: $('brief-body'), orb: $('brief-orb') },
+    });
+    briefBusy = false;
+  }
+
+  function hideBrief() {
+    const panel = $('brief');
+    panel.classList.remove('on');
+    panel.hidden = true;
+    document.body.classList.remove('brief-on');
+    askSeq += 1;                       // any stream still running stops painting
+  }
+
+  /* Hero chips are the registry's own presets, not a hard-coded list: add a
+     preset to datasets.json and it appears here. */
+  function buildHeroChips() {
+    const host = $('suggest'); if (!host) return;
+    host.querySelectorAll('.preset-chip').forEach((b) => b.remove());
+    const setup = $('ai-setup-chip');
+    domePresets.slice(0, 4).forEach((p) => {
+      const b = document.createElement('button');
+      b.className = 'preset-chip';
+      b.dataset.preset = p.id;
+      b.title = p.question || '';
+      b.textContent = p.name;
+      b.addEventListener('click', () => runBrief(p.id));
+      host.insertBefore(b, setup);
+    });
+  }
+
+  /* ------------------------------------------------------------ orb menu */
+  function buildOrbMenu() {
+    const list = $('om-list'); if (!list) return;
+    list.innerHTML = '';
+    domePresets.forEach((p) => {
+      const b = document.createElement('button');
+      b.innerHTML = `<b>${safe(p.name)}</b><small>${safe(p.question || '')}</small>`;
+      b.addEventListener('click', () => { closeOrbMenu(); runBrief(p.id); });
+      list.appendChild(b);
+    });
+  }
+  function openOrbMenu() {
+    const m = $('orbmenu'); if (!m) return;
+    setText('om-model', preferredTarget ? `${preferredTarget.model} · on this machine` : 'no local model yet');
+    m.hidden = false;
+    requestAnimationFrame(() => m.classList.add('on'));
+  }
+  function closeOrbMenu() {
+    const m = $('orbmenu'); if (!m) return;
+    m.classList.remove('on');
+    setTimeout(() => { if (!m.classList.contains('on')) m.hidden = true; }, 220);
+  }
+
+  /* -------------------------------------------- Ask inside every workspace */
+  /* When the option is on, each workspace window carries an Ask control that
+     is scoped to what that workspace covers: Hardware asks about thermal,
+     Projects about repositories, Doctor about the last scan. */
+  let awAnswerEl = null;
+  function awAnswer() {
+    if (!awAnswerEl) {
+      awAnswerEl = document.createElement('div');
+      awAnswerEl.className = 'dome-answer aw-answer';
+      awAnswerEl.hidden = true;
+    }
+    return awAnswerEl;
+  }
+  function detachAwAnswer() {
+    if (awAnswerEl && awAnswerEl.parentNode) awAnswerEl.parentNode.removeChild(awAnswerEl);
+    if (awAnswerEl) { awAnswerEl.hidden = true; awAnswerEl.innerHTML = ''; }
+  }
+  function addAskControl(id, app, extra) {
+    if (!app.scope || app.builtin === 'dome') return;
+    if (shellSettings.aiAskEverywhere === false) return;
+    const b = document.createElement('button');
+    b.className = 'btn ghost aw-ask-btn';
+    b.id = 'aw-ask-btn';
+    b.textContent = `Ask about ${app.name.toLowerCase()}`;
+    b.disabled = !preferredTarget;
+    if (!preferredTarget) b.title = 'No local model is online yet.';
+    b.addEventListener('click', () => {
+      const box = awAnswer();
+      const content = $('aw-content');
+      if (box.parentNode !== content) content.insertBefore(box, content.firstChild);
+      box.scrollIntoView({ block: 'start' });
+      const preset = domePresets.find((p) => p.scope === app.scope);
+      askStream({
+        scope: app.scope,
+        presetId: preset ? preset.id : undefined,
+        box,
+        title: `${app.name} · local core`,
+      });
+    });
+    extra.appendChild(b);
+  }
+
+  /* ------------------------------------------------------ shell settings */
+  async function saveSetting(patch) {
+    try { shellSettings = await api.setSettings(patch) || shellSettings; }
+    catch (e) { toast(`Could not save that: ${e.message || e}`, 'bad'); }
+    return shellSettings;
+  }
+
+  function applyAccent(name) {
+    const hex = ACCENTS[name] || ACCENTS.cyan;
+    document.body.style.setProperty('--sh-accent', hex);
+    document.body.style.setProperty('--sh-accent-soft', hueFill(hex, 0.16));
+    document.body.style.setProperty('--sh-accent-line', hueFill(hex, 0.42));
+    document.body.style.setProperty('--sh-grad', `linear-gradient(120deg, ${hueFill(hex, 0.85)}, ${hex})`);
+  }
+  function applyWatermark(on) {
+    const m = $('shellMark');
+    if (m) m.hidden = on === false;
+  }
+
+  function scheduleDome() {
+    if (domeTimer) { clearInterval(domeTimer); domeTimer = null; }
+    const secs = Number(shellSettings.domeInterval);
+    if (!secs || secs < 5) return;                       // 0 = only when asked
+    domeTimer = setInterval(() => {
+      if (!$('overlay').classList.contains('on')) refreshDome();
+    }, secs * 1000);
+  }
+
+  /* ------------------------------------------------- the options card */
+  function fillSelect(sel, rows, value) {
+    if (!sel) return;
+    const want = rows.map((r) => `${r.value}\u0000${r.label}`).join('|');
+    if (sel.dataset.rows !== want) {
+      sel.innerHTML = rows.map((r) => `<option value="${safe(r.value)}">${safe(r.label)}</option>`).join('');
+      sel.dataset.rows = want;
+    }
+    if (value != null && sel.value !== String(value)) sel.value = String(value);
+  }
+
+  function paintOptions() {
+    const card = $('domeOptions'); if (!card) return;
+    const set = (id, on) => { const e = $(id); if (e) e.checked = on !== false; };
+    set('optAutoBrief', shellSettings.aiAutoBrief);
+    set('optAskEverywhere', shellSettings.aiAskEverywhere);
+    set('optWatermark', shellSettings.watermark);
+    const k = $('optKiosk'); if (k) k.checked = Boolean(shellSettings.kioskMode);
+
+    fillSelect($('optBriefPreset'), domePresets.map((p) => ({ value: p.id, label: p.name })),
+      shellSettings.aiBriefPreset || 'state-of-machine');
+    fillSelect($('optModel'), aiList.length
+      ? aiList.map((t) => ({ value: t.model, label: `${t.model} · ${t.endpoint || t.endpointId || 'local'}` }))
+      : [{ value: defaultModel(), label: `${defaultModel()} · not pulled yet` }],
+      (preferredTarget && preferredTarget.model) || defaultModel());
+    const iv = $('optInterval'); if (iv) iv.value = String(shellSettings.domeInterval == null ? 45 : shellSettings.domeInterval);
+    const ac = $('optAccent'); if (ac) ac.value = shellSettings.accent || 'cyan';
+
+    if (domeData) {
+      setText('optMeta', `${domeData.counts.strata} strata · ${domeData.counts.segments} segments · ${domeData.counts.datasets} sets · ${domeData.counts.presets} presets`);
+    }
+  }
+
+  function wireOptions() {
+    const card = $('domeOptions'); if (!card) return;
+    const on = (id, ev, fn) => { const e = $(id); if (e) e.addEventListener(ev, fn); };
+
+    on('optAutoBrief', 'change', (e) => saveSetting({ aiAutoBrief: e.target.checked }));
+    on('optAskEverywhere', 'change', async (e) => {
+      await saveSetting({ aiAskEverywhere: e.target.checked });
+      if (mounted && APPS[mounted.id]) paintAppHead(mounted.id, APPS[mounted.id]);
+    });
+    on('optWatermark', 'change', async (e) => { await saveSetting({ watermark: e.target.checked }); applyWatermark(e.target.checked); });
+    on('optKiosk', 'change', (e) => setKiosk(e.target.checked));
+    on('optBriefPreset', 'change', (e) => saveSetting({ aiBriefPreset: e.target.value }));
+    on('optModel', 'change', async (e) => { await saveSetting({ aiDefaultModel: e.target.value }); await refreshAi(); });
+    on('optInterval', 'change', async (e) => { await saveSetting({ domeInterval: Number(e.target.value) }); scheduleDome(); });
+    on('optAccent', 'change', async (e) => { await saveSetting({ accent: e.target.value }); applyAccent(e.target.value); });
+
+    on('optReread', 'click', async () => {
+      await api.dome.refresh();
+      toast('Re-reading every set…');
+      await refreshDome();
+      paintOptions();
+      toast('The dome is current.', 'good');
+    });
+    on('optReport', 'click', async (e) => {
+      const b = e.currentTarget; const label = b.textContent;
+      b.disabled = true; b.textContent = 'Writing…';
+      try {
+        const r = await api.dome.report();
+        const name = r && r.file ? String(r.file).split(/[\\/]/).pop() : '';
+        toast(r && r.ok
+          ? `${name} written · ${r.segments} segments, ${r.datasets} sets - open the report folder`
+          : `Report failed: ${(r && r.error) || 'unknown'}`, r && r.ok ? 'good' : 'bad');
+      } catch (err) { toast(`Report failed: ${err.message || err}`, 'bad'); }
+      b.textContent = label; b.disabled = false;
+    });
+    on('optReports', 'click', () => api.dome.openReports());
+    on('optFanFolder', 'click', () => api.fans.openFolder());
+    on('optDatasets', 'click', () => openApp('dome', { focus: 'datasets' }));
+  }
+
   /* ---------------------------------------------------------- kiosk etc */
   function applyKioskUi(on) {
     document.body.classList.toggle('kiosk-shell', Boolean(on));
@@ -524,12 +865,27 @@
   }
 
   function bind() {
-    document.querySelectorAll('[data-app]').forEach((b) => b.addEventListener('click', () => openApp(b.dataset.app)));
+    document.querySelectorAll('[data-app]').forEach((b) => {
+      if (b.id === 'dock-orb') return;   // the orb opens the preset menu, below
+      b.addEventListener('click', () => openApp(b.dataset.app));
+    });
     $('aw-close').addEventListener('click', closeApp);
     $('overlay').addEventListener('click', (e) => { if (e.target === $('overlay')) closeApp(); });
     $('dome-card').addEventListener('click', () => openApp('monitor'));
     $('userChip').addEventListener('click', () => openApp('settings'));
-    $('engine-chip').addEventListener('click', () => (aiSetup && aiSetup !== 'busy' ? runAiSetup() : openApp('ai')));
+    $('engine-chip').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (aiSetup && aiSetup !== 'busy') { runAiSetup(); return; }
+      openOrbMenu();                       // the chip is the model picker as well
+    });
+    $('dock-orb').addEventListener('click', (e) => { e.stopPropagation(); openOrbMenu(); });
+    $('om-open-ai').addEventListener('click', () => { closeOrbMenu(); openApp('ai'); });
+    $('om-open-dome').addEventListener('click', () => { closeOrbMenu(); openApp('dome'); });
+    document.addEventListener('click', (e) => { if (!$('orbmenu').contains(e.target)) closeOrbMenu(); });
+
+    $('brief-close').addEventListener('click', hideBrief);
+    $('brief-more').addEventListener('click', () => openApp('dome'));
+    $('brief-orb').addEventListener('click', () => runBrief());
     $('ai-setup-chip').addEventListener('click', runAiSetup);
     $('ask-send').addEventListener('click', ask);
     $('ask-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ask(); } if (e.key === 'Escape') $('ask-input').blur(); });
@@ -549,11 +905,19 @@
     window.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'k') { e.preventDefault(); setKiosk(!shellSettings.kioskMode); return; }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); closeApp(); $('ask-input').focus(); $('ask-input').select(); return; }
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); runBrief(); return; }
+      if (e.key === 'Escape' && !$('orbmenu').hidden) { closeOrbMenu(); return; }
       if (e.key === 'Escape' && $('overlay').classList.contains('on') && $('summarySheet').hidden) closeApp();
     });
 
     api.onMetrics(paintMetrics);
-    api.onSettingsChanged((next) => { shellSettings = next || {}; applyKioskUi(shellSettings.kioskMode); paintUser(); });
+    api.onSettingsChanged((next) => {
+      shellSettings = next || {};
+      applyKioskUi(shellSettings.kioskMode);
+      applyAccent(shellSettings.accent);
+      applyWatermark(shellSettings.watermark);
+      paintUser(); paintOptions(); scheduleDome();
+    });
     api.onUpdateAvailable((u) => { const on = Boolean(u && u.available); $('updateDot').hidden = !on; $('dockUpdateDot').hidden = !on; if (on) toast(`ProGramerly ${u.latest} is available - open Operations.`, 'good'); });
     api.onUpdateChecked((u) => { const on = Boolean(u && u.available); $('updateDot').hidden = !on; $('dockUpdateDot').hidden = !on; });
     api.programs.onProgress((p) => { if (p && p.phase === 'ready') loadTools(); if (p && p.phase === 'failed') toast(`${p.file}: ${p.error || 'failed'}`, 'bad'); });
@@ -564,21 +928,36 @@
 
   async function initShell() {
     shellSettings = SETTINGS || {};
-    buildTiles(); bind(); paintUser();
+    buildTiles(); bind(); paintUser(); wireOptions();
+    applyAccent(shellSettings.accent);
+    applyWatermark(shellSettings.watermark);
     updateClock(); setInterval(updateClock, 1000);
     setText('build-label', `v${INFO.appVersion} · Policy 986 AED`);
     $('shell').classList.add('on');
+    // The fast surfaces first. The dome's first read walks the development
+    // root, which on a large one takes real time - nothing the operator can
+    // already use is allowed to wait behind it.
     await Promise.allSettled([
       api.metrics().then(paintMetrics),
       loadTools(),
-      refreshAi(),
-      refreshDome(),
+      api.dome.presets('all').then((rows) => { domePresets = Array.isArray(rows) ? rows : []; }),
     ]);
+    buildHeroChips(); buildOrbMenu();
+    await refreshAi();                       // enables the chips it can answer
+    paintOptions();
     if (shellSettings.kioskMode) await setKiosk(true);
     setInterval(refreshAi, 30000);
-    // The dome re-reads on a slower cadence than the stats: its scan-cost sets
-    // are cached in the main process, so this is cheap, but it is not free.
-    setInterval(() => { if (!$('overlay').classList.contains('on')) refreshDome(); }, 45000);
+
+    // The machine reads itself once, on the deck, as soon as a model is there.
+    if (shellSettings.aiAutoBrief !== false && preferredTarget) setTimeout(() => runBrief(), 900);
+
+    // The dome paints twice: once from what can be read without a scan, so the
+    // deck is complete immediately, and once in full - walking the drives, the
+    // listening ports and every repository under the development root - which
+    // lands when it lands and repaints the card on arrival.
+    await refreshDome({ quick: true });
+    paintOptions();
+    refreshDome().then(() => { paintOptions(); scheduleDome(); });
   }
 
   const coreBoot = boot;

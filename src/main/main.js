@@ -491,7 +491,38 @@ ipcMain.handle('settings:reset', () => {
 });
 
 /* --- intro -------------------------------------------------------------- */
-ipcMain.handle('intro:config', () => ({ sound: Boolean(settings.get('introSound')) }));
+ipcMain.handle('intro:config', () => {
+  // The intro narrates the machine it is starting on, so the strata it draws
+  // are the real ones. Everything here is cheap - no scans, no probes.
+  let items = 0;
+  let groups = 0;
+  try {
+    const cat = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
+    items = (cat.items || []).length;
+    groups = (cat.groups || []).length;
+  } catch { /* the catalogue is checked elsewhere */ }
+  const m = metrics.snapshot() || {};
+  const tools = programs.list();
+  return {
+    sound: Boolean(settings.get('introSound')),
+    accent: settings.get('accent') || 'cyan',
+    version: app.getVersion(),
+    host: os.hostname(),
+    os: `${os.type()} ${os.release()}`,
+    cores: os.cpus().length,
+    memGb: Math.round(os.totalmem() / 1e9),
+    catalogue: items,
+    groups,
+    strata: (dome.FRAMEWORK.strata || []).map((s) => ({ id: s.id, label: s.label, strap: s.strap, segments: s.segments.length })),
+    datasets: (dome.REGISTRY.datasets || []).length,
+    presets: (dome.REGISTRY.presets || []).length,
+    tools: tools.filter((t) => t.available).length,
+    toolsTotal: tools.length,
+    installed: (settings.get('installedIds') || []).length,
+    disks: (m.disks || []).length,
+    model: settings.get('aiDefaultModel') || null,
+  };
+});
 ipcMain.on('intro:done', () => { /* resolved by the once() handler in showIntro */ });
 
 /* --- metrics ------------------------------------------------------------ */
@@ -615,7 +646,7 @@ ipcMain.handle('ai:chat', async (_e, req) => {
 /* Five strata bound to real readers, the registered data sets behind them, and
    the local model answering from those sets and nothing else. */
 
-ipcMain.handle('dome:overview', () => dome.overview());
+ipcMain.handle('dome:overview', (_e, opts) => dome.overview(opts || {}));
 ipcMain.handle('dome:stratum', (_e, id) => dome.stratum(id));
 ipcMain.handle('dome:segment', (_e, id) => dome.segment(id));
 ipcMain.handle('dome:datasets', () => dome.datasets());
@@ -664,6 +695,68 @@ ipcMain.handle('dome:ask', async (_e, req = {}) => {
 
   emit('dome:token', { id, done: true, ok: res.ok, error: res.error || null, stats: res.stats || null });
   return { id, ...res, model: target.model, sets: pack.sets, question };
+});
+
+/**
+ * Write the whole dome to a Markdown report: every stratum, every segment with
+ * its reading, and every registered set with its state. This is the artefact
+ * you hand someone who asks what the machine is.
+ */
+ipcMain.handle('dome:report', async () => {
+  try {
+    const ov = await dome.overview();
+    const reg = await dome.datasets();
+    const L = [];
+    L.push('# ProGramerly - workstation DOME report');
+    L.push('');
+    L.push('Ionity (Pty) Ltd | AEDI - Policy 986 AED');
+    L.push(`Machine: ${ov.host} - ${os.type()} ${os.release()} (${os.arch()})`);
+    L.push(`Read at: ${new Date().toISOString()}  |  ProGramerly ${app.getVersion()}`);
+    L.push('');
+    L.push(`${ov.counts.strata} strata, ${ov.counts.segments} segments, `
+      + `${ov.counts.datasets} registered data sets, ${ov.counts.presets} analysis presets.`);
+    L.push('');
+    L.push(`> ${ov.sourceNote}`);
+    for (const st of ov.strata) {
+      L.push('');
+      L.push(`## ${st.order}. ${st.label} - ${st.strap}`);
+      L.push('');
+      L.push(`${st.summary}`);
+      L.push('');
+      L.push(`**${st.value == null ? 'not read' : `${st.value}%`}** (${st.level}) - ${st.read}`);
+      L.push('');
+      L.push('| Segment | Reading | Level | Detail | Reads |');
+      L.push('| --- | ---: | --- | --- | --- |');
+      for (const sg of st.segments) {
+        L.push(`| ${sg.name} (${sg.code}) | ${sg.value == null ? '-' : `${sg.value}%`} `
+          + `| ${sg.level} | ${sg.label}${sg.detail ? ` - ${sg.detail}` : ''} | ${sg.reads.join(', ')} |`);
+      }
+    }
+    L.push('');
+    L.push('## Data sets');
+    L.push('');
+    L.push('| Set | Class | State | About |');
+    L.push('| --- | --- | --- | --- |');
+    for (const d of reg.datasets) {
+      L.push(`| \`${d.id}\` | ${d.class} | ${d.available ? `${d.rows} rows` : `unavailable - ${d.reason || 'no reason'}`} | ${d.about} |`);
+    }
+    L.push('');
+    L.push('---');
+    L.push('(c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - All rights reserved - TM');
+    const dir = path.join(app.getPath('userData'), 'reports');
+    fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, `dome-${new Date().toISOString().replace(/[:.]/g, '-')}.md`);
+    fs.writeFileSync(file, `${L.join('\n')}\n`, 'utf8');
+    return { ok: true, file, segments: ov.counts.segments, datasets: reg.datasets.length };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('dome:openReports', () => {
+  const dir = path.join(app.getPath('userData'), 'reports');
+  fs.mkdirSync(dir, { recursive: true });
+  return shell.openPath(dir);
 });
 
 /* --- fan control --------------------------------------------------------- */

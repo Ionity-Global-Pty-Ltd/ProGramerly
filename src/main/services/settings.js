@@ -48,6 +48,12 @@ const DEFAULTS = Object.freeze({
   startMinimised: false,
   kioskMode: false,                 // opt-in full-screen operator shell; Ctrl+Shift+K exits
   aiDefaultModel: 'llama3.2:1b',    // small local Ollama model the Command Center sets up and prefers (~1.3 GB, runs on CPU)
+  aiAutoBrief: true,                // on launch, have the local model read the machine and report once
+  aiBriefPreset: 'state-of-machine',// which standing question the launch brief asks
+  aiAskEverywhere: true,            // an Ask button in every workspace window
+  domeInterval: 45,                 // seconds between dome re-reads while the deck is showing
+  accent: 'cyan',                   // cyan | violet | lime | amber | blue - the shell's colour
+  watermark: true,                  // the Ionity mark, bottom left
   launchAtLogin: false,
   profile: {},                     // name/email/role/org + preferred install profile
   nodeBackdrop: true,              // the gradient node field behind the app
