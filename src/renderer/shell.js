@@ -32,7 +32,10 @@
     cic: SVG('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v5.5M12 15.5V21M3 12h5.5M15.5 12H21"/>'),
     mcp: SVG('<path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'),
     about: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
+    dome: SVG('<path d="M3 17a9 9 0 0 1 18 0"/><path d="M2 17h20"/><path d="M6.5 17a5.5 5.5 0 0 1 11 0"/><path d="M12 8V5"/>'),
   };
+  /* Segment icons live with the DOME surface so both use the same set. */
+  const SEG = () => (window.PGApps && window.PGApps.GLYPHS) || {};
 
   /* One entry per dock button / tile. `tab` is the renderer.js VIEWS key the
      app shows (fans reuses the Hardware workspace); `tool` is a programs.json
@@ -50,12 +53,13 @@
     updates: { name: 'Operations', sub: 'Updates, sync and releases', view: 'updatesView', tab: 'updates', hue: '#3d8f63', desc: 'Update checks, scheduled sync, push & release.' },
     settings: { name: 'Settings', sub: 'Profile, startup and application controls', view: 'settingsView', tab: 'settings', hue: '#5d7181', desc: 'Startup, tray, kiosk, profile.' },
     // Ionity tools - capabilities of ProGramerly, laid out the Ai-OS way
-    fans: { name: 'Fan control', sub: 'Fanzi · cooling for this workstation', view: 'hardwareView', tab: 'hardware', tool: 'fanzi', hue: '#00c8f0', desc: 'Fan curves and cooling, next to the sensors it reads.' },
+    dome: { name: 'The Ionity DOME', sub: 'Five strata · 24 segments · the sets behind them', builtin: 'dome', hue: '#00c8f0', desc: 'The workstation as structure, drillable, with the local model reporting from the real sets.' },
+    fans: { name: 'Fan control', sub: 'Channels · curves · thermal sources', builtin: 'fans', tool: 'fanzi', hue: '#00c8f0', desc: 'Every fan channel, the curves that drive them, and what each would command right now.' },
     cic: { name: 'CiC', sub: 'Central Ionity Control', tool: 'cic', launch: true, hue: '#0e9ab8', desc: 'The IONITY CiC workstation utility.' },
     mcp: { name: 'MCP audit', sub: 'Internal side tool · maintainers', tool: 'mcp-audit', launch: true, side: true, hue: '#8b7cf5', desc: 'Internal. Asks before it runs.' },
     about: { name: 'About ProGramerly', sub: 'Ionity (Pty) Ltd · AEDI', about: true, hue: '#00c8f0', desc: '' },
   };
-  const TILE_ORDER = ['software', 'ai', 'projects', 'fans', 'cic', 'monitor', 'doctor', 'terminals'];
+  const TILE_ORDER = ['dome', 'software', 'ai', 'projects', 'fans', 'cic', 'monitor', 'doctor'];
 
   let tools = [];                 // programs.list()
   let mounted = null;             // { id, el } currently in the app window
@@ -99,6 +103,7 @@
   function tabOf(id) { const a = APPS[id]; return a && a.tab ? a.tab : id; }
 
   function closeApp() {
+    if (teardown) { try { teardown(); } catch { /* best effort */ } teardown = null; }
     if (mounted) {
       // Park the workspace again; renderer.js state inside it is untouched.
       store().appendChild(mounted.el);
@@ -125,12 +130,51 @@
     }
   }
 
-  async function openApp(id) {
+  /* Built-in surfaces (the DOME, fan control) are mounted into their own
+     element rather than being one of renderer.js's views. Each may return a
+     teardown, which runs when the window closes. */
+  const builtinEls = new Map();
+  let teardown = null;
+
+  async function mountBuiltin(id, kind, opts = {}) {
+    if (!window.PGApps || !window.PGApps[kind]) {
+      toast(`The ${APPS[id].name} surface did not load.`, 'bad');
+      return false;
+    }
+    let el = builtinEls.get(id);
+    if (!el) {
+      el = document.createElement('main');
+      el.id = `${id}App`;
+      el.className = 'view pad';
+      builtinEls.set(id, el);
+      store().appendChild(el);
+    }
+    $('aw-content').appendChild(el);
+    mounted = { id, el, builtin: true };
+    activeTab = id;
+    try {
+      teardown = await window.PGApps[kind].mount(el, {
+        api, toast, openApp, focus: opts.focus, safe,
+      }) || null;
+    } catch (error) {
+      el.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'muted';
+      p.textContent = `This surface failed to open: ${error.message || error}`;
+      el.appendChild(p);
+    }
+    return true;
+  }
+
+  async function openApp(id, opts = {}) {
     const app = APPS[id]; if (!app) return;
     if (id === '_ask') { $('ask-input').focus(); return; }
     if (app.launch) { await launchTool(app.tool); return; }
     if (mounted && mounted.id !== id) closeApp();
-    if (app.about) {
+    if (app.builtin) {
+      const done = await mountBuiltin(id, app.builtin, opts);
+      if (!done) return;
+    } else if (app.about) {
       mountAbout();
     } else {
       coreShowTab(tabOf(id));              // renderer.js: visibility, lazy loaders, activeTab
@@ -237,60 +281,93 @@
   }
 
   /* --------------------------------------------------- dome + stats + bar */
-  const STRATA = [
-    { id: 'hardware', name: 'Hardware', app: 'hardware' },
-    { id: 'system', name: 'System', app: 'monitor' },
-    { id: 'storage', name: 'Storage', app: 'monitor' },
-    { id: 'toolchain', name: 'Toolchain', app: 'software' },
-    { id: 'ai', name: 'Local AI', app: 'ai' },
-  ];
-  let strataState = {};
+  /* The card on the deck is the DOME's own overview, not a second opinion:
+     five strata scored by services/dome.js from the registered sets, painted
+     here, and drillable into the full surface. */
 
-  function domeGeometry() {
-    // Five half-rings, base first. viewBox 360x200, centre (180,190).
-    const cx = 180, cy = 190, outer = 168, step = 30, out = [];
-    for (let i = 0; i < STRATA.length; i += 1) {
-      const ro = outer - i * step, ri = ro - step + 4;
-      out.push({ ro, ri, cx, cy });
-    }
-    return out;
+  let domeData = null;
+  let domeBusy = false;
+
+  const W = 360;
+  const H = 200;
+  const CX = 180;
+  const CY = 190;
+
+  function ringPath(ro, ri) {
+    return `M${CX - ro},${CY} A${ro},${ro} 0 0 1 ${CX + ro},${CY} L${CX + ri},${CY} A${ri},${ri} 0 0 0 ${CX - ri},${CY} Z`;
   }
-  function ringPath(cx, cy, ro, ri) {
-    return `M${cx - ro},${cy} A${ro},${ro} 0 0 1 ${cx + ro},${cy} L${cx + ri},${cy} A${ri},${ri} 0 0 0 ${cx - ri},${cy} Z`;
-  }
-  function buildDome() {
-    const svg = $('dome-svg'); const geo = domeGeometry();
-    let html = `<line class="base" x1="6" y1="190" x2="354" y2="190"/>`;
-    STRATA.forEach((s, i) => {
-      const g = geo[i];
-      html += `<path class="band" data-stratum="${s.id}" d="${ringPath(g.cx, g.cy, g.ro, g.ri)}"><title>${safe(s.name)}</title></path>`;
-      const y = g.cy - (g.ro + g.ri) / 2;
-      html += `<text class="lbl" x="${g.cx + 4}" y="${y + 3}" text-anchor="middle">${safe(s.name.toUpperCase())}</text>`;
+
+  function buildDome(strata) {
+    const svg = $('dome-svg');
+    const outer = 168;
+    const step = Math.floor((outer - 18) / strata.length);
+    let html = '<line class="base" x1="6" y1="190" x2="354" y2="190"/>';
+    strata.forEach((st, i) => {
+      const ro = outer - i * step;
+      const ri = ro - step + 4;
+      html += `<path class="band" data-stratum="${safe(st.id)}" d="${ringPath(ro, ri)}"><title>${safe(st.label)} — ${safe(st.strap)}</title></path>`;
+      html += `<text class="lbl" x="${CX}" y="${CY - (ro + ri) / 2 + 3}" text-anchor="middle">${safe(st.label.toUpperCase())}</text>`;
     });
-    html += `<circle class="apex" cx="180" cy="${190 - geo[geo.length - 1].ri + 6}" r="3"/>`;
+    html += `<circle class="apex" cx="${CX}" cy="${CY - (outer - (strata.length - 1) * step) + 6}" r="3"/>`;
     svg.innerHTML = html;
-    svg.querySelectorAll('.band').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); const s = STRATA.find((x) => x.id === b.dataset.stratum); openApp(s.app); }));
-    const legend = $('dome-legend'); legend.innerHTML = '';
-    STRATA.forEach((s) => {
-      const b = document.createElement('button'); b.dataset.stratum = s.id;
-      b.innerHTML = `<i></i><span><b>${safe(s.name)}</b><small>reading…</small></span><em>—</em>`;
-      b.addEventListener('click', (e) => { e.stopPropagation(); openApp(s.app); });
-      legend.appendChild(b);
-    });
+    svg.querySelectorAll('.band').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openApp('dome', { focus: b.dataset.stratum });
+    }));
+
+    const legend = $('dome-legend');
+    legend.innerHTML = strata.map((st) => `
+      <button data-stratum="${safe(st.id)}" title="${safe(st.summary)}">
+        <i></i>
+        <span><b>${safe(st.label)}</b><small>reading…</small></span>
+        <em>—</em>
+      </button>`).join('');
+    legend.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openApp('dome', { focus: b.dataset.stratum });
+    }));
   }
-  function setStratum(id, value, detail, level = 'ok') {
-    strataState[id] = { value, detail, level };
-    const band = document.querySelector(`#dome-svg .band[data-stratum="${id}"]`);
-    if (band) { band.classList.remove('warn', 'err', 'hot'); if (level !== 'ok') band.classList.add(level); }
-    const row = document.querySelector(`#dome-legend button[data-stratum="${id}"]`);
-    if (row) {
-      row.classList.remove('warn', 'err'); if (level !== 'ok') row.classList.add(level);
-      row.querySelector('em').textContent = value; row.querySelector('small').textContent = detail;
-    }
-    const worst = Object.values(strataState).some((s) => s.level === 'err') ? 'err' : Object.values(strataState).some((s) => s.level === 'warn') ? 'warn' : 'ok';
-    const pill = $('dome-pill'); pill.className = `live-pill${worst === 'ok' ? '' : ' warn'}`;
+
+  function paintDome(data) {
+    if (!data) return;
+    if (!$('dome-svg').querySelector('.band')) buildDome(data.strata);
+    data.strata.forEach((st) => {
+      const band = document.querySelector(`#dome-svg .band[data-stratum="${st.id}"]`);
+      if (band) {
+        band.classList.remove('warn', 'err', 'hot');
+        if (st.level === 'warn' || st.level === 'err') band.classList.add(st.level);
+        else if (st.value != null && st.value >= 70) band.classList.add('hot');
+      }
+      const row = document.querySelector(`#dome-legend button[data-stratum="${st.id}"]`);
+      if (row) {
+        row.classList.remove('warn', 'err');
+        if (st.level === 'warn' || st.level === 'err') row.classList.add(st.level);
+        row.querySelector('em').textContent = st.value == null ? '—' : `${st.value}%`;
+        const worst = st.segments.filter((x) => x.level === 'err' || x.level === 'warn')[0];
+        row.querySelector('small').textContent = worst
+          ? `${worst.name.toLowerCase()} · ${worst.label}`
+          : st.strap.toLowerCase();
+      }
+    });
+    const worst = data.strata.reduce((a, s) => (s.level === 'err' ? 'err' : s.level === 'warn' && a !== 'err' ? 'warn' : a), 'ok');
+    const pill = $('dome-pill');
+    pill.className = `live-pill${worst === 'ok' ? '' : ' warn'}`;
     pill.innerHTML = `<i></i>${worst === 'ok' ? 'Live' : worst === 'warn' ? 'Attention' : 'Critical'}`;
-    setText('dome-read', `${Object.keys(strataState).length} of ${STRATA.length} strata read`);
+    setText('dome-read', `${data.counts.segments} segments`);
+    setText('dome-note', `${data.counts.datasets} data sets in reach · ${data.counts.presets} presets`);
+  }
+
+  async function refreshDome() {
+    if (domeBusy) return;
+    domeBusy = true;
+    try {
+      domeData = await api.dome.overview();
+      paintDome(domeData);
+    } catch {
+      setText('dome-note', 'the dome could not be read');
+    } finally {
+      domeBusy = false;
+    }
   }
 
   function setStat(id, k, t, pct, level) {
@@ -314,9 +391,6 @@
     const rx = Number(net.rxBps) || 0, tx = Number(net.txBps) || 0;
     setStat('net', `↓${humanBits(rx).replace(/\s/, '')}`, `↑ ${humanBits(tx)}${packet && packet.ping ? ` · ${Math.round(packet.ping)} ms` : ''}`, clamp(((rx + tx) * 8) / 1e6), 'ok');
 
-    setStratum('hardware', temp == null ? '—' : `${Math.round(temp)}°`, temp == null ? 'no OS sensor · open Hardware' : (m.temp.source || 'CPU package'), temp == null ? 'ok' : lvl(temp, 75, 88));
-    setStratum('system', `${Math.round(cpuPct)}%`, `CPU · memory ${Math.round(memPct)}%`, lvl(Math.max(cpuPct, memPct - 5), 75, 90));
-    setStratum('storage', sys ? `${Math.round(diskPct)}%` : '—', sys ? `${humanBytes(sys.free)} free on system disk` : 'no drive data', lvl(diskPct, 82, 92));
 
     const pressure = []; let severity = 'ok';
     const flag = (c, level, label) => { if (!c) return; pressure.push(label); if (level === 'err' || severity === 'ok') severity = level; };
@@ -327,11 +401,6 @@
     const cap = $('status-capsule'); cap.className = severity === 'ok' ? '' : severity;
     setText('status-text', pressure.length ? pressure.join(' · ') : (m.at ? 'System nominal · live telemetry' : 'Warming up…'));
     setText('homeMachineLine', [m.host, m.platform, m.uptimeSec != null ? `uptime ${humanDuration(m.uptimeSec)}` : ''].filter(Boolean).join(' · ') || 'Reading this machine…');
-  }
-
-  function paintToolchain() {
-    const installed = Array.isArray(shellSettings.installedIds) ? shellSettings.installedIds.length : 0;
-    setStratum('toolchain', String(installed), `${installed} managed package${installed === 1 ? '' : 's'} · ${CATALOG && CATALOG.items ? CATALOG.items.length : 0} in catalogue`, 'ok');
   }
 
   function updateClock() {
@@ -484,7 +553,7 @@
     });
 
     api.onMetrics(paintMetrics);
-    api.onSettingsChanged((next) => { shellSettings = next || {}; applyKioskUi(shellSettings.kioskMode); paintToolchain(); paintUser(); });
+    api.onSettingsChanged((next) => { shellSettings = next || {}; applyKioskUi(shellSettings.kioskMode); paintUser(); });
     api.onUpdateAvailable((u) => { const on = Boolean(u && u.available); $('updateDot').hidden = !on; $('dockUpdateDot').hidden = !on; if (on) toast(`ProGramerly ${u.latest} is available - open Operations.`, 'good'); });
     api.onUpdateChecked((u) => { const on = Boolean(u && u.available); $('updateDot').hidden = !on; $('dockUpdateDot').hidden = !on; });
     api.programs.onProgress((p) => { if (p && p.phase === 'ready') loadTools(); if (p && p.phase === 'failed') toast(`${p.file}: ${p.error || 'failed'}`, 'bad'); });
@@ -495,20 +564,21 @@
 
   async function initShell() {
     shellSettings = SETTINGS || {};
-    buildTiles(); buildDome(); bind(); paintUser(); paintToolchain();
+    buildTiles(); bind(); paintUser();
     updateClock(); setInterval(updateClock, 1000);
     setText('build-label', `v${INFO.appVersion} · Policy 986 AED`);
     $('shell').classList.add('on');
     await Promise.allSettled([
       api.metrics().then(paintMetrics),
       loadTools(),
-      refreshAi().then(() => {
-        const list = aiTargets || [];
-        setStratum('ai', String(list.length), list.length ? `${list.length} model${list.length === 1 ? '' : 's'} online · ${preferredTarget ? preferredTarget.model : ''}` : (aiSetup === 'pull' ? 'Ollama up · no model yet' : 'Ollama offline'), list.length ? 'ok' : 'warn');
-      }),
+      refreshAi(),
+      refreshDome(),
     ]);
     if (shellSettings.kioskMode) await setKiosk(true);
-    setInterval(() => refreshAi().then(() => { const list = aiTargets || []; setStratum('ai', String(list.length), list.length ? `${list.length} model${list.length === 1 ? '' : 's'} online · ${preferredTarget ? preferredTarget.model : ''}` : 'Ollama offline', list.length ? 'ok' : 'warn'); }), 30000);
+    setInterval(refreshAi, 30000);
+    // The dome re-reads on a slower cadence than the stats: its scan-cost sets
+    // are cached in the main process, so this is cheap, but it is not free.
+    setInterval(() => { if (!$('overlay').classList.contains('on')) refreshDome(); }, 45000);
   }
 
   const coreBoot = boot;

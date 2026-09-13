@@ -1921,11 +1921,18 @@ window.addEventListener('resize', () => { if (activeTab === 'monitor') drawNetCh
   const shell = document.createElement('script');
   shell.src = 'shell.js';
   shell.addEventListener('load', start, { once: true });
+  // The DOME and fan surfaces load first: shell.js mounts them, and a missing
+  // apps.js must degrade to "that surface did not load", never to no shell.
+  const apps = document.createElement('script');
+  apps.src = 'apps.js';
+  const afterApps = () => document.body.appendChild(shell);
+  apps.addEventListener('load', afterApps, { once: true });
+  apps.addEventListener('error', afterApps, { once: true });
   shell.addEventListener('error', () => {
     document.body.classList.remove('aios');
     const s = $('shell'); if (s) s.hidden = true;
     const store = $('apps-store'); if (store) { store.removeAttribute('aria-hidden'); store.id = 'apps-fallback'; }
     start();
   }, { once: true });
-  document.body.appendChild(shell);
+  document.body.appendChild(apps);
 })();

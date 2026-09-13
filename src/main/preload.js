@@ -164,6 +164,33 @@ contextBridge.exposeInMainWorld('programerly', {
     onProgress: (cb) => on('programs:progress', cb),
   },
 
+  /* ---------------------------------------------------------- the DOME */
+  dome: {
+    overview: () => ipcRenderer.invoke('dome:overview'),
+    stratum: (id) => ipcRenderer.invoke('dome:stratum', id),
+    segment: (id) => ipcRenderer.invoke('dome:segment', id),
+    datasets: () => ipcRenderer.invoke('dome:datasets'),
+    dataset: (id) => ipcRenderer.invoke('dome:dataset', id),
+    presets: (scope) => ipcRenderer.invoke('dome:presets', scope),
+    refresh: (prefix) => ipcRenderer.invoke('dome:refresh', prefix),
+    ask: (req) => ipcRenderer.invoke('dome:ask', req),
+    onToken: (cb) => on('dome:token', cb),
+  },
+
+  /* ----------------------------------------------------------- fan control */
+  fans: {
+    channels: () => ipcRenderer.invoke('fans:channels'),
+    summary: () => ipcRenderer.invoke('fans:summary'),
+    profiles: () => ipcRenderer.invoke('fans:profiles'),
+    save: (profile) => ipcRenderer.invoke('fans:save', profile),
+    remove: (id) => ipcRenderer.invoke('fans:delete', id),
+    setActive: (id) => ipcRenderer.invoke('fans:active', id),
+    fromPreset: (req) => ipcRenderer.invoke('fans:fromPreset', req),
+    exportProfile: (id) => ipcRenderer.invoke('fans:export', id),
+    openFolder: () => ipcRenderer.invoke('fans:openFolder'),
+    presets: () => ipcRenderer.invoke('fans:presets'),
+  },
+
   /* ------------------------------------------------------------- events */
   onLog: (cb) => on('install:log', cb),
   onItem: (cb) => on('install:item', cb),

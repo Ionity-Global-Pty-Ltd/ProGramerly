@@ -848,6 +848,67 @@ Implementation note: `src/renderer/shell.js` wraps `boot()` and `showTab()`
 from `renderer.js` and moves each existing view element into the app window on
 open, so all workspace logic is unchanged; `aios.css` draws only the shell.
 
+### The Ionity DOME
+
+The deck's centrepiece is the **DOME**: this workstation modelled as navigable
+structure rather than a picture. Five strata — **Hardware, System, Storage,
+Toolchain, Intelligence** — carrying **24 segments**, each bound to real data
+sets on this machine. Click a band or a legend row and the full surface opens:
+strata scored live, segments with their own icon, purpose and what to watch
+for, and under each segment the actual sets behind it with a sample of their
+rows.
+
+Readiness is computed at the moment you look, by `services/dome.js`, from the
+readers that already exist — sensors, metrics, the doctor, the registry scan,
+the catalogue, the projects sweep, Ollama. It is never stored and never carried
+between runs.
+
+### Data sets and presets — what the model can see
+
+`src/main/data/datasets.json` is the boundary, stated in one file: **28 data
+sets** the local model may read, each with a class that governs how a figure
+may be reported —
+
+| Class | Meaning |
+| --- | --- |
+| `measured` | Read from a sensor, the OS or a live scan on this machine, now |
+| `catalogue` | Curated data shipped inside the application |
+| `manifest` | A pinned record — sizes and SHA-256 digests |
+| `state` | What this installation has recorded about itself |
+| `computed` | Derived from other sets. Never a reading |
+
+Nothing outside that registry is servable: `dome.dataset('etc.passwd')` is
+refused by design, not by filtering. The **brief** handed to the model is built
+only from listed sets, each rendered as a compact table with its class tag, and
+the system preamble tells the model to answer only from them, to cite the set
+id for every figure, and to report a gap rather than estimate around it.
+
+**10 analysis presets** are the standing questions — state of the machine,
+thermal and airflow brief, which curve to run, disk pressure and reclaim,
+toolchain gaps, repository standing, model fit, integrity and privilege,
+explain the last scan, and *what can you see*. Each declares the sets it reads.
+Ask one from the dome, a stratum, a segment, or the data-set registry; the
+answer streams back in place with the model, the set count and the context size
+shown above it.
+
+### Fan control
+
+The fan surface is the sensor tree folded into something you can work with:
+every **channel** with its live RPM, the controller driving it and the role it
+plays (CPU, GPU, pump, intake, exhaust); every **temperature source** that
+could drive a curve; and a **curve editor** — click the plot to add a point,
+click a point to remove it — with minimum duty, a stop-below threshold and
+hysteresis. Curves are stored per machine, evaluated against the live
+temperature, and shown as *commanded* (computed) beside *measured*, so a curve
+that would ask for 30 points more duty than the fan is actually running says so
+in words. Four presets seed a curve: Silent, Balanced, Cooling, Full speed.
+Export writes the whole thing to JSON — channel, source, points, floor.
+
+What ProGramerly does not do is write the curve to the chip. That needs a
+signed kernel-mode driver, which is what Fanzi FanControl ships and why it
+exists. ProGramerly designs, previews, stores and exports; the apply belongs to
+the tool that owns the driver. The window head carries that handoff.
+
 ### Ionity tools built in
 
 ProGramerly is the combined Ionity workstation. The tools below are

@@ -38,6 +38,8 @@ const secrets = require('./services/secrets');
 const firebaseAuth = require('./services/firebaseAuth');
 const programs = require('./services/programs');
 const cloudConfig = require('./services/cloudConfig');
+const fans = require('./services/fans');
+const dome = require('./services/dome');
 const tray = require('./tray');
 
 const IS_WIN = process.platform === 'win32';
@@ -354,6 +356,16 @@ function startServices() {
   // pinned programs release. The renderer only ever sees progress packets.
   programs.setProgressSink((packet) => emit('programs:progress', packet));
 
+  // The DOME reads this machine through the services above. It is told where
+  // the development root and the catalogue live rather than reaching for them,
+  // so the only data it can serve is data a reader in its registry returns.
+  dome.configure({
+    devRoot,
+    catalogPath: () => CATALOG_PATH,
+    isElevated,
+    osLabel: () => `${os.type()} ${os.release()} (${os.arch()})`,
+  });
+
   try {
     tray.create({
       show: (tab) => showWindow(tab),
@@ -598,6 +610,79 @@ ipcMain.handle('ai:chat', async (_e, req) => {
   emit('ai:token', { id, done: true, stats: res.stats || null, ok: res.ok, error: res.error || null });
   return { id, ...res };
 });
+
+/* --- the Ionity DOME ----------------------------------------------------- */
+/* Five strata bound to real readers, the registered data sets behind them, and
+   the local model answering from those sets and nothing else. */
+
+ipcMain.handle('dome:overview', () => dome.overview());
+ipcMain.handle('dome:stratum', (_e, id) => dome.stratum(id));
+ipcMain.handle('dome:segment', (_e, id) => dome.segment(id));
+ipcMain.handle('dome:datasets', () => dome.datasets());
+ipcMain.handle('dome:dataset', (_e, id) => dome.dataset(id));
+ipcMain.handle('dome:presets', (_e, scope) => dome.presets(scope));
+ipcMain.handle('dome:refresh', (_e, prefix) => { dome.invalidate(prefix); return true; });
+
+/** Pick the model the copilot should use: the configured small default first. */
+async function preferredTarget(explicit) {
+  if (explicit && explicit.model) return explicit;
+  const list = await ai.chatTargets();
+  if (!list.length) return null;
+  const want = String(settings.get('aiDefaultModel') || '');
+  const base = want.split(':')[0];
+  return list.find((t) => String(t.model || '') === want)
+    || list.find((t) => String(t.model || '').startsWith(base))
+    || list[0];
+}
+
+/**
+ * Ask the local model a question about this machine. The brief is built from
+ * registered sets only; the model never sees anything else, and the reply
+ * streams back on its own channel so the AI workspace chat is untouched.
+ */
+ipcMain.handle('dome:ask', async (_e, req = {}) => {
+  const id = ++chatSeq;
+  const target = await preferredTarget(req.target);
+  if (!target) {
+    return { id, ok: false, error: 'No local model is running. Install Ollama and pull a model from the Software or Local AI workspace.' };
+  }
+  let pack;
+  try {
+    pack = await dome.brief({ scope: req.scope, setIds: req.setIds, presetId: req.presetId });
+  } catch (err) {
+    return { id, ok: false, error: `The brief could not be built: ${err.message}` };
+  }
+  const question = String(req.question || pack.question || 'Report on the sets above.').slice(0, 4000);
+  emit('dome:token', { id, start: true, model: target.model, sets: pack.sets, chars: pack.chars, preset: pack.preset });
+
+  const res = await ai.chat({
+    endpointId: target.endpointId,
+    port: target.port,
+    model: target.model,
+    messages: [{ role: 'system', content: pack.system }, { role: 'user', content: question }],
+  }, (t) => emit('dome:token', { id, ...t }));
+
+  emit('dome:token', { id, done: true, ok: res.ok, error: res.error || null, stats: res.stats || null });
+  return { id, ...res, model: target.model, sets: pack.sets, question };
+});
+
+/* --- fan control --------------------------------------------------------- */
+/* Channels and temperatures come off the sensor tree; curves are designed,
+   previewed and stored here; the apply belongs to the tool with the driver. */
+
+ipcMain.handle('fans:channels', () => fans.channels());
+ipcMain.handle('fans:summary', () => fans.summary());
+ipcMain.handle('fans:profiles', () => fans.profiles());
+ipcMain.handle('fans:save', (_e, profile) => { dome.invalidate('ds:fans'); return fans.saveProfile(profile); });
+ipcMain.handle('fans:delete', (_e, id) => { dome.invalidate('ds:fans'); return fans.deleteProfile(id); });
+ipcMain.handle('fans:active', (_e, id) => fans.setActive(id));
+ipcMain.handle('fans:fromPreset', (_e, { presetId, channelId, sourceSensorId, name }) => {
+  dome.invalidate('ds:fans');
+  return fans.fromPreset(presetId, { channelId, sourceSensorId, name });
+});
+ipcMain.handle('fans:export', (_e, id) => fans.exportProfile(id));
+ipcMain.handle('fans:openFolder', () => shell.openPath(fans.exportDir()));
+ipcMain.handle('fans:presets', () => fans.PRESETS);
 
 ipcMain.handle('ai:benchmark', async (_e, target) => {
   aiLog(`benchmark: ${target.model} on ${target.endpoint}`, 'head');

@@ -1,0 +1,243 @@
+{
+  "_comment": "ProGramerly - the Ionity DOME. Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED. The workstation modelled as navigable structure rather than a picture: five strata from the silicon up to the model layer, each with segments, each segment bound to a real data set on this machine (see datasets.json). Structure and prose here are the framework as written; every figure a surface shows is computed in services/dome.js from live readers and carries its own source class - measured, catalogue, manifest, state or assessment. Nothing structural is ever presented as telemetry.",
+  "version": "1.0",
+  "sourceNote": "Structure is the Ionity DOME as published. Readiness is computed per segment from this machine's own readers at the moment you look; it is not a score carried between runs.",
+  "strata": [
+    {
+      "id": "hardware",
+      "order": 1,
+      "label": "Hardware",
+      "strap": "The machine itself",
+      "summary": "Silicon, thermals, airflow, power and lighting - everything read off a chip rather than a file.",
+      "segments": [
+        {
+          "id": "thermal", "code": "THR", "glyph": "thermal", "name": "Thermal envelope",
+          "blurb": "Every temperature sensor the driver exposes, and the headroom left.",
+          "purpose": "Temperature is the first constraint on sustained work. A package that throttles at 95 turns a twenty-minute build into forty, and no amount of toolchain tuning gets that back.",
+          "reads": ["sensors.tree", "metrics.live"],
+          "watch": "A CPU package above 88 under sustained load, or a GPU that will not drop below 70 at idle."
+        },
+        {
+          "id": "airflow", "code": "AIR", "glyph": "fan",
+          "name": "Fans and airflow",
+          "blurb": "Fan channels, the controllers driving them, and the curves stored for each.",
+          "purpose": "Airflow is the one thermal variable you control directly. Every channel here is a tachometer and, where the board exposes one, the controller that sets its duty.",
+          "reads": ["fans.channels", "fans.profiles"],
+          "watch": "A fan reading zero RPM while its temperature source climbs, or a channel with no controller at all."
+        },
+        {
+          "id": "power", "code": "PWR", "glyph": "power",
+          "name": "Power and voltage",
+          "blurb": "Rail voltages and package power, where the board reports them.",
+          "purpose": "Voltage sag and power ceilings explain instability that looks like a software fault. Reading them costs nothing and rules out a whole class of cause.",
+          "reads": ["sensors.tree"],
+          "watch": "A 12 V rail drifting under load, or package power pinned at its limit for long stretches."
+        },
+        {
+          "id": "lighting", "code": "RGB", "glyph": "rgb",
+          "name": "Lighting devices",
+          "blurb": "Controllers reachable over the OpenRGB protocol.",
+          "purpose": "Lighting is cosmetic until it is signal. A machine that goes amber when a build fails tells you across a room what a notification does not.",
+          "reads": ["rgb.devices"],
+          "watch": "The OpenRGB server not running - the protocol is there, nothing is listening."
+        },
+        {
+          "id": "memory-phys", "code": "MEM", "glyph": "memory",
+          "name": "Physical memory",
+          "blurb": "Installed memory, what is in use, and what the standby list is holding.",
+          "purpose": "Memory pressure is the quietest cause of a slow machine: nothing errors, everything just waits. The standby list in particular is memory Windows counts as free while behaving as though it is not.",
+          "reads": ["metrics.live", "memory.state"],
+          "watch": "Sustained use above 85 percent, or a standby list larger than the free pool."
+        }
+      ]
+    },
+    {
+      "id": "system",
+      "order": 2,
+      "label": "System",
+      "strap": "The operating system",
+      "summary": "Privilege, the documented repair set, listeners, environment and what a scan actually found.",
+      "segments": [
+        {
+          "id": "privilege", "code": "PRV", "glyph": "shield",
+          "name": "Privilege and elevation",
+          "blurb": "Whether this process holds an administrator token.",
+          "purpose": "One consent at launch is the difference between an unattended install and a hundred dialogs. Everything downstream inherits that token, so its state is worth stating plainly rather than discovering mid-run.",
+          "reads": ["system.privilege"],
+          "watch": "Running standard while an install queue contains items that need admin."
+        },
+        {
+          "id": "registry", "code": "REG", "glyph": "registry",
+          "name": "Registry fix set",
+          "blurb": "The curated, Microsoft-documented repairs and which are actionable here.",
+          "purpose": "Every entry in this set is a documented fix with a stated symptom, not a tweak from a forum. Each is exported to a .reg file before a single value changes.",
+          "reads": ["registry.fixes"],
+          "watch": "Actionable entries left standing after a repair run - they did not apply, and the log says why."
+        },
+        {
+          "id": "services-ports", "code": "PRT", "glyph": "port",
+          "name": "Ports and listeners",
+          "blurb": "What is bound to the ports a developer machine actually contends over.",
+          "purpose": "The answer to 'port 3000 is already in use' is a process name and a PID, not a reboot. This segment is that answer, standing.",
+          "reads": ["ports.listeners"],
+          "watch": "A development port held by something you did not start."
+        },
+        {
+          "id": "env-path", "code": "ENV", "glyph": "path",
+          "name": "Environment and PATH",
+          "blurb": "Resolved toolchain binaries and the PATH that found them.",
+          "purpose": "Most 'it works on my machine' reduces to PATH order. Resolving each tool to the file that actually answers turns an argument into a fact.",
+          "reads": ["env.resolved"],
+          "watch": "Two versions of the same runtime on PATH, with the wrong one first."
+        },
+        {
+          "id": "health-scan", "code": "DOC", "glyph": "stethoscope",
+          "name": "Doctor findings",
+          "blurb": "The last diagnostic pass: what it checked, what it flagged.",
+          "purpose": "A finding is only useful with its fix attached. Each item here carries the check that produced it and the action that clears it.",
+          "reads": ["doctor.findings"],
+          "watch": "Findings that reappear after a fix - the cause is upstream of the symptom."
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "order": 3,
+      "label": "Storage",
+      "strap": "What is on disk",
+      "summary": "Volumes, the development root, space worth reclaiming, and the verified tool payload.",
+      "segments": [
+        {
+          "id": "volumes", "code": "VOL", "glyph": "disk",
+          "name": "Volumes",
+          "blurb": "Every drive, its free space and the pressure that implies.",
+          "purpose": "A system disk under ten percent free stops being a storage question and becomes a stability one - Windows needs room to page, patch and restore.",
+          "reads": ["disks.volumes"],
+          "watch": "The system volume above 90 percent used."
+        },
+        {
+          "id": "devroot", "code": "DEV", "glyph": "folder",
+          "name": "Development root",
+          "blurb": "Where projects, virtual environments and clones live.",
+          "purpose": "One root keeps the machine legible: back it up and you have the work; delete a folder and you have removed a tool cleanly.",
+          "reads": ["storage.devroot", "projects.repos"],
+          "watch": "Repositories outside the root - they will not be swept, synced or backed up with the rest."
+        },
+        {
+          "id": "reclaim", "code": "RCL", "glyph": "broom",
+          "name": "Reclaimable space",
+          "blurb": "Caches and temporary trees, measured before anything is removed.",
+          "purpose": "Cleanup should be arithmetic, not faith. Every candidate is sized first, and nothing outside the listed roots is ever touched.",
+          "reads": ["doctor.reclaim"],
+          "watch": "A package cache larger than the project it serves."
+        },
+        {
+          "id": "payload", "code": "PAY", "glyph": "seal",
+          "name": "Verified tool payload",
+          "blurb": "The Ionity tools shipped with this build and their SHA-256 state.",
+          "purpose": "Each tool is pinned by byte size and digest in the manifest and re-verified immediately before it is handed to the OS. A mismatch is discarded, never run.",
+          "reads": ["programs.pins"],
+          "watch": "Integrity marked invalid - the file on disk is not the file that was pinned."
+        }
+      ]
+    },
+    {
+      "id": "toolchain",
+      "order": 4,
+      "label": "Toolchain",
+      "strap": "The installed code base",
+      "summary": "The catalogue, what is installed from it, how it resolves, and the repositories it serves.",
+      "segments": [
+        {
+          "id": "catalogue", "code": "CAT", "glyph": "catalogue",
+          "name": "The catalogue",
+          "blurb": "Every curated item, its group, profile membership and dependencies.",
+          "purpose": "The catalogue is the data set this application is actually built on: a resolved graph of what a development machine needs and which engine installs it on which platform.",
+          "reads": ["catalog.items", "catalog.groups"],
+          "watch": "Items with no resolver for this platform - they will report skipped, not failed."
+        },
+        {
+          "id": "installed", "code": "INS", "glyph": "check",
+          "name": "Installed set",
+          "blurb": "What ProGramerly has put on this machine, by id.",
+          "purpose": "Knowing what was installed deliberately separates the machine's toolchain from everything else that accumulated on it.",
+          "reads": ["installed.ids", "catalog.items"],
+          "watch": "A profile only partly satisfied - the remainder is one install run away."
+        },
+        {
+          "id": "resolvers", "code": "RSV", "glyph": "engine",
+          "name": "Package resolvers",
+          "blurb": "winget, Chocolatey, Homebrew, npm, pip and uv - which are present.",
+          "purpose": "Nothing is redistributed. Every install is the official vendor source fetched by the package manager the platform already trusts, so the resolvers being healthy is the whole supply chain being healthy.",
+          "reads": ["env.resolved", "catalog.items"],
+          "watch": "A missing fallback engine on Windows - one broken winget source and there is nowhere to go."
+        },
+        {
+          "id": "mcp", "code": "MCP", "glyph": "plug",
+          "name": "MCP servers",
+          "blurb": "Model Context Protocol servers in the catalogue and their config.",
+          "purpose": "MCP is how a local model reaches real tools. These entries install the servers and write the configuration that lets an assistant use them.",
+          "reads": ["catalog.items", "mcp.config"],
+          "watch": "A configured server whose binary is no longer installed."
+        },
+        {
+          "id": "repos", "code": "GIT", "glyph": "branch",
+          "name": "Repositories",
+          "blurb": "Git working copies under the development root and their state.",
+          "purpose": "Ahead, behind, dirty or clean across every clone at once - the state you would otherwise get by visiting each folder.",
+          "reads": ["projects.repos"],
+          "watch": "Uncommitted work in a repository you have not opened this week."
+        }
+      ]
+    },
+    {
+      "id": "intelligence",
+      "order": 5,
+      "label": "Intelligence",
+      "strap": "The local model layer",
+      "summary": "Models on this machine, the silicon that runs them, the environments around them, and the data sets they may read.",
+      "segments": [
+        {
+          "id": "models", "code": "MDL", "glyph": "model",
+          "name": "Local models",
+          "blurb": "Models held on disk, which are loaded, and which endpoint serves them.",
+          "purpose": "The copilot in this application is a model running on this machine. Nothing it is asked and nothing it reads leaves the box.",
+          "reads": ["ollama.models", "ai.endpoints"],
+          "watch": "No model at all - the ask box can still open workspaces, but it cannot answer."
+        },
+        {
+          "id": "accel", "code": "ACC", "glyph": "chip",
+          "name": "Acceleration",
+          "blurb": "GPU devices, free VRAM, and what will fit in it.",
+          "purpose": "Model choice is a memory question before it is a quality one. Free VRAM decides which weights run at speed and which fall back to the CPU.",
+          "reads": ["gpu.devices"],
+          "watch": "A model larger than free VRAM - it will still answer, just slowly."
+        },
+        {
+          "id": "pyenv", "code": "ENVS", "glyph": "flask",
+          "name": "Environments",
+          "blurb": "Virtual environments, conda environments and Node versions.",
+          "purpose": "ML work lives in environments. Enumerating them stops the slow drift where three projects share one polluted interpreter.",
+          "reads": ["python.envs"],
+          "watch": "Frameworks installed into the system interpreter rather than the managed environment."
+        },
+        {
+          "id": "datasets", "code": "SETS", "glyph": "dataset",
+          "name": "Data sets in reach",
+          "blurb": "Every set around this application the model is allowed to read.",
+          "purpose": "This is the boundary, stated. The model can read these sets and report from them; it cannot read anything else, and every figure it quotes carries the class of the set it came from.",
+          "reads": ["dome.datasets"],
+          "watch": "A set reporting unavailable - the model will say so rather than estimate."
+        },
+        {
+          "id": "presets", "code": "PRE", "glyph": "preset",
+          "name": "Analysis presets",
+          "blurb": "Standing questions the model answers from the sets above.",
+          "purpose": "A preset is a question worth asking the same way every time: which sets it reads, what it looks for, how it reports. Repeatable beats clever.",
+          "reads": ["dome.presets"],
+          "watch": "A preset whose sets are unavailable on this machine - it is listed, but it will report gaps."
+        }
+      ]
+    }
+  ]
+}
