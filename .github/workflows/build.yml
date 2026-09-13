@@ -254,9 +254,15 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag || github.ref_name }}
-          files: |
-            artifacts/**/*
-            artifacts/SHA256.txt
+          # artifacts/**/* already matches artifacts/SHA256.txt. Listing it a
+          # second time made the action upload the same name twice; the second
+          # copy deletes-then-reuploads and lost the race ("Not Found ...
+          # update-a-release-asset"), which failed the step, left v2.3.0 as a
+          # draft and dropped SHA256.txt from the release.
+          files: artifacts/**/*
+          # Explicit, so a re-run also publishes a release the failed first
+          # attempt left behind as a draft.
+          draft: false
           generate_release_notes: true
           body: |
             **ProGramerly - Basic Coding Software for All**
