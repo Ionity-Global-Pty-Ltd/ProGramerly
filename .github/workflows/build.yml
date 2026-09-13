@@ -324,10 +324,18 @@ jobs:
             | Debian / Ubuntu | `programerly_*_amd64.deb` |
             | Fedora / RHEL / openSUSE | `programerly-*.x86_64.rpm` |
 
-            **What is inside.** ProGramerly is the combined Ionity workstation: the Command
-            Center (AiOS operator layout, live telemetry, Ctrl+K), fan control and CiC built in
-            on Windows and verified against their SHA-256 pins before they run, and local AI
+            **What is inside.** ProGramerly is the combined Ionity workstation: the Ai-OS
+            operator layout, live telemetry, the Ionity DOME - this machine as five strata and
+            24 segments, each bound to a registered data set - fan control and CiC built in on
+            Windows and verified against their SHA-256 pins before they run, and local AI
             through Ollama with a small default model (`llama3.2:1b`) that works on CPU.
+
+            **The local core is on the deck.** On launch the model reads the registered sets
+            and reports, naming the model, the sets it could read and the tokens per second.
+            Every workspace carries its own Ask control scoped to what it covers; the dock orb
+            holds all ten analysis presets; Ctrl+/ runs the brief from anywhere; Settings
+            carries the whole of it - brief, model, re-read cadence, accent, DOME report.
+            Nothing it reads leaves the machine.
 
             Windows builds are unsigned until a code-signing certificate is added to the
             repository secrets, so SmartScreen shows "Windows protected your PC" - choose
