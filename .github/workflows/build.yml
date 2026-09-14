@@ -326,16 +326,26 @@ jobs:
 
             **What is inside.** ProGramerly is the combined Ionity workstation: the Ai-OS
             operator layout, live telemetry, the Ionity DOME - this machine as five strata and
-            24 segments, each bound to a registered data set - fan control and CiC built in on
+            25 segments, each bound to a registered data set - fan control and CiC built in on
             Windows and verified against their SHA-256 pins before they run, and local AI
             through Ollama with a small default model (`llama3.2:1b`) that works on CPU.
 
             **The local core is on the deck.** On launch the model reads the registered sets
             and reports, naming the model, the sets it could read and the tokens per second.
             Every workspace carries its own Ask control scoped to what it covers; the dock orb
-            holds all ten analysis presets; Ctrl+/ runs the brief from anywhere; Settings
+            holds all eleven analysis presets; Ctrl+/ runs the brief from anywhere; Settings
             carries the whole of it - brief, model, re-read cadence, accent, DOME report.
             Nothing it reads leaves the machine.
+
+            **Reading.** A workspace that turns a page, a screenshot or a PDF into text on this
+            machine. An OCR engine (Tesseract, RapidOCR, EasyOCR) returns the characters it
+            found; a tiny vision model (moondream, granite3.2-vision) reads layout and
+            handwriting and can be asked a question about the page instead of transcribing it.
+            The answer always names which reader produced it. Nothing is uploaded to be read.
+
+            **Gemma**, first class: `gemma3:1b` for triage, `gemma4:e2b` for everyday work,
+            `gemma4:e4b` where the memory is there - and every curated model declares what it
+            is for: chat, code, reasoning, vision or embeddings.
 
             Windows builds are unsigned until a code-signing certificate is added to the
             repository secrets, so SmartScreen shows "Windows protected your PC" - choose

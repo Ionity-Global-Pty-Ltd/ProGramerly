@@ -40,6 +40,7 @@ const programs = require('./services/programs');
 const cloudConfig = require('./services/cloudConfig');
 const fans = require('./services/fans');
 const dome = require('./services/dome');
+const ocr = require('./services/ocr');
 const tray = require('./tray');
 
 const IS_WIN = process.platform === 'win32';
@@ -751,6 +752,50 @@ ipcMain.handle('dome:report', async () => {
   } catch (err) {
     return { ok: false, error: err.message };
   }
+});
+
+/* --- OCR and document reading ------------------------------------------- */
+/* Two kinds of reader, both local: an OCR engine (Tesseract, RapidOCR,
+   EasyOCR) and a vision model through Ollama. Text streams back on its own
+   channel so a long page does not arrive as one lump. */
+
+ipcMain.handle('ocr:engines', () => ocr.engines());
+
+ipcMain.handle('ocr:pick', async () => {
+  const res = await dialog.showOpenDialog(win, {
+    title: 'Read a page',
+    properties: ['openFile'],
+    filters: [
+      { name: 'Images and PDFs', extensions: ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tif', 'tiff', 'gif', 'pdf'] },
+      { name: 'All files', extensions: ['*'] },
+    ],
+  });
+  if (res.canceled || !res.filePaths.length) return { ok: false, cancelled: true };
+  const file = res.filePaths[0];
+  return { ok: true, file, name: path.basename(file), bytes: fs.statSync(file).size };
+});
+
+ipcMain.handle('ocr:read', async (_e, req = {}) => {
+  const id = ++chatSeq;
+  emit('ocr:token', { id, start: true, engineId: req.engineId || null, file: req.filePath || '' });
+  const res = await ocr.read(req, (token) => emit('ocr:token', { id, token }));
+  emit('ocr:token', { id, done: true, ok: res.ok, error: res.error || null });
+  dome.invalidate('ds:ocr');
+  return { id, ...res };
+});
+
+ipcMain.handle('ocr:save', (_e, { text, name } = {}) => {
+  try {
+    const dir = path.join(app.getPath('userData'), 'readings');
+    const file = ocr.saveText(String(text || ''), name || 'reading', dir);
+    return { ok: true, file };
+  } catch (err) { return { ok: false, error: err.message }; }
+});
+
+ipcMain.handle('ocr:openFolder', () => {
+  const dir = path.join(app.getPath('userData'), 'readings');
+  fs.mkdirSync(dir, { recursive: true });
+  return shell.openPath(dir);
 });
 
 ipcMain.handle('dome:openReports', () => {

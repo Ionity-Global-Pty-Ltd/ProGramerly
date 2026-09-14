@@ -13,10 +13,26 @@
   <div id="grain" aria-hidden="true"></div>
   <img class="shell-mark" id="shellMark" src="assets/ionity-mark.png" alt="" aria-hidden="true" />
 
+  <!-- ===================== DOME BOOT =====================================
+       The startup of the official IONITY Ai-OS DOME build, carried over: the
+       mark, the wordmark line, the fill, and the steps. The steps here are
+       real - each one is ticked by the milestone it names as the shell brings
+       itself up, so the fill reaches the end when the machine is actually
+       ready, not after a timer. -->
+  <div id="boot">
+    <div class="boot-inner">
+      <img class="boot-mark" src="assets/ionity-mark.png" alt="IONITY" />
+      <div class="boot-sub"><span class="os">Ai-OS</span><span class="tag">Building Tomorrow, Today.</span></div>
+      <div class="boot-line"><i id="boot-fill"></i></div>
+      <div id="boot-steps"></div>
+      <div class="boot-note" id="boot-note">Ionity Global · ProGramerly · AEDI</div>
+    </div>
+  </div>
+
   <div id="shell">
     <header id="topbar">
       <div class="tb-side">
-        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.3.0</span></span>
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.4.0</span></span>
         <span class="tb-divider"></span>
         <span id="clock">--:--</span>
         <span id="date">Local time</span>
@@ -100,6 +116,7 @@
         <button class="dock-btn" data-app="monitor"><span class="tip">Monitor</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
         <button class="dock-btn" data-app="network"><span class="tip">Network</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></button>
         <button class="dock-btn" data-app="hardware"><span class="tip">Hardware</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg></button>
+        <button class="dock-btn" data-app="reading"><span class="tip">Reading · OCR</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></svg></button>
         <button class="dock-btn" data-app="doctor"><span class="tip">Doctor</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-7-11a7 7 0 0 1 14 0c0 6.5-7 11-7 11z"/><path d="M12 8v6M9 11h6"/></svg></button>
         <button class="dock-btn" data-app="terminals"><span class="tip">Terminals</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg></button>
         </span>

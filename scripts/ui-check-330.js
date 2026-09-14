@@ -12,9 +12,17 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-const PWC = path.join(os.homedir(), 'AppData', 'Roaming', 'npm', 'node_modules',
-  '@playwright', 'mcp', 'node_modules', 'playwright-core');
-const { _electron: electron } = require(PWC);
+/* playwright-core is a devDependency of this repository. The global copy that
+   ships inside @playwright/mcp is only a fallback for a machine that has the
+   MCP server but has not run `npm install --include=dev` here. */
+function loadPlaywright() {
+  try { return require('playwright-core'); } catch { /* fall back below */ }
+  const global = path.join(os.homedir(), 'AppData', 'Roaming', 'npm', 'node_modules',
+    '@playwright', 'mcp', 'node_modules', 'playwright-core');
+  try { return require(global); } catch { /* neither is present */ }
+  throw new Error('playwright-core is not installed. Run: npm install --include=dev');
+}
+const { _electron: electron } = loadPlaywright();
 
 const ROOT = path.resolve(__dirname, '..');
 const SHOT = path.join(ROOT, 'Claude outputs');
@@ -75,8 +83,36 @@ async function run() {
   win.on('console', (m) => { if (m.type() === 'error') consoleErrors.push(m.text()); });
   win.on('pageerror', (e) => pageErrors.push(e.message));
 
+  /* ------------------------------------------------- the DOME boot */
+  /* The boot overlay must be up first, tick real steps, and then clear
+     itself - the shell is only "up" once it is gone. */
+  const bootSeen = await win.evaluate(() => Boolean(document.getElementById('boot')));
+  check(bootSeen, 'the DOME boot markup is in the shell window');
+  const bootLive = await win.evaluate(() => {
+    const b = document.getElementById('boot');
+    return b && !b.hidden && !b.classList.contains('done');
+  }).catch(() => false);
+
   await win.waitForSelector('#shell.on', { timeout: 90000 });
   ok('the shell comes up');
+
+  // Polled rather than waitForFunction: this renderer runs under
+  // script-src 'self', so Playwright's eval-based waiter is refused.
+  const bootGone = async () => win.evaluate(() => {
+    const b = document.getElementById('boot');
+    return !b || b.hidden || b.classList.contains('done');
+  });
+  const bootBy = Date.now() + 40000;
+  while (!(await bootGone()) && Date.now() < bootBy) await wait(400);
+  const bootEnd = await win.evaluate(() => ({
+    width: (document.getElementById('boot-fill') || {}).style?.width || '',
+    steps: (document.getElementById('boot-steps') || {}).textContent || '',
+    markLoaded: (() => { const m = document.querySelector('#boot .boot-mark'); return Boolean(m && m.complete && m.naturalWidth > 0); })(),
+  }));
+  check(bootLive || bootEnd.width, 'the boot overlay runs before the shell', bootLive ? 'seen live' : `fill ${bootEnd.width}`);
+  check(bootEnd.width === '100%', 'its fill reaches the end only when the machine is ready', bootEnd.width);
+  check(bootEnd.markLoaded, 'it carries the Ionity mark');
+  ok('and it clears itself', bootEnd.steps.trim() || 'stepped through');
 
   /* ------------------------------------------------------- the Ionity mark */
   const mark = await win.evaluate(() => {
@@ -224,6 +260,74 @@ async function run() {
   await win.screenshot({ path: path.join(SHOT, 'v33-dome.png') });
   await win.click('#aw-close');
 
+  /* ------------------------------------------------- Reading - OCR */
+  await win.waitForSelector('#overlay:not(.on)', { timeout: 8000 });
+  await win.click('.dock-btn[data-app="reading"]');
+  await win.waitForSelector('#readingApp .ocr-engines', { timeout: 60000 });
+  const reading = await win.evaluate(() => {
+    const cards = [...document.querySelectorAll('#readingApp .ocr-engine')];
+    return {
+      total: cards.length,
+      ready: cards.filter((c) => !c.disabled).map((c) => c.dataset.engine),
+      unavailable: cards.filter((c) => c.disabled).map((c) => ({
+        id: c.dataset.engine,
+        reason: (c.querySelector('.oe-state') || {}).textContent || '',
+      })),
+      selected: (document.querySelector('#readingApp .ocr-engine.sel') || {}).dataset?.engine || null,
+      hasQuestion: Boolean(document.getElementById('ocrQuestion')),
+    };
+  });
+  check(reading.total >= 4, 'the Reading workspace lists every reader', `${reading.total} readers`);
+  check(reading.ready.length >= 1, 'at least one can read a page now', reading.ready.join(', ') || 'none');
+  check(reading.unavailable.every((u) => /install|environment|PATH/i.test(u.reason)),
+    'an unavailable reader says why and what installs it',
+    reading.unavailable.map((u) => `${u.id}: ${u.reason}`).join(' | ') || 'all available');
+  check(reading.hasQuestion, 'a vision model can be asked about the page instead of transcribing it');
+  await win.screenshot({ path: path.join(SHOT, 'v34-reading.png') });
+  await win.click('#aw-close');
+  await win.waitForSelector('#overlay:not(.on)', { timeout: 8000 });
+
+  /* ---------------------------------------- the dome knows about reading */
+  const domeVision = await win.evaluate(async () => {
+    // The quick pass: the full one walks the whole development root, which on
+    // a large one is minutes, and the counts and this segment do not need it.
+    const ov = await window.programerly.dome.overview({ quick: true });
+    const intel = ov.strata.find((s) => s.id === 'intelligence');
+    const seg = intel && intel.segments.find((s) => s.id === 'vision');
+    const sets = await window.programerly.dome.dataset('ocr.engines');
+    return {
+      counts: ov.counts,
+      seg: seg ? { name: seg.name, level: seg.level, label: seg.label, value: seg.value } : null,
+      setRows: sets.available ? sets.rows.length : 0,
+      setClass: sets.class,
+    };
+  });
+  check(domeVision.seg != null, 'the dome carries a Reading and OCR segment',
+    domeVision.seg ? `${domeVision.seg.value}% ${domeVision.seg.level} - ${domeVision.seg.label}` : 'missing');
+  check(domeVision.setRows > 0, 'and the set behind it is readable',
+    `${domeVision.setRows} rows, class ${domeVision.setClass}`);
+  check(domeVision.counts.segments === 25 && domeVision.counts.datasets === 29 && domeVision.counts.presets === 11,
+    'the registry counts match what shipped',
+    `${domeVision.counts.segments} segments · ${domeVision.counts.datasets} sets · ${domeVision.counts.presets} presets`);
+
+  /* ------------------------------------------------ Gemma in the catalogue */
+  const models = await win.evaluate(async () => {
+    const curated = await window.programerly.aiCurated();
+    const res = await window.programerly.getCatalog();
+    const items = (res.catalog && res.catalog.items) || res.items || [];
+    return {
+      gemma: curated.filter((c) => c.name.startsWith('gemma')).map((c) => c.name),
+      vision: curated.filter((c) => c.role === 'vision').map((c) => c.name),
+      roles: [...new Set(curated.map((c) => c.role))],
+      items: items.filter((i) => /gemma|ocr/.test(i.id)).map((i) => i.id),
+    };
+  });
+  check(models.gemma.includes('gemma4:e2b'), 'gemma4:e2b is offered as a model', models.gemma.join(', '));
+  check(!models.vision.includes('gemma3:1b') && models.vision.includes('moondream'),
+    'only models that can actually read are offered as readers', models.vision.join(', '));
+  check(models.roles.length >= 4, 'every curated model declares what it is for', models.roles.join(', '));
+  check(models.items.length >= 5, 'the catalogue installs Gemma and the OCR stack', models.items.join(', '));
+
   /* --------------------------------------------------------------- errors */
   await wait(1200);
   check(pageErrors.length === 0, 'no uncaught errors in the renderer', pageErrors.join(' | ') || 'clean');
@@ -236,7 +340,7 @@ async function run() {
   const failed = results.filter((r) => !r.pass);
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
   if (failed.length) { console.log('FAILED:'); failed.forEach((f) => console.log(`  - ${f.name}: ${f.detail || ''}`)); process.exit(1); }
-  console.log('ProGramerly 3.3.0 behaves as built.');
+  console.log(`ProGramerly ${require('../package.json').version} behaves as built.`);
 }
 
 run().catch((e) => { console.error('\nharness error:', e && e.stack ? e.stack : e); process.exit(2); });

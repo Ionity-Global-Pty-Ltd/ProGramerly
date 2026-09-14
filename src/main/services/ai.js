@@ -225,19 +225,59 @@ function ollamaDelete(model) {
   });
 }
 
-/** A short, opinionated list so the download box is not an empty text field. */
+/**
+ * A short, opinionated list so the download box is not an empty text field.
+ *
+ * `role` is what the model is for, and it is what the rest of the application
+ * reads: the copilot picks from `chat`, the OCR surface offers only `vision`,
+ * RAG wants `embed`. `sizeBytes` is the approximate download, kept beside the
+ * human string so a fit check is arithmetic rather than string-parsing.
+ */
+const GB = 1024 ** 3;
 const CURATED = [
-  { name: 'llama3.2:3b', note: 'Small, fast, genuinely useful. Good first model.', size: '~2 GB' },
-  { name: 'llama3.1:8b', note: 'The general-purpose workhorse.', size: '~4.7 GB' },
-  { name: 'qwen2.5-coder:7b', note: 'Code completion and review.', size: '~4.7 GB' },
-  { name: 'qwen2.5-coder:14b', note: 'Noticeably better code, needs the VRAM.', size: '~9 GB' },
-  { name: 'deepseek-r1:8b', note: 'Reasoning traces, shows its working.', size: '~4.9 GB' },
-  { name: 'mistral:7b', note: 'Fast, permissive licence.', size: '~4.1 GB' },
-  { name: 'phi4:14b', note: "Microsoft's small model, strong at maths.", size: '~9 GB' },
-  { name: 'gemma2:9b', note: 'Google, good instruction following.', size: '~5.4 GB' },
-  { name: 'nomic-embed-text', note: 'Embeddings, not chat. For RAG.', size: '~275 MB' },
-  { name: 'llava:7b', note: 'Vision - describe and read images.', size: '~4.7 GB' },
+  // --- everyday chat ----------------------------------------------------
+  { name: 'llama3.2:1b', role: 'chat', note: 'The Command Center default. Runs on CPU, answers in seconds.', size: '~1.3 GB', sizeBytes: 1.3 * GB },
+  { name: 'llama3.2:3b', role: 'chat', note: 'Small, fast, genuinely useful. Good first model.', size: '~2 GB', sizeBytes: 2 * GB },
+  { name: 'llama3.1:8b', role: 'chat', note: 'The general-purpose workhorse.', size: '~4.7 GB', sizeBytes: 4.7 * GB },
+  { name: 'mistral:7b', role: 'chat', note: 'Fast, permissive licence.', size: '~4.1 GB', sizeBytes: 4.1 * GB },
+  // --- Gemma ------------------------------------------------------------
+  { name: 'gemma3:1b', role: 'chat', note: 'Gemma, pocket size. Quick triage on any machine.', size: '~815 MB', sizeBytes: 0.8 * GB },
+  { name: 'gemma2:2b', role: 'chat', note: 'Gemma 2, small. Steady instruction following.', size: '~1.6 GB', sizeBytes: 1.6 * GB },
+  { name: 'gemma3:4b', role: 'chat', note: 'Gemma 3, the middle step. Reads longer context.', size: '~3.3 GB', sizeBytes: 3.3 * GB },
+  { name: 'gemma4:e2b', role: 'chat', note: 'Gemma 4 (e2b) - the everyday Ionity default above the starter model.', size: '~7.2 GB', sizeBytes: 7.2 * GB },
+  { name: 'gemma4:e4b', role: 'chat', note: 'Gemma 4 (e4b) - long reasoning and document work, if the memory is there.', size: '~9.6 GB', sizeBytes: 9.6 * GB },
+  // --- code and reasoning ----------------------------------------------
+  { name: 'qwen2.5-coder:7b', role: 'code', note: 'Code completion and review.', size: '~4.7 GB', sizeBytes: 4.7 * GB },
+  { name: 'qwen2.5-coder:14b', role: 'code', note: 'Noticeably better code, needs the VRAM.', size: '~9 GB', sizeBytes: 9 * GB },
+  { name: 'deepseek-r1:8b', role: 'reason', note: 'Reasoning traces, shows its working.', size: '~4.9 GB', sizeBytes: 4.9 * GB },
+  { name: 'phi4:14b', role: 'reason', note: "Microsoft's small model, strong at maths.", size: '~9 GB', sizeBytes: 9 * GB },
+  // --- reading: vision and OCR -----------------------------------------
+  { name: 'moondream', role: 'vision', note: 'Tiny OCR. Reads a screenshot or a page in seconds, on CPU.', size: '~1.7 GB', sizeBytes: 1.7 * GB },
+  { name: 'granite3.2-vision', role: 'vision', note: 'Built for documents - tables, forms, invoices, scans.', size: '~2.4 GB', sizeBytes: 2.4 * GB },
+  { name: 'llava:7b', role: 'vision', note: 'General vision - describe and read images.', size: '~4.7 GB', sizeBytes: 4.7 * GB },
+  { name: 'llama3.2-vision:11b', role: 'vision', note: 'The heavier reader. Best transcription, wants a GPU.', size: '~7.9 GB', sizeBytes: 7.9 * GB },
+  // --- embeddings -------------------------------------------------------
+  { name: 'nomic-embed-text', role: 'embed', note: 'Embeddings, not chat. For RAG.', size: '~275 MB', sizeBytes: 0.27 * GB },
 ];
+
+/**
+ * Model names that can actually read an image, by family.
+ *
+ * The exceptions matter: Gemma 3 is multimodal from 4b upwards, but gemma3:1b
+ * is text only. Claiming a model can read a page when it cannot is the kind of
+ * wrong answer that wastes someone's afternoon, so the small tags are named
+ * here rather than swept in by a prefix match.
+ */
+const VISION_FAMILIES = [
+  'moondream', 'granite3.2-vision', 'granite3-vision', 'llava', 'bakllava',
+  'llama3.2-vision', 'minicpm-v', 'qwen2-vl', 'qwen2.5-vl', 'gemma3',
+];
+const TEXT_ONLY_TAGS = new Set(['gemma3:1b', 'gemma3:270m']);
+function isVisionModel(name) {
+  const n = String(name || '').toLowerCase();
+  if (TEXT_ONLY_TAGS.has(n)) return false;
+  return VISION_FAMILIES.some((f) => n.startsWith(f));
+}
 
 /* ------------------------------------------------------ Python and Node */
 
@@ -357,6 +397,8 @@ module.exports = {
   ollamaDelete,
   environments,
   CURATED,
+  isVisionModel,
+  VISION_FAMILIES,
   human,
 };
 

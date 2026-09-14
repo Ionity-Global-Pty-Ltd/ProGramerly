@@ -3133,6 +3133,138 @@
           "allowFail": true
         }
       ]
+    },
+    {
+      "id": "ollama-gemma",
+      "name": "Gemma family (gemma4:e2b + gemma3:1b)",
+      "group": "ai",
+      "desc": "Google's Gemma on this machine. gemma4:e2b is the everyday model - strong instruction following, reads long context, and still answers on a laptop; gemma3:1b is the pocket version for quick triage. Both run through the same local Ollama the Command Center uses, so nothing leaves the machine.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "ollama"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "ollama pull gemma4:e2b",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "ollama pull gemma3:1b",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "ollama-gemma-large",
+      "name": "Gemma, the larger cut (gemma4:e4b, gemma3:4b)",
+      "group": "ai",
+      "desc": "The bigger Gemma weights for a workstation with the memory to hold them: gemma4:e4b for long reasoning and document work, gemma3:4b as the middle step. Roughly 13 GB together.",
+      "profiles": [],
+      "dependsOn": [
+        "ollama"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "ollama pull gemma4:e4b",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "ollama pull gemma3:4b",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "ollama-ocr",
+      "name": "Tiny OCR and vision (moondream + granite3.2-vision)",
+      "group": "ai",
+      "desc": "Reading models small enough to run beside everything else. moondream is about 1.7 GB and describes and transcribes a screenshot in seconds; granite3.2-vision is built for documents - tables, forms, invoices and scanned pages. Both answer through the local Ollama, so a document never leaves the machine to be read.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "ollama"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "ollama pull moondream",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "ollama pull granite3.2-vision",
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "ocr-engine",
+      "name": "Tesseract OCR engine",
+      "group": "ml",
+      "desc": "The classic OCR engine, on PATH. Fast, deterministic, no model to load - the right tool for clean scans and screenshots, and the fallback when no vision model is pulled.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "UB-Mannheim.TesseractOCR"
+        ],
+        "choco": [
+          "tesseract"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "formula": [
+            "tesseract"
+          ]
+        }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then sudo apt-get install -y tesseract-ocr; elif command -v dnf >/dev/null; then sudo dnf install -y tesseract; elif command -v pacman >/dev/null; then sudo pacman -S --noconfirm tesseract; else echo \"no supported package manager\"; exit 1; fi'",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "ocr-toolkit",
+      "name": "OCR toolkit (RapidOCR, EasyOCR, PyMuPDF)",
+      "group": "ml",
+      "desc": "The document-reading stack in the managed Python environment: rapidocr-onnxruntime (tiny, CPU, no system dependency), easyocr for harder pages, pytesseract to drive the engine above, PyMuPDF and pdf2image to turn PDF pages into images, and Pillow for the rest.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "rapidocr-onnxruntime",
+            "easyocr",
+            "pytesseract",
+            "pymupdf",
+            "pdf2image",
+            "pillow"
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "name": "programerly",
   "productName": "ProGramerly",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "ProGramerly - Basic Coding Software for All. One free desktop app that provisions a complete development environment on Windows, macOS and Linux, elevates once so nothing prompts again, diagnoses and repairs the machine it runs on, manages local LLMs and Python environments, opens any installed shell, reads sensors and drives RGB through the OpenRGB SDK, launches the bundled Ionity utilities from a Command Center with every executable SHA-256 pinned, and - for its own maintainers - pushes itself to GitHub and cuts its own release.",
   "main": "src/main/main.js",
   "author": {
@@ -27,11 +27,13 @@
     "dist:linux": "electron-builder --linux",
     "pack": "electron-builder --dir",
     "start:min": "electron . --minimised",
-    "lint:syntax": "node scripts/syntax-check.js"
+    "lint:syntax": "node scripts/syntax-check.js",
+    "check:ui": "node scripts/ui-check-330.js"
   },
   "devDependencies": {
     "electron": "^33.2.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "playwright-core": "^1.49.1"
   },
   "engines": {
     "node": ">=18"

@@ -47,6 +47,8 @@
     flask: S('<path d="M10 3v6L4.6 18A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.7-3L14 9V3"/><path d="M9 3h6"/><path d="M7.5 15h9"/>'),
     dataset: S('<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>'),
     preset: S('<path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="16" cy="17" r="2"/>'),
+    eye: S('<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>'),
+    page: S('<path d="M6 3h7l5 5v13H6z"/><path d="M13 3v5h5"/><path d="M9 13h6M9 16.5h4"/>'),
     /* shell-side */
     dome: S('<path d="M3 17a9 9 0 0 1 18 0"/><path d="M2 17h20"/><path d="M6.5 17a5.5 5.5 0 0 1 11 0"/><path d="M12 8V5"/>'),
     back: S('<path d="M15 5l-7 7 7 7"/>'),
@@ -731,5 +733,156 @@
     },
   };
 
-  window.PGApps = { GLYPHS, dome, fans, esc, bytes };
+
+  /* ====================================================================== *
+   *  READING - OCR and the local vision models
+   *  Pick a page, pick a reader, get the words. Everything runs here; a
+   *  document is never uploaded to be read.
+   * ====================================================================== */
+
+  const ocr = {
+    /**
+     * @param {HTMLElement} root
+     * @param {{api:object, toast:Function, openApp:Function, focus?:string}} h
+     */
+    async mount(root, h) {
+      const api = h.api;
+      let list = { engines: [], note: '' };
+      let picked = null;            // { file, name, bytes }
+      let chosen = null;            // engine id
+      let busy = false;
+      let last = null;              // the last result, for saving
+
+      const kindLabel = (k) => (k === 'vision' ? 'vision model' : 'OCR engine');
+
+      function engineCard(e) {
+        const on = e.available;
+        return `<button class="ocr-engine ${on ? '' : 'off'} ${chosen === e.id ? 'sel' : ''}" data-engine="${esc(e.id)}" ${on ? '' : 'disabled'}>
+          <span class="oe-ic">${e.kind === 'vision' ? GLYPHS.eye : GLYPHS.page}</span>
+          <span class="oe-body">
+            <b>${esc(e.name)}<em>${esc(kindLabel(e.kind))}</em></b>
+            <small>${esc(e.about)}</small>
+            <i class="oe-state">${on ? esc(e.detail) : esc(e.reason || e.detail)}</i>
+          </span>
+        </button>`;
+      }
+
+      function paint() {
+        const ready = list.engines.filter((e) => e.available);
+        root.innerHTML = `
+          <header class="dome-head">
+            <div>
+              <h3>${GLYPHS.eye}Reading</h3>
+              <p class="muted">${ready.length} reader${ready.length === 1 ? '' : 's'} on this machine · ${esc(list.note || '')}</p>
+            </div>
+            <div class="dome-actions">
+              <button class="btn ghost" data-act="refresh">Re-probe</button>
+              <button class="btn ghost" data-act="folder">Saved readings</button>
+              <button class="btn primary" data-act="pick">${GLYPHS.page}Choose a page</button>
+            </div>
+          </header>
+
+          <p class="dome-note">An OCR engine returns the characters it found. A vision model returns its reading of them - it handles handwriting and layout, and it can be asked a question about the page, but it is a model and it can be wrong.</p>
+
+          <div class="ocr-engines">${list.engines.map(engineCard).join('')}</div>
+
+          <section class="ocr-run">
+            <div class="ocr-file">
+              ${picked
+                ? `<span class="of-ic">${GLYPHS.page}</span><span class="of-body"><b>${esc(picked.name)}</b><small>${bytes(picked.bytes)}${/\.pdf$/i.test(picked.name) ? ' · PDF pages are rendered first' : ''}</small></span>`
+                : `<span class="of-ic muted">${GLYPHS.page}</span><span class="of-body"><b>No page chosen</b><small>Choose an image or a PDF to read.</small></span>`}
+            </div>
+            <label class="ocr-q"><span>Ask the vision model something instead of transcribing</span>
+              <input type="text" id="ocrQuestion" placeholder="e.g. What is the invoice total and its date?" /></label>
+            <div class="ocr-go">
+              <button class="btn primary" data-act="read" ${picked && !busy ? '' : 'disabled'}>${GLYPHS.spark}${busy ? 'Reading…' : 'Read it'}</button>
+              <button class="btn ghost" data-act="save" ${last && last.text ? '' : 'disabled'}>Save as text</button>
+              <button class="btn ghost" data-act="copy" ${last && last.text ? '' : 'disabled'}>Copy</button>
+            </div>
+          </section>
+
+          <section class="ocr-out ${last && last.ok === false ? 'err' : ''}" ${last || busy ? '' : 'hidden'}>
+            <div class="ans-head"><span class="ai-orb ${busy ? 'busy' : ''}"></span><b id="ocrTitle">${busy ? 'Reading…' : esc((last && last.engine) || '')}</b><span class="ans-meta" id="ocrMeta">${last && last.ok ? esc(`${last.words} words · ${last.chars} characters${last.pages > 1 ? ` · ${last.pages} pages` : ''}${last.confidence != null ? ` · ${Math.round(last.confidence * 100)}% mean confidence` : ''} · ${last.ms} ms`) : ''}</span></div>
+            <div class="ans-body" id="ocrBody">${esc((last && (last.text || last.error)) || '')}</div>
+            ${last && last.ok && last.note ? `<p class="ocr-note">${esc(last.note)}</p>` : ''}
+          </section>`;
+        wire();
+      }
+
+      async function load() {
+        root.innerHTML = '<div class="dome-loading">Checking every reader…</div>';
+        try {
+          list = await api.ocr.engines();
+        } catch (e) {
+          root.innerHTML = `<div class="dome-loading err">The readers could not be probed: ${esc(e.message || e)}</div>`;
+          return;
+        }
+        if (!chosen) {
+          const first = list.engines.find((e) => e.available && e.kind === 'engine')
+            || list.engines.find((e) => e.available);
+          chosen = first ? first.id : null;
+        }
+        paint();
+      }
+
+      async function pick() {
+        const r = await api.ocr.pick();
+        if (!r.ok) return;
+        picked = r; last = null;
+        paint();
+      }
+
+      async function readIt() {
+        if (!picked || busy) return;
+        const engine = list.engines.find((e) => e.id === chosen);
+        if (!engine || !engine.available) { h.toast('Pick a reader that is available.', 'bad'); return; }
+        const question = (root.querySelector('#ocrQuestion') || {}).value || '';
+        busy = true; last = null; paint();
+        const body = root.querySelector('#ocrBody');
+        const meta = root.querySelector('#ocrMeta');
+        const off = api.ocr.onToken((p) => {
+          if (p.start) { meta.textContent = `${engine.name} · reading ${picked.name}`; return; }
+          if (p.token && body) { body.textContent += p.token; body.scrollTop = body.scrollHeight; }
+        });
+        try {
+          const res = await api.ocr.read({ filePath: picked.file, engineId: chosen, question: question.trim() || undefined });
+          last = res;
+          if (!res.ok) h.toast(res.error || 'The page could not be read.', 'bad');
+        } catch (e) {
+          last = { ok: false, error: e.message || String(e) };
+        } finally {
+          setTimeout(off, 400);
+          busy = false;
+          paint();
+        }
+      }
+
+      function wire() {
+        root.querySelectorAll('[data-engine]').forEach((b) => b.addEventListener('click', () => {
+          chosen = b.dataset.engine; paint();
+        }));
+        root.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', async () => {
+          const act = b.dataset.act;
+          if (act === 'pick') return pick();
+          if (act === 'read') return readIt();
+          if (act === 'refresh') { chosen = null; return load(); }
+          if (act === 'folder') return api.ocr.openFolder();
+          if (act === 'save') {
+            const r = await api.ocr.save({ text: last.text, name: last.file });
+            h.toast(r.ok ? `Saved as ${String(r.file).split(/[\\/]/).pop()}` : `Could not save: ${r.error}`, r.ok ? 'good' : 'bad');
+            return undefined;
+          }
+          if (act === 'copy') {
+            try { await navigator.clipboard.writeText(last.text); h.toast('The reading is on the clipboard.', 'good'); }
+            catch { h.toast('The clipboard refused that.', 'bad'); }
+          }
+          return undefined;
+        }));
+      }
+
+      await load();
+    },
+  };
+
+  window.PGApps = { GLYPHS, dome, fans, ocr, esc, bytes };
 })();

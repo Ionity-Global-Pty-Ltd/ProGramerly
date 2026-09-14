@@ -852,7 +852,7 @@ open, so all workspace logic is unchanged; `aios.css` draws only the shell.
 
 The deck's centrepiece is the **DOME**: this workstation modelled as navigable
 structure rather than a picture. Five strata — **Hardware, System, Storage,
-Toolchain, Intelligence** — carrying **24 segments**, each bound to real data
+Toolchain, Intelligence** — carrying **25 segments**, each bound to real data
 sets on this machine. Click a band or a legend row and the full surface opens:
 strata scored live, segments with their own icon, purpose and what to watch
 for, and under each segment the actual sets behind it with a sample of their
@@ -865,7 +865,7 @@ between runs.
 
 ### Data sets and presets — what the model can see
 
-`src/main/data/datasets.json` is the boundary, stated in one file: **28 data
+`src/main/data/datasets.json` is the boundary, stated in one file: **29 data
 sets** the local model may read, each with a class that governs how a figure
 may be reported —
 
@@ -883,10 +883,11 @@ only from listed sets, each rendered as a compact table with its class tag, and
 the system preamble tells the model to answer only from them, to cite the set
 id for every figure, and to report a gap rather than estimate around it.
 
-**10 analysis presets** are the standing questions — state of the machine,
+**11 analysis presets** are the standing questions — state of the machine,
 thermal and airflow brief, which curve to run, disk pressure and reclaim,
-toolchain gaps, repository standing, model fit, integrity and privilege,
-explain the last scan, and *what can you see*. Each declares the sets it reads.
+toolchain gaps, repository standing, model fit, *what can this machine read*,
+integrity and privilege, explain the last scan, and *what can you see*. Each
+declares the sets it reads.
 Ask one from the dome, a stratum, a segment, or the data-set registry; the
 answer streams back in place with the model, the set count and the context size
 shown above it.
@@ -931,6 +932,81 @@ in the band, the legend and the segment icons; the four gauges are coloured by
 what they measure. The official transparent IONITY GLOBAL wordmark sits bottom
 left, and the intro assembles the dome arc by arc from the real machine facts
 before the shell appears.
+
+### Reading — OCR and the local vision models — 3.4.0
+
+**Reading** is a workspace of its own: choose a page — an image or a PDF —
+choose a reader, and get the words. Everything happens here; a document is
+never uploaded to be read.
+
+Two kinds of reader, side by side, and the answer always names which one
+produced it:
+
+| Reader | Installed by | Character |
+| --- | --- | --- |
+| **Tesseract** | *Tesseract OCR engine* | Deterministic. Returns the characters it found. Best on clean scans and screenshots |
+| **RapidOCR** | *OCR toolkit* | ONNX runtime, CPU only, no system dependency, good on mixed layouts |
+| **EasyOCR** | *OCR toolkit* | Heavier and slower, better on photographs and odd fonts |
+| **moondream** | *Tiny OCR and vision* | ~1.7 GB. Reads a screenshot or a page in seconds, on CPU |
+| **granite3.2-vision** | *Tiny OCR and vision* | ~2.4 GB. Built for documents — tables, forms, invoices, scans |
+| llava, llama3.2-vision, gemma3 (4b+) | the AI workspace | The heavier readers |
+
+A PDF is rasterised first — 200 dpi, up to 20 pages, with PyMuPDF in the
+managed environment — and read page by page, streaming. A vision model can be
+asked a question about the page (*"what is the invoice total and its date"*)
+instead of transcribing it; an OCR engine cannot, and the surface says so.
+
+Every result carries the engine, the pages, the elapsed time, the mean
+confidence where the reader reports one, and a note that distinguishes *these
+are the characters it found* from *this is a model's reading — check anything
+that matters*. Illegible text is asked for as `[illegible]`, never guessed. A
+reader that is not installed is listed with the reason and the catalogue item
+that installs it. Saved readings go to `<userData>/readings`.
+
+The dome gained a segment for it: **Reading and OCR** in the Intelligence
+stratum, reading `ocr.engines`, scored honestly — having both an engine and a
+vision model is the healthy state, one of the two is a warning, neither is an
+error, because then a scan cannot be read at all without sending it somewhere.
+The standing question **"what can this machine read"** asks the model to
+report exactly that.
+
+### Gemma — 3.4.0
+
+Gemma is a first-class family in the catalogue and the curated list:
+
+| Tag | Size | What it is for |
+| --- | --- | --- |
+| `gemma3:1b` | ~815 MB | Pocket size, quick triage. **Text only** |
+| `gemma2:2b` | ~1.6 GB | Small, steady instruction following |
+| `gemma3:4b` | ~3.3 GB | The middle step; multimodal, so it reads pages too |
+| `gemma4:e2b` | ~7.2 GB | The everyday model above the starter — what to move up to |
+| `gemma4:e4b` | ~9.6 GB | Long reasoning and document work, where the memory is there |
+
+*Gemma family* (`gemma4:e2b` + `gemma3:1b`) is in the **full** and **ai**
+profiles; *Gemma, the larger cut* is opt-in. Multimodality is stated exactly —
+Gemma 3 reads images from 4b upwards, and `gemma3:1b` is listed as text only,
+so the Reading workspace never offers a model that cannot read.
+
+Every curated model now declares a **role** — `chat`, `code`, `reason`,
+`vision`, `embed` — and the application reads the role rather than guessing
+from the name.
+
+### The DOME boot — 3.4.0
+
+After the intro window closes, the shell comes up behind the **startup of the
+official IONITY Ai-OS DOME build**: the mark, the `Ai-OS · Building Tomorrow,
+Today.` line, the fill, and the step list.
+
+The difference is that the steps are real. Each is ticked by the milestone it
+names — *verifying the integrated tools · loading the analysis presets ·
+reading sensors and volumes · waking the local core · assembling the dome* —
+so the fill is the share of real work done and cannot run ahead of the
+machine. A 20-second ceiling clears it whatever happens, exactly as the intro
+has one, because nobody is ever left looking at a boot screen.
+
+Full detail of the AI and ML structure — models, roles, the registry, the
+readers, the stack and the startup — is in
+[`docs/AI-AND-ML.md`](docs/AI-AND-ML.md).
 
 ### Fan control
 

@@ -33,6 +33,7 @@
     mcp: SVG('<path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'),
     about: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
     dome: SVG('<path d="M3 17a9 9 0 0 1 18 0"/><path d="M2 17h20"/><path d="M6.5 17a5.5 5.5 0 0 1 11 0"/><path d="M12 8V5"/>'),
+    reading: SVG('<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>'),
   };
   /* Segment icons live with the DOME surface so both use the same set. */
   const SEG = () => (window.PGApps && window.PGApps.GLYPHS) || {};
@@ -54,12 +55,13 @@
     settings: { name: 'Settings', sub: 'Profile, startup and application controls', view: 'settingsView', tab: 'settings', hue: '#5d7181', desc: 'Startup, tray, kiosk, profile.' },
     // Ionity tools - capabilities of ProGramerly, laid out the Ai-OS way
     dome: { name: 'The Ionity DOME', sub: 'Five strata · 24 segments · the sets behind them', builtin: 'dome', hue: '#00c8f0', scope: 'all', desc: 'The workstation as structure, drillable, with the local model reporting from the real sets.' },
+    reading: { name: 'Reading', sub: 'OCR engines · local vision models', builtin: 'ocr', scope: 'vision', hue: '#8b7cf5', desc: 'Turn a page, a screenshot or a PDF into text - on this machine, with the reader you choose.' },
     fans: { name: 'Fan control', sub: 'Channels · curves · thermal sources', builtin: 'fans', tool: 'fanzi', hue: '#00c8f0', scope: 'thermal', desc: 'Every fan channel, the curves that drive them, and what each would command right now.' },
     cic: { name: 'CiC', sub: 'Central Ionity Control', tool: 'cic', launch: true, hue: '#0e9ab8', desc: 'The IONITY CiC workstation utility.' },
     mcp: { name: 'MCP audit', sub: 'Internal side tool · maintainers', tool: 'mcp-audit', launch: true, side: true, hue: '#8b7cf5', desc: 'Internal. Asks before it runs.' },
     about: { name: 'About ProGramerly', sub: 'Ionity (Pty) Ltd · AEDI', about: true, hue: '#00c8f0', desc: '' },
   };
-  const TILE_ORDER = ['dome', 'software', 'ai', 'projects', 'fans', 'cic', 'monitor', 'doctor'];
+  const TILE_ORDER = ['dome', 'software', 'ai', 'reading', 'projects', 'fans', 'cic', 'monitor'];
 
   /* One hue per stratum. The dome, its legend and every segment icon carry it,
      so the deck reads as five subjects rather than five grey rings. */
@@ -852,6 +854,50 @@
     on('optDatasets', 'click', () => openApp('dome', { focus: 'datasets' }));
   }
 
+  /* ------------------------------------------------------- the DOME boot */
+  /* The startup of the official Ai-OS DOME build, with one difference: every
+     step below is ticked by the milestone it names. The fill is the share of
+     real work done, so it cannot run ahead of the machine. */
+
+  const BOOT_STEPS = [
+    ['tools', 'verifying the integrated tools…'],
+    ['presets', 'loading the analysis presets…'],
+    ['metrics', 'reading sensors and volumes…'],
+    ['core', 'waking the local core…'],
+    ['dome', 'assembling the dome…'],
+  ];
+  const bootDone = new Set();
+  let bootFinished = false;
+
+  function bootStep(id) {
+    if (bootFinished || bootDone.has(id)) return;
+    bootDone.add(id);
+    const host = $('boot-steps');
+    const entry = BOOT_STEPS.find((x) => x[0] === id);
+    if (host && entry) {
+      const line = document.createElement('span');
+      line.className = 'ok';
+      line.textContent = entry[1];
+      host.innerHTML = '';
+      host.appendChild(line);
+    }
+    const fill = $('boot-fill');
+    if (fill) fill.style.width = `${Math.round((bootDone.size / BOOT_STEPS.length) * 100)}%`;
+  }
+
+  function bootClear() {
+    if (bootFinished) return;
+    bootFinished = true;
+    const fill = $('boot-fill');
+    if (fill) fill.style.width = '100%';
+    const boot = $('boot');
+    if (!boot) return;
+    setTimeout(() => {
+      boot.classList.add('done');
+      setTimeout(() => { boot.hidden = true; }, 900);
+    }, 260);
+  }
+
   /* ---------------------------------------------------------- kiosk etc */
   function applyKioskUi(on) {
     document.body.classList.toggle('kiosk-shell', Boolean(on));
@@ -938,12 +984,16 @@
     // root, which on a large one takes real time - nothing the operator can
     // already use is allowed to wait behind it.
     await Promise.allSettled([
-      api.metrics().then(paintMetrics),
-      loadTools(),
-      api.dome.presets('all').then((rows) => { domePresets = Array.isArray(rows) ? rows : []; }),
+      api.metrics().then((m) => { paintMetrics(m); bootStep('metrics'); }),
+      loadTools().then(() => bootStep('tools')),
+      api.dome.presets('all').then((rows) => {
+        domePresets = Array.isArray(rows) ? rows : [];
+        bootStep('presets');
+      }),
     ]);
     buildHeroChips(); buildOrbMenu();
     await refreshAi();                       // enables the chips it can answer
+    bootStep('core');
     paintOptions();
     if (shellSettings.kioskMode) await setKiosk(true);
     setInterval(refreshAi, 30000);
@@ -956,15 +1006,24 @@
     // listening ports and every repository under the development root - which
     // lands when it lands and repaints the card on arrival.
     await refreshDome({ quick: true });
+    bootStep('dome');
+    bootClear();                             // the shell is genuinely up now
     paintOptions();
     refreshDome().then(() => { paintOptions(); scheduleDome(); });
   }
 
   const coreBoot = boot;
   boot = async function bootWithShell() {
+    // A hard ceiling, exactly as the intro has one: whatever happens to a
+    // reader, the operator is never left looking at a boot screen.
+    setTimeout(bootClear, 20000);
     await coreBoot();
     // renderer.js ends its boot on the software tab; the shell starts closed.
     closeApp();
-    await initShell();
+    try {
+      await initShell();
+    } finally {
+      bootClear();
+    }
   };
 })();

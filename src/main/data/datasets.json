@@ -9,55 +9,399 @@
     "computed": "Derived from other sets. Never a reading."
   },
   "datasets": [
-    { "id": "sensors.tree", "name": "Sensor tree", "class": "measured", "reader": "sensors", "source": "LibreHardwareMonitor over CIM", "shape": "groups[] -> sensors[] { name, type, value, unit }", "about": "Every temperature, fan, controller, load, voltage, power and clock the driver exposes, grouped by the chip that owns it.", "platform": "win" },
-    { "id": "fans.channels", "name": "Fan channels", "class": "measured", "reader": "fanChannels", "source": "sensor tree, folded", "shape": "channels[] { label, parent, role, rpm, duty, controllable }", "about": "Tachometers paired with the controllers that drive them, plus every temperature source available to a curve.", "platform": "win" },
-    { "id": "fans.profiles", "name": "Fan curve profiles", "class": "state", "reader": "fanProfiles", "source": "settings.json", "shape": "profiles[] { name, points[], minDuty, stopBelow, commandedDuty }", "about": "Curves designed in this application, each evaluated against the live temperature so the commanded duty can be compared with the measured one." },
-    { "id": "metrics.live", "name": "Live metrics", "class": "measured", "reader": "metrics", "source": "metrics service", "shape": "{ cpu, mem, disks[], net, temp, uptimeSec, host }", "about": "The same sample the tray and the deck paint from: CPU load and clock, memory, every volume, throughput and package temperature." },
-    { "id": "disks.volumes", "name": "Volumes", "class": "measured", "reader": "disks", "source": "metrics service", "shape": "disks[] { name, usedPct, free, total }", "about": "Each mounted volume with used percentage and free bytes." },
-    { "id": "memory.state", "name": "Memory state", "class": "measured", "reader": "memory", "source": "hardware service", "shape": "{ totalBytes, freeBytes, standbyBytes, usedPct }", "about": "Installed, free and standby-list memory - the last being memory Windows counts as free while behaving as though it is not.", "platform": "win" },
-    { "id": "rgb.devices", "name": "Lighting devices", "class": "measured", "reader": "rgb", "source": "OpenRGB SDK over TCP", "shape": "{ connected, devices[] { name, type, zones } }", "about": "Controllers reachable on the OpenRGB protocol, if its server is running." },
-    { "id": "system.privilege", "name": "Privilege state", "class": "measured", "reader": "privilege", "source": "process token", "shape": "{ elevated, platform, osLabel }", "about": "Whether this process holds an administrator token, and what it is running on." },
-    { "id": "registry.fixes", "name": "Registry fix set", "class": "catalogue", "reader": "registryFixes", "cost": "scan", "source": "src/main/data/registry-fixes.json", "shape": "fixes[] { id, name, symptom, status, action }", "about": "The curated set of Microsoft-documented repairs, each with the symptom it addresses and its state on this machine.", "platform": "win" },
-    { "id": "ports.listeners", "name": "Port listeners", "class": "measured", "reader": "ports", "source": "doctor service", "shape": "ports[] { port, pid, process, state }", "about": "What is bound to the ports a development machine contends over.", "cost": "scan" },
-    { "id": "env.resolved", "name": "Resolved toolchain", "class": "measured", "reader": "environment", "source": "doctor service", "shape": "tools[] { name, found, version, path }", "about": "Each expected tool resolved to the binary that actually answers on PATH, with its version.", "cost": "scan" },
-    { "id": "doctor.findings", "name": "Doctor findings", "class": "measured", "reader": "doctorFindings", "source": "doctor service", "shape": "items[] { id, title, status, detail, fix }", "about": "The last diagnostic pass - what was checked, what was flagged, and the action that clears each finding.", "cost": "scan" },
-    { "id": "doctor.reclaim", "name": "Reclaimable space", "class": "measured", "reader": "reclaim", "source": "doctor service", "shape": "candidates[] { label, path, bytes }", "about": "Caches and temporary trees, sized before anything is removed.", "cost": "scan" },
-    { "id": "catalog.items", "name": "Catalogue items", "class": "catalogue", "reader": "catalogItems", "source": "src/main/catalog/catalog.json", "shape": "items[] { id, name, group, desc, profiles[], dependsOn[], win, mac }", "about": "The curated software graph this application installs from - the largest data set it ships." },
-    { "id": "catalog.groups", "name": "Catalogue groups", "class": "catalogue", "reader": "catalogGroups", "source": "src/main/catalog/catalog.json", "shape": "groups[] { id, name, count }", "about": "How the catalogue is organised, and how many items sit in each group." },
-    { "id": "installed.ids", "name": "Installed set", "class": "state", "reader": "installed", "cost": "scan", "source": "settings.json", "shape": "ids[]", "about": "Catalogue ids this installation has installed on this machine." },
-    { "id": "programs.pins", "name": "Tool payload pins", "class": "manifest", "reader": "programs", "source": "src/main/data/programs.json", "shape": "programs[] { name, file, expectedBytes, sha256, available, integrity }", "about": "The Ionity tools shipped with this build, pinned by byte size and SHA-256, with their verification state." },
-    { "id": "projects.repos", "name": "Repositories", "class": "measured", "reader": "repos", "source": "projects service", "shape": "repos[] { name, path, branch, ahead, behind, dirty, stack }", "about": "Git working copies under the development root and their state.", "cost": "scan" },
-    { "id": "storage.devroot", "name": "Development root", "class": "state", "reader": "devroot", "cost": "scan", "source": "settings + filesystem", "shape": "{ path, exists, entries }", "about": "Where projects, environments and clones live." },
-    { "id": "ollama.models", "name": "Local models", "class": "measured", "reader": "models", "source": "Ollama HTTP API", "shape": "models[] { name, sizeBytes, family, loaded }", "about": "Models held on this machine and which are resident in memory now." },
-    { "id": "ai.endpoints", "name": "Inference endpoints", "class": "measured", "reader": "endpoints", "source": "localhost port probe", "shape": "endpoints[] { id, name, port, up, models[] }", "about": "Local inference services that are actually listening." },
-    { "id": "gpu.devices", "name": "GPU devices", "class": "measured", "reader": "gpu", "source": "vendor tooling", "shape": "gpus[] { name, vramTotalMb, vramFreeMb, utilPct, tempC, fits }", "about": "Accelerators present, free VRAM, and what will fit in it." },
-    { "id": "python.envs", "name": "Environments", "class": "measured", "reader": "envs", "source": "filesystem + conda + node", "shape": "{ venvs[], conda[], node[] }", "about": "Virtual environments, conda environments and Node versions available.", "cost": "scan" },
-    { "id": "mcp.config", "name": "MCP configuration", "class": "state", "reader": "mcpConfig", "source": "MCP client config files", "shape": "{ servers[] { name, command, present } }", "about": "Model Context Protocol servers configured for the clients on this machine, and whether each binary is still installed." },
-    { "id": "links.registry", "name": "Official link registry", "class": "catalogue", "reader": "links", "source": "src/main/data/links.json", "shape": "groups[] -> links[] { name, url }", "about": "The Ionity and AEDI link registry, plus the package and AI endpoints the application depends on." },
-    { "id": "sync.state", "name": "Sync state", "class": "state", "reader": "sync", "source": "sync service", "shape": "{ enabled, nextRunAt, lastRunAt, scope }", "about": "The scheduled code-base sweep: whether it is on, what it covers, and when it next runs." },
-    { "id": "dome.datasets", "name": "This registry", "class": "catalogue", "reader": "selfDatasets", "source": "src/main/data/datasets.json", "shape": "datasets[] { id, name, class, about, available }", "about": "The registry itself - every set in reach, and which are available on this machine right now." },
-    { "id": "dome.presets", "name": "Analysis presets", "class": "catalogue", "reader": "selfPresets", "source": "src/main/data/datasets.json", "shape": "presets[] { id, name, scope, question, reads[] }", "about": "The standing questions below." }
+    {
+      "id": "sensors.tree",
+      "name": "Sensor tree",
+      "class": "measured",
+      "reader": "sensors",
+      "source": "LibreHardwareMonitor over CIM",
+      "shape": "groups[] -> sensors[] { name, type, value, unit }",
+      "about": "Every temperature, fan, controller, load, voltage, power and clock the driver exposes, grouped by the chip that owns it.",
+      "platform": "win"
+    },
+    {
+      "id": "fans.channels",
+      "name": "Fan channels",
+      "class": "measured",
+      "reader": "fanChannels",
+      "source": "sensor tree, folded",
+      "shape": "channels[] { label, parent, role, rpm, duty, controllable }",
+      "about": "Tachometers paired with the controllers that drive them, plus every temperature source available to a curve.",
+      "platform": "win"
+    },
+    {
+      "id": "fans.profiles",
+      "name": "Fan curve profiles",
+      "class": "state",
+      "reader": "fanProfiles",
+      "source": "settings.json",
+      "shape": "profiles[] { name, points[], minDuty, stopBelow, commandedDuty }",
+      "about": "Curves designed in this application, each evaluated against the live temperature so the commanded duty can be compared with the measured one."
+    },
+    {
+      "id": "metrics.live",
+      "name": "Live metrics",
+      "class": "measured",
+      "reader": "metrics",
+      "source": "metrics service",
+      "shape": "{ cpu, mem, disks[], net, temp, uptimeSec, host }",
+      "about": "The same sample the tray and the deck paint from: CPU load and clock, memory, every volume, throughput and package temperature."
+    },
+    {
+      "id": "disks.volumes",
+      "name": "Volumes",
+      "class": "measured",
+      "reader": "disks",
+      "source": "metrics service",
+      "shape": "disks[] { name, usedPct, free, total }",
+      "about": "Each mounted volume with used percentage and free bytes."
+    },
+    {
+      "id": "memory.state",
+      "name": "Memory state",
+      "class": "measured",
+      "reader": "memory",
+      "source": "hardware service",
+      "shape": "{ totalBytes, freeBytes, standbyBytes, usedPct }",
+      "about": "Installed, free and standby-list memory - the last being memory Windows counts as free while behaving as though it is not.",
+      "platform": "win"
+    },
+    {
+      "id": "rgb.devices",
+      "name": "Lighting devices",
+      "class": "measured",
+      "reader": "rgb",
+      "source": "OpenRGB SDK over TCP",
+      "shape": "{ connected, devices[] { name, type, zones } }",
+      "about": "Controllers reachable on the OpenRGB protocol, if its server is running."
+    },
+    {
+      "id": "system.privilege",
+      "name": "Privilege state",
+      "class": "measured",
+      "reader": "privilege",
+      "source": "process token",
+      "shape": "{ elevated, platform, osLabel }",
+      "about": "Whether this process holds an administrator token, and what it is running on."
+    },
+    {
+      "id": "registry.fixes",
+      "name": "Registry fix set",
+      "class": "catalogue",
+      "reader": "registryFixes",
+      "cost": "scan",
+      "source": "src/main/data/registry-fixes.json",
+      "shape": "fixes[] { id, name, symptom, status, action }",
+      "about": "The curated set of Microsoft-documented repairs, each with the symptom it addresses and its state on this machine.",
+      "platform": "win"
+    },
+    {
+      "id": "ports.listeners",
+      "name": "Port listeners",
+      "class": "measured",
+      "reader": "ports",
+      "source": "doctor service",
+      "shape": "ports[] { port, pid, process, state }",
+      "about": "What is bound to the ports a development machine contends over.",
+      "cost": "scan"
+    },
+    {
+      "id": "env.resolved",
+      "name": "Resolved toolchain",
+      "class": "measured",
+      "reader": "environment",
+      "source": "doctor service",
+      "shape": "tools[] { name, found, version, path }",
+      "about": "Each expected tool resolved to the binary that actually answers on PATH, with its version.",
+      "cost": "scan"
+    },
+    {
+      "id": "doctor.findings",
+      "name": "Doctor findings",
+      "class": "measured",
+      "reader": "doctorFindings",
+      "source": "doctor service",
+      "shape": "items[] { id, title, status, detail, fix }",
+      "about": "The last diagnostic pass - what was checked, what was flagged, and the action that clears each finding.",
+      "cost": "scan"
+    },
+    {
+      "id": "doctor.reclaim",
+      "name": "Reclaimable space",
+      "class": "measured",
+      "reader": "reclaim",
+      "source": "doctor service",
+      "shape": "candidates[] { label, path, bytes }",
+      "about": "Caches and temporary trees, sized before anything is removed.",
+      "cost": "scan"
+    },
+    {
+      "id": "catalog.items",
+      "name": "Catalogue items",
+      "class": "catalogue",
+      "reader": "catalogItems",
+      "source": "src/main/catalog/catalog.json",
+      "shape": "items[] { id, name, group, desc, profiles[], dependsOn[], win, mac }",
+      "about": "The curated software graph this application installs from - the largest data set it ships."
+    },
+    {
+      "id": "catalog.groups",
+      "name": "Catalogue groups",
+      "class": "catalogue",
+      "reader": "catalogGroups",
+      "source": "src/main/catalog/catalog.json",
+      "shape": "groups[] { id, name, count }",
+      "about": "How the catalogue is organised, and how many items sit in each group."
+    },
+    {
+      "id": "installed.ids",
+      "name": "Installed set",
+      "class": "state",
+      "reader": "installed",
+      "cost": "scan",
+      "source": "settings.json",
+      "shape": "ids[]",
+      "about": "Catalogue ids this installation has installed on this machine."
+    },
+    {
+      "id": "programs.pins",
+      "name": "Tool payload pins",
+      "class": "manifest",
+      "reader": "programs",
+      "source": "src/main/data/programs.json",
+      "shape": "programs[] { name, file, expectedBytes, sha256, available, integrity }",
+      "about": "The Ionity tools shipped with this build, pinned by byte size and SHA-256, with their verification state."
+    },
+    {
+      "id": "projects.repos",
+      "name": "Repositories",
+      "class": "measured",
+      "reader": "repos",
+      "source": "projects service",
+      "shape": "repos[] { name, path, branch, ahead, behind, dirty, stack }",
+      "about": "Git working copies under the development root and their state.",
+      "cost": "scan"
+    },
+    {
+      "id": "storage.devroot",
+      "name": "Development root",
+      "class": "state",
+      "reader": "devroot",
+      "cost": "scan",
+      "source": "settings + filesystem",
+      "shape": "{ path, exists, entries }",
+      "about": "Where projects, environments and clones live."
+    },
+    {
+      "id": "ollama.models",
+      "name": "Local models",
+      "class": "measured",
+      "reader": "models",
+      "source": "Ollama HTTP API",
+      "shape": "models[] { name, sizeBytes, family, loaded }",
+      "about": "Models held on this machine and which are resident in memory now."
+    },
+    {
+      "id": "ocr.engines",
+      "name": "Readers on this machine",
+      "class": "measured",
+      "reader": "ocrEngines",
+      "source": "Tesseract on PATH, the managed Python environment, and the local vision models",
+      "shape": "engines[] { id, kind, name, detail, available, reason }",
+      "about": "Every OCR engine and vision model this machine can read a page with, and the reason when one is unavailable.",
+      "cost": "scan"
+    },
+    {
+      "id": "ai.endpoints",
+      "name": "Inference endpoints",
+      "class": "measured",
+      "reader": "endpoints",
+      "source": "localhost port probe",
+      "shape": "endpoints[] { id, name, port, up, models[] }",
+      "about": "Local inference services that are actually listening."
+    },
+    {
+      "id": "gpu.devices",
+      "name": "GPU devices",
+      "class": "measured",
+      "reader": "gpu",
+      "source": "vendor tooling",
+      "shape": "gpus[] { name, vramTotalMb, vramFreeMb, utilPct, tempC, fits }",
+      "about": "Accelerators present, free VRAM, and what will fit in it."
+    },
+    {
+      "id": "python.envs",
+      "name": "Environments",
+      "class": "measured",
+      "reader": "envs",
+      "source": "filesystem + conda + node",
+      "shape": "{ venvs[], conda[], node[] }",
+      "about": "Virtual environments, conda environments and Node versions available.",
+      "cost": "scan"
+    },
+    {
+      "id": "mcp.config",
+      "name": "MCP configuration",
+      "class": "state",
+      "reader": "mcpConfig",
+      "source": "MCP client config files",
+      "shape": "{ servers[] { name, command, present } }",
+      "about": "Model Context Protocol servers configured for the clients on this machine, and whether each binary is still installed."
+    },
+    {
+      "id": "links.registry",
+      "name": "Official link registry",
+      "class": "catalogue",
+      "reader": "links",
+      "source": "src/main/data/links.json",
+      "shape": "groups[] -> links[] { name, url }",
+      "about": "The Ionity and AEDI link registry, plus the package and AI endpoints the application depends on."
+    },
+    {
+      "id": "sync.state",
+      "name": "Sync state",
+      "class": "state",
+      "reader": "sync",
+      "source": "sync service",
+      "shape": "{ enabled, nextRunAt, lastRunAt, scope }",
+      "about": "The scheduled code-base sweep: whether it is on, what it covers, and when it next runs."
+    },
+    {
+      "id": "dome.datasets",
+      "name": "This registry",
+      "class": "catalogue",
+      "reader": "selfDatasets",
+      "source": "src/main/data/datasets.json",
+      "shape": "datasets[] { id, name, class, about, available }",
+      "about": "The registry itself - every set in reach, and which are available on this machine right now."
+    },
+    {
+      "id": "dome.presets",
+      "name": "Analysis presets",
+      "class": "catalogue",
+      "reader": "selfPresets",
+      "source": "src/main/data/datasets.json",
+      "shape": "presets[] { id, name, scope, question, reads[] }",
+      "about": "The standing questions below."
+    }
   ],
   "presets": [
-    { "id": "state-of-machine", "name": "State of the machine", "scope": "all", "reads": ["metrics.live", "disks.volumes", "sensors.tree", "installed.ids"],
-      "question": "Read the sets provided and give me the state of this workstation in three short paragraphs: what is healthy, what is under pressure, and the single thing most worth doing next. Quote real figures and say which set each came from." },
-    { "id": "thermal-brief", "name": "Thermal and airflow brief", "scope": "hardware", "reads": ["sensors.tree", "fans.channels", "fans.profiles", "metrics.live"],
-      "question": "Assess the thermal and airflow position of this machine. Name the hottest sensors, whether the fans answering them are spinning and controllable, and whether any stored curve would command a different duty than the one measured. Be specific about channel names." },
-    { "id": "fan-advice", "name": "Which curve should I run", "scope": "hardware", "reads": ["fans.channels", "fans.profiles", "sensors.tree"],
-      "question": "Given the fan channels, the temperature sources and any stored curves, recommend a curve shape for the main CPU channel: the points, a minimum duty, and whether a stop-below threshold is safe here. Explain the reasoning in two sentences, then give the points as a list." },
-    { "id": "disk-pressure", "name": "Disk pressure and reclaim", "scope": "storage", "reads": ["disks.volumes", "doctor.reclaim", "storage.devroot"],
-      "question": "Report disk pressure by volume, then list the reclaim candidates largest first with their sizes. Say plainly how much would be freed and what would be lost by removing each." },
-    { "id": "toolchain-gaps", "name": "Toolchain gaps", "scope": "toolchain", "reads": ["catalog.items", "installed.ids", "env.resolved"],
-      "question": "Compare what the catalogue offers with what is installed and what actually resolves on PATH. List the gaps that matter for a working development machine, most important first, with the catalogue id for each." },
-    { "id": "repo-standing", "name": "Repository standing", "scope": "toolchain", "reads": ["projects.repos"],
-      "question": "Summarise the repositories: which have uncommitted work, which are behind their remote, and which look abandoned. One line each, path included." },
-    { "id": "model-fit", "name": "Model fit for this machine", "scope": "intelligence", "reads": ["gpu.devices", "ollama.models", "metrics.live"],
-      "question": "Given the accelerator, free VRAM and system memory, say which of the installed models will run comfortably and which will fall back to the CPU. Recommend one model to add for coding work and justify it with the memory figures." },
-    { "id": "security-posture", "name": "Integrity and privilege", "scope": "system", "reads": ["programs.pins", "system.privilege", "ports.listeners"],
-      "question": "Report the integrity state of every pinned tool, the privilege this process holds, and anything listening on a development port that was not started deliberately. Flag anything that fails its pin." },
-    { "id": "doctor-explain", "name": "Explain the last scan", "scope": "system", "reads": ["doctor.findings", "registry.fixes"],
-      "question": "Explain the diagnostic findings in plain language: what each one means, whether it matters on a development machine, and the order to address them in." },
-    { "id": "data-inventory", "name": "What can you see", "scope": "intelligence", "reads": ["dome.datasets"],
-      "question": "List every data set you can currently read on this machine, grouped by class, and state in one line each what you could report from it. Name the sets that are unavailable and why." }
+    {
+      "id": "state-of-machine",
+      "name": "State of the machine",
+      "scope": "all",
+      "reads": [
+        "metrics.live",
+        "disks.volumes",
+        "sensors.tree",
+        "installed.ids"
+      ],
+      "question": "Read the sets provided and give me the state of this workstation in three short paragraphs: what is healthy, what is under pressure, and the single thing most worth doing next. Quote real figures and say which set each came from."
+    },
+    {
+      "id": "thermal-brief",
+      "name": "Thermal and airflow brief",
+      "scope": "hardware",
+      "reads": [
+        "sensors.tree",
+        "fans.channels",
+        "fans.profiles",
+        "metrics.live"
+      ],
+      "question": "Assess the thermal and airflow position of this machine. Name the hottest sensors, whether the fans answering them are spinning and controllable, and whether any stored curve would command a different duty than the one measured. Be specific about channel names."
+    },
+    {
+      "id": "fan-advice",
+      "name": "Which curve should I run",
+      "scope": "hardware",
+      "reads": [
+        "fans.channels",
+        "fans.profiles",
+        "sensors.tree"
+      ],
+      "question": "Given the fan channels, the temperature sources and any stored curves, recommend a curve shape for the main CPU channel: the points, a minimum duty, and whether a stop-below threshold is safe here. Explain the reasoning in two sentences, then give the points as a list."
+    },
+    {
+      "id": "disk-pressure",
+      "name": "Disk pressure and reclaim",
+      "scope": "storage",
+      "reads": [
+        "disks.volumes",
+        "doctor.reclaim",
+        "storage.devroot"
+      ],
+      "question": "Report disk pressure by volume, then list the reclaim candidates largest first with their sizes. Say plainly how much would be freed and what would be lost by removing each."
+    },
+    {
+      "id": "toolchain-gaps",
+      "name": "Toolchain gaps",
+      "scope": "toolchain",
+      "reads": [
+        "catalog.items",
+        "installed.ids",
+        "env.resolved"
+      ],
+      "question": "Compare what the catalogue offers with what is installed and what actually resolves on PATH. List the gaps that matter for a working development machine, most important first, with the catalogue id for each."
+    },
+    {
+      "id": "repo-standing",
+      "name": "Repository standing",
+      "scope": "toolchain",
+      "reads": [
+        "projects.repos"
+      ],
+      "question": "Summarise the repositories: which have uncommitted work, which are behind their remote, and which look abandoned. One line each, path included."
+    },
+    {
+      "id": "model-fit",
+      "name": "Model fit for this machine",
+      "scope": "intelligence",
+      "reads": [
+        "gpu.devices",
+        "ollama.models",
+        "metrics.live"
+      ],
+      "question": "Given the accelerator, free VRAM and system memory, say which of the installed models will run comfortably and which will fall back to the CPU. Recommend one model to add for coding work and justify it with the memory figures."
+    },
+    {
+      "id": "reading-capacity",
+      "name": "What can this machine read",
+      "scope": "intelligence",
+      "reads": [
+        "ocr.engines",
+        "ollama.models"
+      ],
+      "question": "From the sets provided, say what this machine can currently read a document with: name each OCR engine and each vision model that is available, say what each is best at, and name what is missing and what it would add. Do not recommend anything that is not in the sets."
+    },
+    {
+      "id": "security-posture",
+      "name": "Integrity and privilege",
+      "scope": "system",
+      "reads": [
+        "programs.pins",
+        "system.privilege",
+        "ports.listeners"
+      ],
+      "question": "Report the integrity state of every pinned tool, the privilege this process holds, and anything listening on a development port that was not started deliberately. Flag anything that fails its pin."
+    },
+    {
+      "id": "doctor-explain",
+      "name": "Explain the last scan",
+      "scope": "system",
+      "reads": [
+        "doctor.findings",
+        "registry.fixes"
+      ],
+      "question": "Explain the diagnostic findings in plain language: what each one means, whether it matters on a development machine, and the order to address them in."
+    },
+    {
+      "id": "data-inventory",
+      "name": "What can you see",
+      "scope": "intelligence",
+      "reads": [
+        "dome.datasets"
+      ],
+      "question": "List every data set you can currently read on this machine, grouped by class, and state in one line each what you could report from it. Name the sets that are unavailable and why."
+    }
   ]
 }

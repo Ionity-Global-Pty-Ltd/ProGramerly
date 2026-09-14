@@ -51,6 +51,7 @@ const services = {
   get registry() { return require('./registry'); },
   get projects() { return require('./projects'); },
   get ai() { return require('./ai'); },
+  get ocr() { return require('./ocr'); },
   get programs() { return require('./programs'); },
   get settings() { return require('./settings'); },
   get sync() { return require('./sync'); },
@@ -251,6 +252,16 @@ const READERS = {
     return ok(rows.map((x) => ({
       name: x.name || x.model, sizeBytes: x.size ?? x.sizeBytes, family: x.family || (x.details && x.details.family),
       parameters: x.parameters || (x.details && x.details.parameter_size), loaded: isLoaded.has(x.name || x.model),
+    })));
+  },
+
+  async ocrEngines() {
+    const r = await services.ocr.engines();
+    const rows = (r && r.engines) || [];
+    if (!rows.length) return gone('No reader could be probed on this machine.');
+    return ok(rows.map((x) => ({
+      id: x.id, kind: x.kind, name: x.name, detail: x.detail,
+      available: x.available, reason: x.reason || null,
     })));
   },
 
@@ -553,6 +564,30 @@ const SCORERS = {
     const level = behind ? 'warn' : 'ok';
     return scoreOf(value, level, `${rows.length} repositor${rows.length === 1 ? 'y' : 'ies'}`,
       'measured', `${dirty} with uncommitted work · ${behind} behind`);
+  },
+
+  /* Reading a page locally needs one of two things, and they are not equal:
+     an OCR engine returns characters, a vision model returns its reading of
+     them. Having both is the healthy state; having neither means a scan
+     cannot be read at all without sending it somewhere. */
+  async vision(get) {
+    const r = await get('ocr.engines');
+    if (!r.available) return IDLE('no reader probed', 'measured', r.reason);
+    const rows = r.rows || [];
+    const engines = rows.filter((x) => x.kind === 'engine' && x.available);
+    const models = rows.filter((x) => x.kind === 'vision' && x.available);
+    if (!engines.length && !models.length) {
+      return scoreOf(0, 'err', 'nothing can read a page', 'measured',
+        'Install the Tesseract engine or a tiny vision model from the Software workspace.');
+    }
+    const label = [
+      engines.length ? `${engines.map((e) => e.name).join(', ')}` : 'no OCR engine',
+      models.length ? `${models.length} vision model${models.length === 1 ? '' : 's'}` : 'no vision model',
+    ].join(' · ');
+    if (engines.length && models.length) return scoreOf(100, 'ok', label, 'measured');
+    return scoreOf(55, 'warn', label, 'measured',
+      engines.length ? 'No vision model: handwriting and awkward layouts will not read well.'
+        : 'No OCR engine: every page goes through a model, which is slower and less literal.');
   },
 
   async models(get) {

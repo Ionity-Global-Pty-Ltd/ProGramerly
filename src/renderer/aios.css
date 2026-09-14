@@ -621,3 +621,77 @@ body.brief-on #chat{gap:9px}
 .opt-field select{width:100%;height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--sh-line);
   background:rgba(6,11,19,.8);color:var(--sh-tx);font-family:inherit;font-size:12.5px;cursor:pointer}
 .opt-field select:focus{outline:0;border-color:var(--sh-accent-line)}
+
+/* ====================================================================== *
+ *  THE DOME BOOT
+ *  Carried over from the official IONITY Ai-OS DOME build: the mark, the
+ *  wordmark line, the fill and the step list. It sits above the shell and
+ *  clears itself when the shell is genuinely up - the fill tracks real
+ *  milestones, so it never claims to be further along than the machine is.
+ * ====================================================================== */
+#boot{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--sh-bg0);
+  transition:opacity .8s var(--sh-ease),visibility .8s}
+#boot.done{opacity:0;visibility:hidden;pointer-events:none}
+#boot[hidden]{display:none}
+.boot-inner{display:flex;flex-direction:column;align-items:center;gap:26px;transform:translateY(-3vh)}
+.boot-mark{width:238px;max-width:62vw;opacity:0;filter:drop-shadow(0 0 26px var(--sh-accent-soft));
+  animation:boot-in 1.15s var(--sh-ease) .18s forwards}
+.boot-sub{display:flex;align-items:center;gap:14px;opacity:0;animation:boot-in .9s var(--sh-ease) .75s forwards}
+.boot-sub .os{font-family:var(--sh-display);font-weight:700;font-size:17px;letter-spacing:.32em;
+  color:var(--sh-tx);padding-right:14px;border-right:1px solid var(--sh-line2)}
+.boot-sub .tag{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sh-tx3)}
+.boot-line{width:250px;height:2px;border-radius:2px;background:rgba(148,190,214,.12);overflow:hidden;
+  opacity:0;animation:boot-in .6s var(--sh-ease) 1.05s forwards}
+.boot-line i{display:block;height:100%;width:0;background:var(--sh-grad);transition:width .5s var(--sh-ease)}
+.boot-note{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--sh-tx3);
+  opacity:0;animation:boot-in .8s var(--sh-ease) 1.5s forwards}
+#boot-steps{display:flex;flex-direction:column;gap:4px;align-items:center;min-height:34px;
+  font-size:10.5px;color:var(--sh-tx3);letter-spacing:.08em;
+  font-family:ui-monospace,"Cascadia Mono",Consolas,monospace}
+#boot-steps span{animation:boot-in .5s var(--sh-ease) forwards}
+#boot-steps span.ok{color:var(--sh-accent)}
+@keyframes boot-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ====================================================================== *
+ *  READING - the OCR surface
+ * ====================================================================== */
+.ocr-engines{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:9px;margin:4px 0 14px}
+.ocr-engine{display:grid;grid-template-columns:34px minmax(0,1fr);gap:11px;align-items:start;padding:12px 13px;
+  border-radius:var(--sh-r-md);border:1px solid var(--sh-line);background:rgba(148,196,222,.035);
+  text-align:left;transition:border-color .25s,background .25s,transform .25s var(--sh-ease)}
+.ocr-engine:hover:not(:disabled){border-color:var(--sh-line2);background:var(--sh-glass2);transform:translateY(-2px)}
+.ocr-engine.sel{border-color:var(--sh-accent);background:var(--sh-accent-soft)}
+.ocr-engine.off{opacity:.6}
+.ocr-engine:disabled{cursor:default}
+.oe-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid var(--sh-accent-line);background:var(--sh-accent-soft)}
+.ocr-engine.off .oe-ic{border-color:var(--sh-line);background:var(--sh-glass)}
+.oe-ic svg{width:17px;height:17px;stroke:var(--sh-accent);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ocr-engine.off .oe-ic svg{stroke:var(--sh-tx3)}
+.oe-body b{display:flex;align-items:baseline;gap:8px;font-size:12.5px;color:var(--sh-tx)}
+.oe-body b em{font-style:normal;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--sh-tx3)}
+.oe-body small{display:block;font-size:10.5px;line-height:1.55;color:var(--sh-tx2);margin:3px 0 5px}
+.oe-state{display:block;font-style:normal;font-size:10.5px;color:var(--sh-tx3)}
+.ocr-engine.sel .oe-state{color:var(--sh-accent)}
+
+.ocr-run{display:grid;gap:11px;padding:13px 15px;border-radius:var(--sh-r-md);
+  border:1px solid var(--sh-line);background:rgba(148,196,222,.03);margin-bottom:14px}
+.ocr-file{display:flex;align-items:center;gap:11px}
+.of-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  border:1px solid var(--sh-line);background:var(--sh-glass)}
+.of-ic svg{width:16px;height:16px;stroke:var(--sh-accent);stroke-width:1.55;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.of-ic.muted svg{stroke:var(--sh-tx3)}
+.of-body b{display:block;font-size:12.5px}
+.of-body small{display:block;font-size:10.5px;color:var(--sh-tx3);margin-top:2px}
+.ocr-q{display:grid;gap:5px}
+.ocr-q>span{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sh-tx3)}
+.ocr-q input{height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--sh-line);
+  background:rgba(6,11,19,.8);color:var(--sh-tx);font-family:inherit;font-size:12.5px}
+.ocr-q input:focus{outline:0;border-color:var(--sh-accent-line)}
+.ocr-go{display:flex;gap:8px;flex-wrap:wrap}
+.ocr-out{border:1px solid var(--sh-accent-line);border-radius:var(--sh-r-md);background:var(--sh-accent-soft);
+  padding:13px 15px;display:grid;gap:9px}
+.ocr-out.err{border-color:rgba(240,104,106,.35);background:rgba(240,104,106,.06)}
+.ocr-out[hidden]{display:none}
+.ocr-out .ans-body{max-height:46vh;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:12px}
+.ocr-note{margin:0;font-size:10.5px;color:var(--sh-tx3)}

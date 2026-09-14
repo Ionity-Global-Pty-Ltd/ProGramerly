@@ -179,6 +179,16 @@ contextBridge.exposeInMainWorld('programerly', {
     onToken: (cb) => on('dome:token', cb),
   },
 
+  /* ------------------------------------------------- OCR and reading pages */
+  ocr: {
+    engines: () => ipcRenderer.invoke('ocr:engines'),
+    pick: () => ipcRenderer.invoke('ocr:pick'),
+    read: (req) => ipcRenderer.invoke('ocr:read', req),
+    save: (payload) => ipcRenderer.invoke('ocr:save', payload),
+    openFolder: () => ipcRenderer.invoke('ocr:openFolder'),
+    onToken: (cb) => on('ocr:token', cb),
+  },
+
   /* ----------------------------------------------------------- fan control */
   fans: {
     channels: () => ipcRenderer.invoke('fans:channels'),
