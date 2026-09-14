@@ -688,7 +688,11 @@ body.brief-on #chat{gap:9px}
 .ocr-q input{height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--sh-line);
   background:rgba(6,11,19,.8);color:var(--sh-tx);font-family:inherit;font-size:12.5px}
 .ocr-q input:focus{outline:0;border-color:var(--sh-accent-line)}
-.ocr-go{display:flex;gap:8px;flex-wrap:wrap}
+.ocr-go{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* The buttons here carry a glyph and a label; as flex items they need their
+   own inline-flex or the label drops under the icon. */
+.ocr-go .btn,.ocr-engines+.ocr-run .btn{display:inline-flex;align-items:center;gap:7px}
+.ocr-go .btn svg{width:15px;height:15px;flex:none}
 .ocr-out{border:1px solid var(--sh-accent-line);border-radius:var(--sh-r-md);background:var(--sh-accent-soft);
   padding:13px 15px;display:grid;gap:9px}
 .ocr-out.err{border-color:rgba(240,104,106,.35);background:rgba(240,104,106,.06)}
