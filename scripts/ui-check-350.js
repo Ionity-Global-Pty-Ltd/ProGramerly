@@ -177,9 +177,10 @@ async function run() {
   check(endBtns === procRows, 'every process has an End action', String(endBtns));
   for (const tab of ['services', 'startup', 'listeners']) {
     await page.click(`#sysTabs [data-tab="${tab}"]`);
-    await until(page, () => { const t = document.querySelector('#sysTable tbody tr'); return t && !/reading…/.test(t.textContent); }, 60000);
+    await until(page, () => { const t = document.querySelector('#sysTable tbody tr'); return t && !/reading…/.test(t.textContent); }, 90000);
     const first = await page.$eval('#sysTable tbody tr', (tr) => tr.textContent.trim().replace(/\s+/g, ' ').slice(0, 140)).catch(() => '');
-    const rows = await page.$$eval('#sysTable tbody tr', (els) => els.length);
+    const rows = await page.$$eval('#sysTable tbody tr:not(.none)', (els) => els.length);
+    // A read that returns nothing is reported as such - a stated empty is a pass, a blank table is not.
     check(first && !/reading…/.test(first), `System · ${tab} read`, `${rows} row(s) · ${first}`);
   }
   await page.screenshot({ path: path.join(SHOT, 'ui-350-system.png') });

@@ -326,6 +326,11 @@
             + `<tbody>${list.map((r) => `<tr><td><b>${r.port}</b></td><td>${esc(r.proto)}</td><td>${esc(r.address)}</td><td>${r.pid || '—'}</td><td>${esc(r.owner || r.name || '—')}</td>
               <td class="acts"><button class="btn ghost" data-do="port" data-port="${r.port}">Inspect</button>${r.pid ? `<button class="btn ghost danger" data-do="kill" data-pid="${r.pid}">End owner</button>` : ''}</td></tr>`).join('')}</tbody>`;
         }
+        // An empty read is a fact worth a row, not a blank table.
+        if (list && !list.length) {
+          const why = q ? `nothing matches "${esc(q)}"` : d.rows.length ? 'everything is filtered out' : `nothing here - ${esc(d.source)} returned no entries`;
+          html = html.replace(/<tbody>[\s\S]*<\/tbody>/, `<tbody><tr class="none"><td class="empty" colspan="7">${why}</td></tr></tbody>`);
+        }
         t.innerHTML = html;
         t.querySelectorAll('th[data-sort]').forEach((th) => th.addEventListener('click', () => { sort[tab] = th.dataset.sort; paint(); }));
         const ms = t.querySelector('#sysMs'); if (ms) ms.addEventListener('change', () => { showMs = ms.checked; paint(); });

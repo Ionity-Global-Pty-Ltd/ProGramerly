@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-20T16:27:58.263Z",
+  "at": "2026-09-20T16:42:32.228Z",
   "platform": "linux",
   "results": [
     {
@@ -56,7 +56,7 @@
     {
       "pass": true,
       "name": "the Processes and services segment exists",
-      "detail": "93 processes · 1 unseen · computed"
+      "detail": "81 processes · 1 unseen · computed"
     },
     {
       "pass": true,
@@ -106,7 +106,7 @@
     {
       "pass": true,
       "name": "a real venv was created through the surface and listed",
-      "detail": "pg-check-mua155el"
+      "detail": "pg-check-mua1nvwa"
     },
     {
       "pass": true,
@@ -120,7 +120,7 @@
     {
       "pass": true,
       "name": "the Processes table lists this machine's processes",
-      "detail": "75 rows · 75 from ps -eo · 6:27:53 PM"
+      "detail": "75 rows · 75 from ps -eo · 6:42:27 PM"
     },
     {
       "pass": true,
