@@ -240,7 +240,57 @@ function renderItems() {
   });
 }
 
+
+/* ------------------------------------------------------------ AEDi tick */
+/* One box at the top of the Software list: tick it and Ollama plus the chosen
+   starter model join the selection; untick and they leave it. Its state line
+   is read from the machine - whether Ollama already answers, which models it
+   holds - never assumed. */
+const AEDI_MODEL_ITEMS = [
+  ['ollama-small', 'llama3.2:1b · starter (~1.3 GB)'],
+  ['ollama-gemma', 'Gemma family (~2.5 GB)'],
+  ['ollama-models', 'Coding set · 5 models (~15 GB)'],
+];
+function aediItems() {
+  const pick = $('aediModelPick');
+  const model = pick && pick.value ? pick.value : 'ollama-small';
+  return ['ollama', model].filter((id) => CATALOG.items.some((i) => i.id === id));
+}
+function paintAediTick() {
+  const tick = $('aediTick'); if (!tick) return;
+  const pick = $('aediModelPick');
+  if (pick && !pick.options.length) {
+    pick.innerHTML = AEDI_MODEL_ITEMS.filter(([id]) => CATALOG.items.some((i) => i.id === id)).map(([id, label]) => `<option value="${id}">${esc(label)}</option>`).join('');
+  }
+  tick.checked = aediItems().every((id) => selected.has(id));
+}
+function wireAediTick() {
+  const tick = $('aediTick'); if (!tick) return;
+  const apply = () => {
+    const ids = aediItems();
+    if (tick.checked) ids.forEach((id) => selected.add(id));
+    else ['ollama', ...AEDI_MODEL_ITEMS.map(([id]) => id)].forEach((id) => selected.delete(id));
+    renderItems(); renderNav(); updateFooter();
+  };
+  tick.addEventListener('change', apply);
+  $('aediModelPick').addEventListener('change', () => { if (tick.checked) { ['ollama', ...AEDI_MODEL_ITEMS.map(([id]) => id)].forEach((id) => selected.delete(id)); apply(); } });
+  refreshAediState();
+}
+async function refreshAediState() {
+  const el = $('aediState'); if (!el) return;
+  try {
+    const [eps, models] = await Promise.all([api.aiEndpoints(), api.aiModels().catch(() => [])]);
+    const ollama = (eps || []).find((e) => e.id === 'ollama');
+    const list = (Array.isArray(models) ? models : (models && models.models)) || [];
+    el.textContent = ollama && ollama.up
+      ? `Ollama is running · ${list.length} model${list.length === 1 ? '' : 's'}${list.length ? ` · ${list.slice(0, 3).map((m) => m.name || m.model).join(', ')}` : ' - tick to add one'}`
+      : 'Ollama is not running on this machine - tick to install it';
+    el.className = `muted ${ollama && ollama.up ? 'good' : ''}`;
+  } catch { el.textContent = ''; }
+}
+
 function updateFooter() {
+  paintAediTick();
   const n = selected.size;
   $('selCount').textContent = `${n} selected`;
   const gb = [...selected].reduce((sum, id) => sum + (SIZE_GB[id] ?? DEFAULT_GB), 0);
@@ -1518,7 +1568,9 @@ async function boot() {
 
   renderProfiles();
   pickProfile('full');
+  wireAediTick();
   document.querySelector('.gnav')?.classList.add('active');
+  document.querySelectorAll('[data-open-app]').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.openApp)));
 
   paintScope();
   paintSettingsSwitches();
@@ -1923,16 +1975,24 @@ window.addEventListener('resize', () => { if (activeTab === 'monitor') drawNetCh
   shell.addEventListener('load', start, { once: true });
   // The DOME and fan surfaces load first: shell.js mounts them, and a missing
   // apps.js must degrade to "that surface did not load", never to no shell.
-  const apps = document.createElement('script');
-  apps.src = 'apps.js';
-  const afterApps = () => document.body.appendChild(shell);
-  apps.addEventListener('load', afterApps, { once: true });
-  apps.addEventListener('error', afterApps, { once: true });
+  // apps.js (DOME, fans, reading), relations.js (the graph) and manage.js
+  // (environments, system) each register their surfaces on window.PGApps;
+  // the shell loads once all three have settled, loaded or not.
+  const SURFACES = ['apps.js', 'relations.js', 'manage.js'];
+  let pendingSurfaces = SURFACES.length;
+  const afterApps = () => { if (--pendingSurfaces === 0) document.body.appendChild(shell); };
+  const surfaceScripts = SURFACES.map((src) => {
+    const el = document.createElement('script');
+    el.src = src;
+    el.addEventListener('load', afterApps, { once: true });
+    el.addEventListener('error', afterApps, { once: true });
+    return el;
+  });
   shell.addEventListener('error', () => {
     document.body.classList.remove('aios');
     const s = $('shell'); if (s) s.hidden = true;
     const store = $('apps-store'); if (store) { store.removeAttribute('aria-hidden'); store.id = 'apps-fallback'; }
     start();
   }, { once: true });
-  document.body.appendChild(apps);
+  surfaceScripts.forEach((el) => document.body.appendChild(el));
 })();

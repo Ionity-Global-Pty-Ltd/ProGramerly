@@ -17,12 +17,22 @@
       </div>
     </div>
 
-    <div class="logo" id="logo" aria-label="IONITY" role="img"></div>
+    <div class="logo" id="logo" role="img" aria-label="IONITY GLOBAL">
+      <img src="assets/ionity-mark.png" alt="IONITY GLOBAL" draggable="false" />
+      <span class="sweep" aria-hidden="true"></span>
+    </div>
     <div class="subtitle" id="subtitle"></div>
+    <div class="strap" id="strap">AEDi · Native-AI workstation · ProGramerly</div>
 
     <!-- The DOME assembles: one arc per stratum, drawn as its facts are read. -->
     <section class="domewrap" id="domewrap" aria-hidden="true">
       <svg class="dome" id="dome" viewBox="0 0 520 250" preserveAspectRatio="xMidYMax meet">
+        <defs>
+          <linearGradient id="domeGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#1a6ee6"/><stop offset=".5" stop-color="#00c8f0"/><stop offset="1" stop-color="#ff7a00"/>
+          </linearGradient>
+          <radialGradient id="apexGrad"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#ff7a00"/><stop offset="1" stop-color="rgba(255,122,0,0)"/></radialGradient>
+        </defs>
         <g id="arcs"></g>
         <g id="segdots"></g>
         <line class="ground" x1="24" y1="232" x2="496" y2="232" />
@@ -35,11 +45,11 @@
 
     <div class="colophon" id="colophon">
       <span>ProGramerly</span>
-      <em>Basic Coding Software for All</em>
-      <span class="dim" id="colo-meta">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd</span>
+      <em>Basic Coding Software for All · Anything is Possible with God.</em>
+      <span class="dim" id="colo-meta">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd · TM</span>
     </div>
 
-    <img class="watermark" id="watermark" src="assets/ionity-mark.png" alt="" aria-hidden="true" />
+    <div class="aedi" id="watermark" aria-hidden="true"><img src="assets/logo.png" alt="" draggable="false" /><span>AEDi<small>Ionity intelligence fabric</small></span></div>
     <button class="skip" id="skip" type="button">Skip</button>
   </div>
   <div class="flash" id="flash" aria-hidden="true"></div>

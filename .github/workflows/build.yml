@@ -73,6 +73,10 @@ jobs:
           pgrep -f 'electron/dist/electron' > /dev/null || { echo '::error::the app exited during launch'; tail -50 app.log; exit 1; }
           DISPLAY=:99 import -window root screenshot.png
           echo "app is alive after 25s"
+      - name: Drive the real application (no fixtures)
+        run: |
+          pkill -f 'electron/dist/electron' || true
+          xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/ui-check-350.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -80,6 +84,8 @@ jobs:
           path: |
             screenshot.png
             app.log
+            Claude outputs/ui-350-*.png
+            Claude outputs/ui-check-350.json
           if-no-files-found: warn
 
   windows:

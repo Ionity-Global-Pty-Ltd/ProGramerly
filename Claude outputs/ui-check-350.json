@@ -1,0 +1,166 @@
+{
+  "at": "2026-09-20T16:27:58.263Z",
+  "platform": "linux",
+  "results": [
+    {
+      "pass": true,
+      "name": "the shell window is up",
+      "detail": "index.html"
+    },
+    {
+      "pass": true,
+      "name": "the DOME boot cleared on its milestones"
+    },
+    {
+      "pass": true,
+      "name": "the engine chip is AEDi",
+      "detail": "AEDi · offline"
+    },
+    {
+      "pass": true,
+      "name": "the chip says AEDi is powered by Ollama",
+      "detail": "AEDi runs on Ollama, which is not installed or not running on this machine"
+    },
+    {
+      "pass": true,
+      "name": "the ask box asks AEDi",
+      "detail": "Type a workspace name, or set up AEDi to ask questions here"
+    },
+    {
+      "pass": true,
+      "name": "tile \"relations\" is on the deck"
+    },
+    {
+      "pass": true,
+      "name": "tile \"envs\" is on the deck"
+    },
+    {
+      "pass": true,
+      "name": "tile \"system\" is on the deck"
+    },
+    {
+      "pass": true,
+      "name": "the dome has 26 segments",
+      "detail": "26"
+    },
+    {
+      "pass": true,
+      "name": "registry: 34 sets · 14 presets",
+      "detail": "34 / 14"
+    },
+    {
+      "pass": true,
+      "name": "no constant 100% is labelled \"measured\"",
+      "detail": "clean"
+    },
+    {
+      "pass": true,
+      "name": "the Processes and services segment exists",
+      "detail": "93 processes · 1 unseen · computed"
+    },
+    {
+      "pass": true,
+      "name": "payload never claims a hash check that did not run",
+      "detail": "0 hashed · 0 size-matched, hashed on first launch"
+    },
+    {
+      "pass": true,
+      "name": "score sources in use",
+      "detail": "measured, state, computed, manifest, catalogue, assessment"
+    },
+    {
+      "pass": true,
+      "name": "the Relations graph is built from this machine",
+      "detail": "62 nodes · 61 relations · 75 processes (1 unseen) · 6 listeners · 0/0 services"
+    },
+    {
+      "pass": true,
+      "name": "the graph carries real processes",
+      "detail": "Processes39 · Unseen1 · Ports6 · Volumes3"
+    },
+    {
+      "pass": true,
+      "name": "searching the hostname opens the machine node panel",
+      "detail": "vmmachine · Linux 6.18.44-fc-v37 · x64"
+    },
+    {
+      "pass": true,
+      "name": "the node panel offers Ask AEDi",
+      "detail": "Ask AEDi"
+    },
+    {
+      "pass": true,
+      "name": "the machine node lists its relations",
+      "detail": "5 links"
+    },
+    {
+      "pass": true,
+      "name": "the builders strip reads real tool availability",
+      "detail": "Python:ok uv:ok conda · install:off Node:ok Docker · daemon off:warn git:ok"
+    },
+    {
+      "pass": true,
+      "name": "five environment kinds are offered",
+      "detail": "5"
+    },
+    {
+      "pass": true,
+      "name": "a real venv was created through the surface and listed",
+      "detail": "pg-check-mua155el"
+    },
+    {
+      "pass": true,
+      "name": "pip list read from the new venv",
+      "detail": "3 packages"
+    },
+    {
+      "pass": true,
+      "name": "the venv was removed again through the surface"
+    },
+    {
+      "pass": true,
+      "name": "the Processes table lists this machine's processes",
+      "detail": "75 rows · 75 from ps -eo · 6:27:53 PM"
+    },
+    {
+      "pass": true,
+      "name": "every process has an End action",
+      "detail": "75"
+    },
+    {
+      "pass": true,
+      "name": "System · services read",
+      "detail": "1 row(s) · System has not been booted with systemd as init system (PID 1). Can't operate. Failed to connect to bus: Host is down (systemctl)"
+    },
+    {
+      "pass": true,
+      "name": "System · startup read",
+      "detail": "1 row(s) · session-migration.servicesystemd-usersystemctl --userusersystemctl --user start session-migration.service Disable"
+    },
+    {
+      "pass": true,
+      "name": "System · listeners read",
+      "detail": "6 row(s) · 2024tcp0.0.0.0—— Inspect"
+    },
+    {
+      "pass": true,
+      "name": "the AEDi tick reads whether Ollama is really running",
+      "detail": "Ollama is not running on this machine - tick to install it"
+    },
+    {
+      "pass": true,
+      "name": "ticking AEDi adds Ollama + the starter model to the install",
+      "detail": "42 selected → 44 selected"
+    },
+    {
+      "pass": true,
+      "name": "no uncaught renderer errors",
+      "detail": "none"
+    },
+    {
+      "pass": true,
+      "name": "no console errors",
+      "detail": "none"
+    }
+  ]
+}

@@ -283,12 +283,54 @@ function humanBytes(b) {
   return `${(b / MB).toFixed(0)} MB`;
 }
 
+/* The standby list is read from the performance counters Windows itself
+   exposes - the three standby cache counters summed, plus the modified and
+   free-and-zero pools. When the counter read fails the fields are null and
+   the UI says "not read", never a made-up figure. */
+const STANDBY_READ = `
+$ErrorActionPreference='Stop'
+$c = Get-Counter -Counter @(
+  '\\Memory\\Standby Cache Normal Priority Bytes',
+  '\\Memory\\Standby Cache Reserve Bytes',
+  '\\Memory\\Standby Cache Core Bytes',
+  '\\Memory\\Modified Page List Bytes',
+  '\\Memory\\Free & Zero Page List Bytes',
+  '\\Memory\\Available Bytes'
+) -MaxSamples 1
+$o = @{}
+foreach ($s in $c.CounterSamples) { $o[($s.Path -split '\\\\')[-1]] = [int64]$s.CookedValue }
+$o | ConvertTo-Json -Compress
+`;
+
 async function memoryState() {
-  return {
+  const base = {
     total: os.totalmem(), totalHuman: humanBytes(os.totalmem()),
     free: os.freemem(), freeHuman: humanBytes(os.freemem()),
     usedPct: Math.round((1 - os.freemem() / os.totalmem()) * 100),
+    standby: null, standbyHuman: null, modified: null, freeZero: null, available: null,
+    standbySource: null,
   };
+  if (!IS_WIN) return base;
+  try {
+    const r = await ps(STANDBY_READ, 20000);
+    if (!r.ok) return { ...base, standbySource: `counter read failed: ${r.text.split(/\r?\n/).pop() || 'exit code'}` };
+    const o = JSON.parse(r.text.slice(r.text.indexOf('{')));
+    const k = (frag) => {
+      const key = Object.keys(o).find((x) => x.toLowerCase().includes(frag));
+      return key ? Number(o[key]) : null;
+    };
+    const n = k('normal priority'); const rs = k('reserve'); const c = k('core');
+    if ([n, rs, c].some((v) => v == null || Number.isNaN(v))) return { ...base, standbySource: 'counters not available' };
+    const standby = n + rs + c;
+    return {
+      ...base,
+      standby, standbyHuman: humanBytes(standby),
+      modified: k('modified'), freeZero: k('free & zero'), available: k('available'),
+      standbySource: 'Memory performance counters',
+    };
+  } catch (e) {
+    return { ...base, standbySource: `counter read failed: ${(e && e.message) || e}` };
+  }
 }
 
 /** Trim every reachable process's working set. Measured, not claimed. */

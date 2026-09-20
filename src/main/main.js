@@ -41,6 +41,9 @@ const cloudConfig = require('./services/cloudConfig');
 const fans = require('./services/fans');
 const dome = require('./services/dome');
 const ocr = require('./services/ocr');
+const system = require('./services/system');
+const envs = require('./services/envs');
+const graph = require('./services/graph');
 const tray = require('./tray');
 
 const IS_WIN = process.platform === 'win32';
@@ -365,6 +368,15 @@ function startServices() {
     catalogPath: () => CATALOG_PATH,
     isElevated,
     osLabel: () => `${os.type()} ${os.release()} (${os.arch()})`,
+  });
+  // Processes, services, startup entries and the Relations graph read this
+  // machine through the same services; nothing here is a stand-in.
+  system.configure({ userData: () => app.getPath('userData'), isElevated });
+  envs.configure({ devRoot, ai });
+  graph.configure({
+    devRoot,
+    catalogPath: () => CATALOG_PATH,
+    services: { metrics, system, ai, projects, envs, settings, programs },
   });
 
   try {
@@ -807,6 +819,108 @@ ipcMain.handle('dome:openReports', () => {
 /* --- fan control --------------------------------------------------------- */
 /* Channels and temperatures come off the sensor tree; curves are designed,
    previewed and stored here; the apply belongs to the tool with the driver. */
+
+/* --- System: processes, services, startup, listeners --------------------- */
+function sysLog(text, level) {
+  if (logStream) logStream.write(`${new Date().toISOString()} [system] ${text}\n`);
+  emit('sys:log', { text, level, ts: Date.now() });
+}
+ipcMain.handle('sys:processes', () => system.processes());
+ipcMain.handle('sys:services', () => system.services());
+ipcMain.handle('sys:startup', () => system.startup());
+ipcMain.handle('sys:listeners', () => system.listeners());
+ipcMain.handle('sys:kill', async (_e, pid) => {
+  const r = await system.kill(pid);
+  sysLog(r.ok ? `ended process ${pid}` : `could not end ${pid}: ${r.error}`, r.ok ? 'info' : 'error');
+  return r;
+});
+ipcMain.handle('sys:service', async (_e, { name, action }) => {
+  const r = await system.serviceControl(name, action);
+  sysLog(r.ok ? `${action} ${name} → ${r.state}` : `${action} ${name} failed: ${r.error}`, r.ok ? 'info' : 'error');
+  return r;
+});
+ipcMain.handle('sys:startupDisable', async (_e, entry) => {
+  const r = await system.startupDisable(entry);
+  sysLog(r.ok ? `disabled startup entry ${entry && entry.name}${r.backup ? ` (backup ${r.backup})` : ''}` : `disable failed: ${r.error}`, r.ok ? 'info' : 'error');
+  return r;
+});
+ipcMain.handle('sys:startupEnable', async (_e, entry) => {
+  const r = await system.startupEnable(entry);
+  sysLog(r.ok ? `restored startup entry ${entry && entry.name}` : `restore failed: ${r.error}`, r.ok ? 'info' : 'error');
+  return r;
+});
+ipcMain.handle('sys:openBackups', () => {
+  const dir = path.join(app.getPath('userData'), 'startup-backups');
+  fs.mkdirSync(dir, { recursive: true });
+  return shell.openPath(dir);
+});
+
+/* --- Environments -------------------------------------------------------- */
+function envLog(text, level) {
+  if (logStream) logStream.write(`${new Date().toISOString()} [envs] ${text}\n`);
+  emit('env:log', { text, level, ts: Date.now() });
+}
+ipcMain.handle('env:tools', () => envs.tools());
+ipcMain.handle('env:list', () => envs.list());
+ipcMain.handle('env:create', async (_e, spec) => {
+  const r = await envs.create(spec || {}, envLog);
+  dome.invalidate('ds:python');
+  return r;
+});
+ipcMain.handle('env:packages', (_e, dir) => envs.packages(dir));
+ipcMain.handle('env:install', (_e, { dir, packages }) => envs.install(dir, packages, envLog));
+ipcMain.handle('env:freeze', (_e, dir) => envs.freeze(dir, envLog));
+ipcMain.handle('env:compose', (_e, { dir, action }) => envs.compose(dir, action, envLog));
+ipcMain.handle('env:remove', async (_e, entry) => {
+  const r = await envs.remove(entry, envLog);
+  dome.invalidate('ds:python');
+  return r;
+});
+ipcMain.handle('env:terminal', (_e, dir) => {
+  const list = terminals.list();
+  const first = (Array.isArray(list) ? list : (list && list.terminals) || []).find((t) => t.available);
+  if (!first) return { ok: false, error: 'no shell found on this machine' };
+  return terminals.open(first.id, dir);
+});
+/** Ask AEDi for an environment recipe. Returns the parsed spec for the operator to confirm - nothing is created here. */
+ipcMain.handle('env:recipe', async (_e, { prompt } = {}) => {
+  const target = await preferredTarget();
+  if (!target) return { ok: false, error: 'AEDi has no model to answer with - set up the local core first.' };
+  let text = '';
+  const res = await ai.chat({
+    endpointId: target.endpointId, port: target.port, model: target.model,
+    messages: [{ role: 'system', content: envs.RECIPE_SYSTEM }, { role: 'user', content: String(prompt || '').slice(0, 2000) }],
+  }, (t) => { if (t.token) text += t.token; });
+  if (!res.ok) return { ok: false, error: res.error || 'the model did not answer', model: target.model };
+  try { return { ok: true, model: target.model, spec: envs.parseRecipe(text), raw: text }; } catch (err) { return { ok: false, error: err.message, model: target.model, raw: text }; }
+});
+
+/* --- Relations graph ----------------------------------------------------- */
+let lastGraph = null;
+ipcMain.handle('graph:build', async (_e, opts) => {
+  lastGraph = await graph.build(opts || {});
+  return lastGraph;
+});
+/** Ask AEDi about one node: the node, its relations, and the live sets its kind belongs to. */
+ipcMain.handle('graph:ask', async (_e, { nodeId, question } = {}) => {
+  const id = ++chatSeq;
+  const target = await preferredTarget();
+  if (!target) return { id, ok: false, error: 'AEDi has no model to answer with - set up the local core first.' };
+  if (!lastGraph) lastGraph = await graph.build({});
+  const desc = graph.describe(lastGraph, nodeId);
+  if (!desc) return { id, ok: false, error: `no node "${nodeId}" in the current graph` };
+  const n = lastGraph.nodes.find((x) => x.id === nodeId);
+  const setsFor = { process: ['metrics.live'], hidden: ['metrics.live'], port: ['ports.listeners'], service: [], volume: ['disks.volumes'], model: ['ollama.models', 'gpu.devices'], env: ['python.envs'], repo: ['projects.repos'], gpu: ['gpu.devices'], cpu: ['metrics.live', 'sensors.tree'], ram: ['metrics.live', 'memory.state'] };
+  const pack = await dome.brief({ setIds: setsFor[n.kind] || ['metrics.live'] });
+  const q = String(question || `Explain what "${n.label}" is on this machine, what it is related to, whether it looks healthy, and what action if any is worth taking. Be concrete and brief.`).slice(0, 4000);
+  emit('dome:token', { id, start: true, model: target.model, sets: pack.sets, chars: pack.chars + desc.length, preset: { id: 'graph', name: `AEDi · ${n.label}`, scope: n.group } });
+  const res = await ai.chat({
+    endpointId: target.endpointId, port: target.port, model: target.model,
+    messages: [{ role: 'system', content: `${pack.system}\n\n${desc}` }, { role: 'user', content: q }],
+  }, (t) => emit('dome:token', { id, ...t }));
+  emit('dome:token', { id, done: true, ok: res.ok, error: res.error || null, stats: res.stats || null });
+  return { id, ...res, model: target.model };
+});
 
 ipcMain.handle('fans:channels', () => fans.channels());
 ipcMain.handle('fans:summary', () => fans.summary());

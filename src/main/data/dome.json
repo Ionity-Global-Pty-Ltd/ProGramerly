@@ -141,6 +141,20 @@
             "doctor.findings"
           ],
           "watch": "Findings that reappear after a fix - the cause is upstream of the symptom."
+        },
+        {
+          "id": "processes",
+          "code": "PRC",
+          "glyph": "engine",
+          "name": "Processes and services",
+          "blurb": "What is running right now, including what the task list hides.",
+          "purpose": "A machine is its running set. The processes in session 0, the services that never show a window and the entries that start themselves are where slowness, noise and surprises live - so they are read as one set, not discovered one at a time.",
+          "reads": [
+            "system.processes",
+            "system.services",
+            "system.startup"
+          ],
+          "watch": "A startup list growing past a dozen non-OS entries, or a service running that nothing on the machine needs."
         }
       ]
     },
@@ -328,7 +342,8 @@
           "blurb": "Virtual environments, conda environments and Node versions.",
           "purpose": "ML work lives in environments. Enumerating them stops the slow drift where three projects share one polluted interpreter.",
           "reads": [
-            "python.envs"
+            "python.envs",
+            "envs.all"
           ],
           "watch": "Frameworks installed into the system interpreter rather than the managed environment."
         },

@@ -634,6 +634,11 @@ const PROBES = [
   ['docker', 'docker --version'], ['code', 'code --version'], ['rustc', 'rustc --version'],
   ['cargo', 'cargo --version'], ['go', 'go version'], ['java', 'java -version 2>&1'],
   ['dotnet', 'dotnet --version'], ['ollama', 'ollama --version'], ['ffmpeg', 'ffmpeg -version'],
+  ['uv', 'uv --version'], ['conda', 'conda --version'],
+  // Package resolvers - the DOME's "resolvers" segment scores off these.
+  ...(IS_WIN ? [['winget', 'winget --version'], ['choco', 'choco --version']] : []),
+  ...(IS_MAC ? [['brew', 'brew --version']] : []),
+  ...(!IS_WIN && !IS_MAC ? [['apt', 'apt --version'], ['dnf', 'dnf --version'], ['pacman', 'pacman --version'], ['snap', 'snap --version'], ['flatpak', 'flatpak --version']] : []),
 ];
 
 async function environment(log = () => {}) {

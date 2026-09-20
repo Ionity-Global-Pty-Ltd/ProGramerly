@@ -169,13 +169,22 @@ async function installItem(item, log) {
 
   // ---- 4. Explicit steps (platform spec first, then item level) ----------
   const steps = [...(spec.steps || []), ...(item.steps || []), ...(spec.post || [])];
+  let softFailures = 0;
+  let ranSteps = 0;
   for (const step of steps) {
     const res = await runStep(step, log);
+    ranSteps += 1;
     if (res === 0) anySuccess = true;
     else if (!step.allowFail) anyFailure = true;
-    else log('  (non-fatal)');
+    else { softFailures += 1; log('  (non-fatal)'); }
   }
 
+  // An item whose only work was optional steps that ALL failed did not do
+  // nothing - it failed. Reporting that as "skipped" would hide a model pull
+  // that never downloaded anything.
+  if (!anySuccess && !anyFailure && softFailures > 0 && softFailures === ranSteps) {
+    return { status: 'failed', detail: `every step failed (${softFailures} of ${ranSteps}) - see the log` };
+  }
   if (!anySuccess && !anyFailure) return { status: 'skipped', detail: 'nothing to do on this platform' };
   if (anySuccess && anyFailure) {
     return item.allowPartial || spec.allowPartial

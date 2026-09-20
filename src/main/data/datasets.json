@@ -62,8 +62,8 @@
       "class": "measured",
       "reader": "memory",
       "source": "hardware service",
-      "shape": "{ totalBytes, freeBytes, standbyBytes, usedPct }",
-      "about": "Installed, free and standby-list memory - the last being memory Windows counts as free while behaving as though it is not.",
+      "shape": "{ total, free, usedPct, standby|null, modified|null, freeZero|null, available|null, standbySource }",
+      "about": "Installed, free and standby-list memory from the Memory performance counters. standby is null with the reason in standbySource when the counters cannot be read.",
       "platform": "win"
     },
     {
@@ -244,9 +244,9 @@
       "name": "MCP configuration",
       "class": "state",
       "reader": "mcpConfig",
-      "source": "MCP client config files",
-      "shape": "{ servers[] { name, command, present } }",
-      "about": "Model Context Protocol servers configured for the clients on this machine, and whether each binary is still installed."
+      "source": "catalogue MCP entries + this install's record",
+      "shape": "{ id, name, installed }",
+      "about": "MCP servers in the catalogue and whether this install recorded them as installed. The client config files themselves are not read."
     },
     {
       "id": "links.registry",
@@ -283,6 +283,56 @@
       "source": "src/main/data/datasets.json",
       "shape": "presets[] { id, name, scope, question, reads[] }",
       "about": "The standing questions below."
+    },
+    {
+      "id": "system.processes",
+      "name": "Running processes",
+      "class": "measured",
+      "reader": "processes",
+      "source": "Win32_Process + Get-Process / ps -eo",
+      "cost": "scan",
+      "shape": "rows[] { pid, ppid, name, path, rss, cpuSec|cpuPct, hidden, user, company }",
+      "about": "Every process on the machine at the moment of the read, including the session-0 / other-user processes an ordinary task list hides (hidden=true)."
+    },
+    {
+      "id": "system.services",
+      "name": "Services",
+      "class": "measured",
+      "reader": "services",
+      "source": "Win32_Service / systemctl / launchctl",
+      "cost": "scan",
+      "shape": "rows[] { name, label, state, start, pid, path, account }",
+      "about": "Every registered service and whether it is running, with the process it runs as."
+    },
+    {
+      "id": "system.startup",
+      "name": "Startup entries",
+      "class": "measured",
+      "reader": "startup",
+      "source": "Run keys · Startup folders · Task Scheduler (win); autostart + systemd user units (linux); LaunchAgents (mac)",
+      "cost": "scan",
+      "shape": "rows[] { kind, source, scope, name, command, enabled }",
+      "about": "Everything that starts without being asked: registry Run entries, startup-folder shortcuts, non-Microsoft scheduled tasks, and the ones ProGramerly has disabled (enabled=false, backed up)."
+    },
+    {
+      "id": "system.listeners",
+      "name": "Listening sockets",
+      "class": "measured",
+      "reader": "listeners",
+      "source": "Get-NetTCPConnection / ss / lsof",
+      "cost": "scan",
+      "shape": "rows[] { proto, address, port, pid }",
+      "about": "Every TCP and UDP socket in the listening state and the process that owns it - the full list, not the common-ports sample."
+    },
+    {
+      "id": "envs.all",
+      "name": "Environments",
+      "class": "measured",
+      "reader": "envsAll",
+      "source": "pyvenv.cfg · conda env list · package.json · compose files · docker compose ls",
+      "cost": "scan",
+      "shape": "rows[] { kind, name, dir, python, status, deps }",
+      "about": "Python venvs, conda environments, Node projects and Docker compose stacks under the development root, with the running state of each stack."
     }
   ],
   "presets": [
@@ -402,6 +452,39 @@
         "dome.datasets"
       ],
       "question": "List every data set you can currently read on this machine, grouped by class, and state in one line each what you could report from it. Name the sets that are unavailable and why."
+    },
+    {
+      "id": "what-is-running",
+      "name": "What is running, seen and unseen",
+      "scope": "system",
+      "reads": [
+        "system.processes",
+        "system.services",
+        "system.listeners",
+        "metrics.live"
+      ],
+      "question": "From the sets: which processes hold the most memory, which are system-session (hidden) processes an operator would not normally see, which services are running that are not part of the operating system, and which listening ports are unexpected for a development workstation? Name the set behind each figure. Finish with the one thing worth ending, stopping or investigating - or say plainly that nothing stands out."
+    },
+    {
+      "id": "startup-audit",
+      "name": "What starts by itself",
+      "scope": "system",
+      "reads": [
+        "system.startup",
+        "system.services"
+      ],
+      "question": "List every startup entry and auto-start service that is not part of the operating system, group them by what they appear to be for, and say which could safely be disabled to speed up boot. Only use what is in the sets."
+    },
+    {
+      "id": "environments-audit",
+      "name": "Environments on this machine",
+      "scope": "toolchain",
+      "reads": [
+        "envs.all",
+        "projects.repos",
+        "python.envs"
+      ],
+      "question": "Which environments exist, which repositories they sit inside, which are stale or duplicated, and which repository has no environment yet? Be specific and brief."
     }
   ]
 }

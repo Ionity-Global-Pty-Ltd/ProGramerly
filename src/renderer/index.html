@@ -32,14 +32,14 @@
   <div id="shell">
     <header id="topbar">
       <div class="tb-side">
-        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.4.0</span></span>
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.5.0</span></span>
         <span class="tb-divider"></span>
         <span id="clock">--:--</span>
         <span id="date">Local time</span>
       </div>
       <div id="status-capsule"><span class="dot"></span><span id="status-text">Reading this machine…</span></div>
       <div class="tb-side right">
-        <button id="engine-chip" class="off" title="Local AI core (Ollama on this machine)"><i></i><span id="engine-label">Local core · scanning</span></button>
+        <button id="engine-chip" class="off" title="AEDi - the Ionity local core, powered by Ollama on this machine"><i></i><span id="engine-label">AEDi · scanning</span></button>
         <span class="badge" id="osBadge">detecting…</span>
         <span class="badge" id="privBadge">…</span>
         <button class="badge badge-btn" id="kioskExitBtn" hidden>Exit kiosk · Ctrl+Shift+K</button>
@@ -60,14 +60,16 @@
           <div id="thread" aria-live="polite"></div>
           <div id="ask">
             <span id="ask-orb" class="ai-orb off"></span>
-            <input id="ask-input" type="text" autocomplete="off" placeholder="Ask the local core, or type a workspace name… (Ctrl+K)" aria-label="Ask" />
+            <input id="ask-input" type="text" autocomplete="off" placeholder="Ask AEDi, or type a workspace name… (Ctrl+K)" aria-label="Ask" />
             <kbd>Enter</kbd>
             <button class="send" id="ask-send" title="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
           </div>
           <div id="suggest">
             <button data-open="dome">Open the DOME</button>
+            <button data-open="relations">See relations</button>
+            <button data-open="envs">New environment</button>
             <button data-open="software">Install software</button>
-            <button class="setup" id="ai-setup-chip" hidden>Set up local AI</button>
+            <button class="setup" id="ai-setup-chip" hidden>Set up AEDi</button>
           </div>
         </div>
       </section>
@@ -111,7 +113,10 @@
       <nav id="dock" aria-label="Dock">
         <span class="dock-side left">
         <button class="dock-btn" data-app="software"><span class="tip">Software</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><rect x="4" y="4" width="16" height="16" rx="4"/></svg></button>
-        <button class="dock-btn" data-app="ai"><span class="tip">Local AI</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
+        <button class="dock-btn" data-app="ai"><span class="tip">AEDi · Local AI</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
+        <button class="dock-btn" data-app="relations"><span class="tip">Relations</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.6"/><circle cx="4.5" cy="6" r="2"/><circle cx="19.5" cy="6" r="2"/><circle cx="4.5" cy="18" r="2"/><circle cx="19.5" cy="18" r="2"/><path d="M6.3 7.2l3.8 3.2M17.7 7.2l-3.8 3.2M6.3 16.8l3.8-3.2M17.7 16.8l-3.8-3.2"/></svg></button>
+        <button class="dock-btn" data-app="envs"><span class="tip">Environments</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></button>
+        <button class="dock-btn" data-app="system"><span class="tip">System</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 9h4M7 12h7"/></svg></button>
         <button class="dock-btn" data-app="projects"><span class="tip">Projects</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></button>
         <button class="dock-btn" data-app="monitor"><span class="tip">Monitor</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></button>
         <button class="dock-btn" data-app="network"><span class="tip">Network</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></button>
@@ -121,7 +126,7 @@
         <button class="dock-btn" data-app="terminals"><span class="tip">Terminals</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></svg></button>
         </span>
         <span class="dock-sep"></span>
-        <button id="dock-orb" class="dock-btn" data-app="_ask" title="Ask the local core"><span class="tip">Ask</span><span class="ai-orb"></span></button>
+        <button id="dock-orb" class="dock-btn" data-app="_ask" title="Ask AEDi"><span class="tip">Ask AEDi</span><span class="ai-orb"></span></button>
         <span class="dock-sep"></span>
         <span class="dock-side right">
         <button class="dock-btn" data-app="fans"><span class="tip">Fan control</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 2-7 5-7 1.5 0 2 1.5 1 3-1.2 1.8-3.5 3-6 4M14 12c4 0 7 2 7 5 0 1.5-1.5 2-3 1-1.8-1.2-3-3.5-4-6M12 14c0 4-2 7-5 7-1.5 0-2-1.5-1-3 1.2-1.8 3.5-3 6-4M10 12c-4 0-7-2-7-5 0-1.5 1.5-2 3-1 1.8 1.2 3 3.5 4 6"/></svg></button>
@@ -149,10 +154,10 @@
   </div>
 
   <div id="orbmenu" hidden>
-    <div class="om-head"><span class="ai-orb"></span><div><b>Ask the local core</b><small id="om-model">no model</small></div></div>
+    <div class="om-head"><span class="ai-orb"></span><div><b>Ask AEDi</b><small id="om-model">no model</small></div></div>
     <div class="om-list" id="om-list"></div>
     <div class="pm-sep"></div>
-    <button id="om-open-ai">Open the Local AI workspace</button>
+    <button id="om-open-ai">Open AEDi · Local AI</button>
     <button id="om-open-dome">Open the DOME</button>
   </div>
 
@@ -186,6 +191,14 @@
     <div id="softwareApp">
 <!-- ========================== SOFTWARE / PICK ========================= -->
   <main id="pickView" class="view" hidden>
+    <section class="aedi-pick" id="aediPick">
+      <label class="check aedi-check">
+        <input type="checkbox" id="aediTick" />
+        <span><b>AEDi local core</b><em id="aediTickNote">Ollama + the starter model. Runs on this machine, nothing leaves it.</em></span>
+      </label>
+      <select id="aediModelPick" aria-label="Starter model"></select>
+      <span class="muted" id="aediState">checking…</span>
+    </section>
     <section class="profiles" id="profiles" aria-label="Install profiles"></section>
     <div class="workarea">
       <nav class="groupnav" id="groupNav" aria-label="Categories"></nav>
@@ -284,12 +297,7 @@
           <button class="btn ghost" id="sweepCancel" hidden>Stop</button>
         </div>
       </div>
-      <p class="cardnote">
-        Five seconds per region against Cloudflare, Google and a regional host.
-        These are TCP handshakes to the live service port, not ICMP — and both
-        Cloudflare and Google are anycast, so a country target answers from the
-        nearest edge that serves it.
-      </p>
+      <p class="cardnote">TCP handshakes to Cloudflare, Google and a regional host - not ICMP.</p>
       <div class="regiongrid" id="regionGrid"></div>
     </section>
 
@@ -328,12 +336,7 @@
           <button class="btn" id="regApplyBtn" disabled>Apply selected</button>
         </div>
       </div>
-      <p class="cardnote">
-        Only values Microsoft documents as correct are written. Nothing is deleted
-        unless Microsoft's own guidance names that value as the fault — and even
-        then only with the box below ticked. Every key is exported to a .reg file
-        before the first change.
-      </p>
+      <p class="cardnote">Documented values only. Every key is exported to a .reg file first.</p>
       <label class="check" id="removalWrap">
         <input type="checkbox" id="allowRemovals" />
         <span>Allow the Microsoft-flagged removals (two entries below)</span>
@@ -356,20 +359,16 @@
   <main id="aiView" class="view pad" hidden>
     <section class="card wide">
       <div class="cardhead">
-        <h3>Local AI services</h3>
+        <h3>AEDi · local services</h3>
         <div class="cardactions"><button class="btn ghost" id="aiRefreshBtn">Rescan</button></div>
       </div>
-      <p class="cardnote">
-        Twelve inference and vector services, probed on their default ports. A service
-        moved to another port will not be found — which is honest, and better than
-        calling it absent when it is merely elsewhere.
-      </p>
+      <p class="cardnote">AEDi answers through <b>Ollama</b>. Twelve local inference and vector services probed on their default ports.</p>
       <div class="epgrid" id="aiEndpoints"><p class="empty">Scanning…</p></div>
     </section>
 
     <section class="card wide">
       <div class="cardhead">
-        <h3>Ollama models</h3>
+        <h3>Models <span class="muted">— Ollama</span></h3>
         <div class="cardactions"><button class="btn ghost" id="aiModelsBtn">Refresh</button></div>
       </div>
       <div id="aiLoaded" class="loadedstrip" hidden></div>
@@ -388,7 +387,7 @@
 
     <section class="card wide">
       <div class="cardhead">
-        <h3>LLM console</h3>
+        <h3>Ask AEDi</h3>
         <div class="cardactions">
           <select id="aiTarget"><option value="">No live model found — rescan</option></select>
           <button class="btn ghost" id="aiTargetsBtn">Rescan</button>
@@ -396,7 +395,7 @@
         </div>
       </div>
       <div id="aiGpu" class="gpustrip" hidden></div>
-      <div class="chatlog" id="aiChatLog"><p class="empty">Pick a model above and ask it something. Everything stays on this machine.</p></div>
+      <div class="chatlog" id="aiChatLog"><p class="empty">Pick a model. Ask. Everything stays on this machine.</p></div>
       <div class="chatrow">
         <textarea id="aiPrompt" rows="2" placeholder="Ask the model… (Ctrl+Enter to send)"></textarea>
         <div class="chatbtns">
@@ -413,11 +412,7 @@
         <h3>Environments</h3>
         <div class="cardactions"><button class="btn ghost" id="aiEnvBtn">Rescan</button></div>
       </div>
-      <p class="cardnote">
-        Virtual environments are found by their <code>pyvenv.cfg</code> marker, which is
-        exactly what a venv is — so this finds every one and nothing else, rather than
-        guessing from folder names. Conda environments come from conda itself.
-      </p>
+      <p class="cardnote">Found by <code>pyvenv.cfg</code> and conda itself. Make new ones in <button class="linkbtn" data-open-app="envs">Environments</button>.</p>
       <div id="aiEnvList" class="envlist"><p class="empty">Not scanned yet.</p></div>
       <div id="aiNodeList" class="kvmini" hidden></div>
     </section>
@@ -442,12 +437,7 @@
           <button class="btn" id="projScanBtn">Rescan</button>
         </div>
       </div>
-      <p class="cardnote">
-        Every git repository under the development folder, two levels deep. Branch, uncommitted
-        work, ahead/behind the remote, last commit, and what it is built with — read from the
-        marker files a stack leaves behind, not guessed from the folder name. Dirty repositories
-        sort to the top. Read-only apart from <b>Fetch</b>, which changes nothing in a working tree.
-      </p>
+      <p class="cardnote">Every git repository under the dev folder. Read-only apart from <b>Fetch</b>.</p>
       <div class="docsummary" id="projSummary" hidden></div>
       <div id="projList" class="projlist"><p class="empty">Not scanned yet.</p></div>
     </section>
@@ -470,12 +460,7 @@
           <button class="btn ghost" id="termFolderBtn">Dev folder</button>
         </div>
       </div>
-      <p class="cardnote">
-        Every shell found on this machine, opened in your development folder. Nothing is
-        emulated in this window — a terminal inside an Electron app is a worse terminal
-        than the one already installed, so this opens the real one and lets go of it.
-        Where Windows Terminal exists, console shells are hosted in it.
-      </p>
+      <p class="cardnote">Opens the real shell in your dev folder.</p>
       <div class="termgrid" id="termList"><p class="empty">Looking…</p></div>
       <div id="termWsl" class="kvmini" hidden></div>
     </section>
@@ -496,14 +481,7 @@
 
     <section class="card wide">
       <div class="cardhead"><h3>Fan control</h3></div>
-      <p class="cardnote">
-        Setting a fan curve means writing to the Super&nbsp;IO or embedded controller, and on
-        Windows that needs a signed kernel-mode driver — which is exactly what FanControl and
-        LibreHardwareMonitor ship, and why they exist. ProGramerly does not ship a kernel
-        driver, and an app that claimed to set your curve without one would be lying to you.
-        So it installs them, launches them, and reads their sensors above. The curve is set in
-        the tool that owns the driver. That is the correct division of labour.
-      </p>
+      <p class="cardnote">Curves are written by the tool that owns the kernel driver. ProGramerly installs it, launches it, reads its sensors.</p>
       <div class="toolbox" id="hwTools"></div>
     </section>
 
@@ -512,14 +490,7 @@
         <h3>RGB lighting</h3>
         <div class="cardactions"><button class="btn ghost" id="rgbRefreshBtn">Connect</button></div>
       </div>
-      <p class="cardnote">
-        A full implementation of the OpenRGB network protocol, spoken over TCP to a running
-        OpenRGB server (127.0.0.1:6742 — switch it on in OpenRGB under
-        <b>Settings → General → Start server</b>). That reaches motherboard 12&nbsp;V headers,
-        5&nbsp;V addressable headers, GPU, RAM, AIO pumps, fan controllers and peripherals,
-        because OpenRGB already carries the per-vendor work and reimplementing it would be
-        worse in every way.
-      </p>
+      <p class="cardnote">OpenRGB SDK over TCP (127.0.0.1:6742). In OpenRGB: <b>Settings → General → Start server</b>.</p>
       <div class="row2 rgbrow">
         <input type="color" id="rgbColor" value="#00c6ff" />
         <div class="swatches" id="rgbSwatches"></div>
@@ -540,15 +511,7 @@
         <button class="btn ghost" id="hwStandbyBtn">Purge standby list</button>
         <button class="btn ghost" id="hwTempBtn">Clear temp cache</button>
       </div>
-      <p class="cardnote">
-        <b>RAM flush</b> calls <code>EmptyWorkingSet</code> on every reachable process — pages go to
-        the standby list, where Windows can still reuse them. <b>Purge standby list</b> is the
-        <code>NtSetSystemInformation</code> call RAMMap makes, which actually returns them to free;
-        it needs administrator rights. Free memory is measured before and after both, so the
-        number reported is measured, not claimed. <b>Clear temp cache</b> empties the OS
-        temporary folder and nothing else — not browser caches, not package caches, not
-        anything in a project.
-      </p>
+      <p class="cardnote"><b>RAM flush</b> trims working sets. <b>Purge standby</b> needs admin. Free memory is measured before and after.</p>
     </section>
 
     <section class="card wide">
@@ -572,15 +535,10 @@
           <button class="btn" id="docScanBtn">Run diagnostics</button>
         </div>
       </div>
-      <p class="cardnote">
-        Diagnosing never changes anything. A <b>Fix</b> button only appears on a check
-        that actually failed, and it always says what it ran. Anything needing
-        administrator rights, a restart, or a judgement call stays a deliberate
-        click and is left out of <b>Fix everything safe</b>.
-      </p>
+      <p class="cardnote">Diagnosing changes nothing. <b>Fix</b> appears only on a failed check and says what it ran.</p>
       <div class="docsummary" id="docSummary" hidden></div>
       <div id="docList" class="doclist">
-        <p class="empty">Nothing has been checked yet. <b>Run diagnostics</b> takes a few seconds.</p>
+        <p class="empty"><b>Run diagnostics</b> - a few seconds.</p>
       </div>
     </section>
 
@@ -590,14 +548,14 @@
 
         <div class="tbx">
           <h4>Environment report</h4>
-          <p>Machine, GPU, disks and the version of every development tool it can find — written into the report folder as Markdown and JSON.</p>
+          <p>Machine, GPU, disks, tool versions → Markdown + JSON.</p>
           <button class="btn ghost" id="docEnvBtn">Collect</button>
           <div class="kvmini" id="docEnvOut" hidden></div>
         </div>
 
         <div class="tbx">
           <h4>Disk cleanup</h4>
-          <p>Measures first, deletes second. Caches are re-downloaded when they are next needed; nothing here is state you cannot lose.</p>
+          <p>Measures first, deletes second. Caches only.</p>
           <button class="btn ghost" id="docCleanScanBtn">Measure</button>
           <button class="btn" id="docCleanRunBtn" hidden disabled>Reclaim selected</button>
           <div id="docCleanList" class="cleanlist"></div>
@@ -605,7 +563,7 @@
 
         <div class="tbx">
           <h4>Port inspector</h4>
-          <p>What is holding a port. The answer to <code>EADDRINUSE</code> without opening a terminal.</p>
+          <p>Who holds a port.</p>
           <div class="row2">
             <input type="number" id="docPort" min="1" max="65535" placeholder="3000" />
             <button class="btn ghost" id="docPortBtn">Check</button>
@@ -637,7 +595,7 @@
           <button class="btn" id="installUpdateBtn" hidden>Install and restart</button>
         </div>
       </div>
-      <p id="updateState" class="cardnote">Updates come straight from the GitHub release feed — no store, no background installer service. You decide when it lands.</p>
+      <p id="updateState" class="cardnote">Straight from the GitHub release feed. You decide when it lands.</p>
       <div class="bar" id="updateBarWrap" hidden><div class="bar-fill" id="updateBar"></div></div>
       <pre class="notes" id="updateNotes" hidden></pre>
     </section>
@@ -651,11 +609,7 @@
           <button class="btn primary" id="publishRunBtn" disabled>Push &amp; Release</button>
         </div>
       </div>
-      <p class="cardnote" id="publishNote">
-        Pushes this source to GitHub, tags it, and lets GitHub's own runners build the
-        Windows installer and the macOS launcher and publish them together as a Release —
-        nothing here fakes a Mac build on a machine that cannot make one.
-      </p>
+      <p class="cardnote" id="publishNote">Push, tag, and let GitHub's runners build every platform into a Release.</p>
       <dl class="kv" id="publishStatusKv"></dl>
       <div class="row2">
         <label class="field"><span>Repo owner</span>
@@ -689,7 +643,7 @@
         </label>
         <label class="check">
           <input type="checkbox" id="autoInstallUpdates" />
-          <span><b>Install the updates it finds</b><em>Untick and nothing is touched — every program stays exactly where it is and the scan becomes a report.</em></span>
+          <span><b>Install the updates it finds</b><em>Unticked, the scan is a report only.</em></span>
         </label>
       </div>
       <div class="scopegrid" id="scopeGrid"></div>
@@ -700,16 +654,16 @@
 <!-- ============================ SETTINGS ============================= -->
   <main id="settingsView" class="view pad" hidden>
     <section class="card" id="domeOptions">
-      <div class="cardhead"><h3>Ionity DOME and local AI</h3><span class="muted" id="optMeta">—</span></div>
+      <div class="cardhead"><h3>Ionity DOME and AEDi</h3><span class="muted" id="optMeta">—</span></div>
       <div class="opt-grid">
-        <label class="opt-row"><input type="checkbox" id="optAutoBrief" /><span><b>Read the machine on launch</b><small>The local model reports once, on the deck, as soon as the shell is up.</small></span></label>
+        <label class="opt-row"><input type="checkbox" id="optAutoBrief" /><span><b>AEDi reads the machine on launch</b><small>One report on the deck as the shell comes up.</small></span></label>
         <label class="opt-row"><input type="checkbox" id="optAskEverywhere" /><span><b>Ask button in every workspace</b><small>Each window gets an Ask control scoped to what that workspace covers.</small></span></label>
         <label class="opt-row"><input type="checkbox" id="optWatermark" /><span><b>Ionity mark</b><small>The wordmark, bottom left.</small></span></label>
         <label class="opt-row"><input type="checkbox" id="optKiosk" /><span><b>Kiosk shell</b><small>Full screen, escapable with Ctrl+Shift+K.</small></span></label>
       </div>
       <div class="opt-grid cols">
         <label class="opt-field"><span>Launch brief</span><select id="optBriefPreset"></select></label>
-        <label class="opt-field"><span>Local model</span><select id="optModel"></select></label>
+        <label class="opt-field"><span>AEDi model (Ollama)</span><select id="optModel"></select></label>
         <label class="opt-field"><span>Dome re-read</span><select id="optInterval">
           <option value="20">every 20 seconds</option>
           <option value="45">every 45 seconds</option>
@@ -732,7 +686,7 @@
         <button class="btn ghost" id="optFanFolder">Fan profiles</button>
         <button class="btn ghost" id="optDatasets">Data sets</button>
       </div>
-      <p class="muted" id="optNote">Every figure the model quotes carries the class of the set it came from. It reads only the sets in the registry.</p>
+      <p class="muted" id="optNote">AEDi quotes only registered sets, each tagged with its class.</p>
     </section>
 
     <section class="card wide" id="profileCard">

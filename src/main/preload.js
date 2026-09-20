@@ -203,6 +203,41 @@ contextBridge.exposeInMainWorld('programerly', {
     presets: () => ipcRenderer.invoke('fans:presets'),
   },
 
+  /* ------------------------------------------ system: seen and unseen */
+  sys: {
+    processes: () => ipcRenderer.invoke('sys:processes'),
+    services: () => ipcRenderer.invoke('sys:services'),
+    startup: () => ipcRenderer.invoke('sys:startup'),
+    listeners: () => ipcRenderer.invoke('sys:listeners'),
+    kill: (pid) => ipcRenderer.invoke('sys:kill', pid),
+    service: (name, action) => ipcRenderer.invoke('sys:service', { name, action }),
+    startupDisable: (entry) => ipcRenderer.invoke('sys:startupDisable', entry),
+    startupEnable: (entry) => ipcRenderer.invoke('sys:startupEnable', entry),
+    openBackups: () => ipcRenderer.invoke('sys:openBackups'),
+    onLog: (cb) => on('sys:log', cb),
+  },
+
+  /* ------------------------------------------------------- environments */
+  envs: {
+    tools: () => ipcRenderer.invoke('env:tools'),
+    list: () => ipcRenderer.invoke('env:list'),
+    create: (spec) => ipcRenderer.invoke('env:create', spec),
+    packages: (dir) => ipcRenderer.invoke('env:packages', dir),
+    install: (dir, packages) => ipcRenderer.invoke('env:install', { dir, packages }),
+    freeze: (dir) => ipcRenderer.invoke('env:freeze', dir),
+    compose: (dir, action) => ipcRenderer.invoke('env:compose', { dir, action }),
+    remove: (entry) => ipcRenderer.invoke('env:remove', entry),
+    terminal: (dir) => ipcRenderer.invoke('env:terminal', dir),
+    recipe: (prompt) => ipcRenderer.invoke('env:recipe', { prompt }),
+    onLog: (cb) => on('env:log', cb),
+  },
+
+  /* ---------------------------------------------------------- relations */
+  graph: {
+    build: (opts) => ipcRenderer.invoke('graph:build', opts),
+    ask: (nodeId, question) => ipcRenderer.invoke('graph:ask', { nodeId, question }),
+  },
+
   /* ------------------------------------------------------------- events */
   onLog: (cb) => on('install:log', cb),
   onItem: (cb) => on('install:item', cb),

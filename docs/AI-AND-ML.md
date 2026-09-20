@@ -42,8 +42,8 @@ Three files are the contract:
 
 | File | What it fixes |
 | --- | --- |
-| `src/main/data/dome.json` | The structure: 5 strata, 25 segments, what each segment reads and what to watch for |
-| `src/main/data/datasets.json` | The boundary: the 29 data sets a model may read, their class, and the 11 standing questions |
+| `src/main/data/dome.json` | The structure: 5 strata, 26 segments, what each segment reads and what to watch for |
+| `src/main/data/datasets.json` | The boundary: the 34 data sets AEDi may read, their class, and the 14 standing questions |
 | `src/main/catalog/catalog.json` | What can be installed: every model, engine and framework, by profile |
 
 Nothing outside `datasets.json` is servable. `dome.dataset('etc.passwd')` is
@@ -143,7 +143,7 @@ Nothing is written unless you save it. Saved readings go to
 
 ## 4. The data registry — what a model may see
 
-Each of the 29 sets carries a **class**, and every figure the model quotes
+Each of the 34 sets carries a **class**, and every figure the model quotes
 carries the class of the set it came from:
 
 | Class | Meaning |
@@ -208,7 +208,7 @@ touched.
    carried into the shell window: the mark, the wordmark line, the fill and
    the step list. Each step is ticked by the milestone it names —
    *verifying the integrated tools, loading the analysis presets, reading
-   sensors and volumes, waking the local core, assembling the dome* — so the
+   sensors and volumes, waking AEDi - the local core, assembling the dome* — so the
    fill is the share of real work done and cannot run ahead of the machine. A
    20-second ceiling clears it whatever happens.
 3. **The shell** — and, if the launch brief is on and a model is present, the
@@ -223,8 +223,8 @@ touched.
 | `src/main/services/ai.js` | Endpoints, models, pulls, chat, benchmark, GPU, the curated list and the vision rule |
 | `src/main/services/ocr.js` | The readers, PDF rasterising, reading, saving |
 | `src/main/services/dome.js` | The readers behind the registry, the scorers, the cache, the brief builder |
-| `src/main/data/dome.json` | 5 strata, 25 segments |
-| `src/main/data/datasets.json` | 29 data sets, 5 classes, 11 presets |
+| `src/main/data/dome.json` | 5 strata, 26 segments |
+| `src/main/data/datasets.json` | 34 data sets, 6 score sources, 14 presets |
 | `src/main/catalog/catalog.json` | 116 installable items in 19 groups |
 | `src/renderer/apps.js` | The DOME surface, the fan surface, the Reading surface |
 | `src/renderer/shell.js` | The shell, the boot, the brief, the orb, the options |
@@ -234,3 +234,42 @@ touched.
 Governance: Policy 986 AED · Licence AED 900
 © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — All rights reserved — TM
 *Building Tomorrow, Today.*
+
+## 3.5.0 — AEDi, and the sets behind Relations, Environments and System
+
+**AEDi** is the name of the local core in the product; **Ollama** is the engine
+that serves it, and the app names both wherever the core is mentioned (`AEDi ·
+gemma3:4b`, "powered by Ollama on this machine"). The AEDi tick-box in Software
+installs `ollama` plus one model item (`ollama-small`, `ollama-gemma` or
+`ollama-models`) with the rest of the run.
+
+Five sets joined the registry, all class `measured`, all cost `scan`:
+
+| Set | Reader | Source |
+| --- | --- | --- |
+| `system.processes` | `system.processes()` | Win32_Process + Get-Process · `ps -eo` |
+| `system.services` | `system.services()` | Win32_Service · `systemctl` · `launchctl` |
+| `system.startup` | `system.startup()` | Run keys · Startup folders · Task Scheduler · autostart · systemd user units · LaunchAgents |
+| `system.listeners` | `system.listeners()` | Get-NetTCPConnection / Get-NetUDPEndpoint · `ss` · `/proc/net` · `lsof` |
+| `envs.all` | `envs.list()` | `pyvenv.cfg` · `conda env list` · `package.json` · compose files · `docker compose ls` |
+
+Three presets joined with them: *what is running, seen and unseen* (system),
+*what starts by itself* (system), *environments on this machine* (toolchain).
+
+**Score sources.** Every DOME percentage now carries one of six words —
+`measured` (a raw reading rescaled), `computed` (a stated formula over real
+readings), `assessment` (a present / absent / both bucket), `state` (what this
+install recorded), `manifest` (pinned digests), `catalogue` (shipped data) — and
+a constant is never `measured`. The word is shown beside the percentage on the
+dome and passed to the model in the brief.
+
+**Relations asks** go through `graph:ask`: the node's own facts and relations
+(`graph.describe`) are appended to a `dome.brief` built from the sets its kind
+belongs to, so the model answers about *this* process or *this* model with the
+live figures around it — and, as everywhere else, says so when it cannot.
+
+**Environment recipes** go through `env:recipe`: `RECIPE_SYSTEM` asks the model
+for one JSON object (`kind`, `name`, `python`, `packages`, `deps`, `devDeps`,
+`services[]`, `start`, `git`, `why`); `parseRecipe` validates it; the operator
+sees the filled form and presses Create. The model never creates anything
+itself.

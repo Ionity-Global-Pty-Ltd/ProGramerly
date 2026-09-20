@@ -1072,6 +1072,56 @@ profiles include `ollama-small`, so a fresh machine has a working local model
 the first time the Home tab opens. Larger models stay a choice in the AI
 workspace.
 
+### AEDi, Relations, Environments, System — 3.5.0
+
+**AEDi** is the name of the Ionity local core throughout the app, and wherever
+it appears the engine under it is named too: the top-bar chip reads
+`AEDi · <model>` with "powered by Ollama on this machine" in its title; with no
+model it reads `AEDi · no model yet` / `AEDi · offline` and every Ask control is
+disabled. A tick-box at the top of the Software list — **AEDi local core** —
+adds Ollama and a starter model (`llama3.2:1b`, the Gemma family, or the coding
+set) to the install run; its state line reads whether Ollama is actually
+running and which models it holds. There is no canned answer anywhere.
+
+**Relations** (`src/main/services/graph.js`, `src/renderer/relations.js`) draws
+the machine as one graph: processes — including the session-0 processes a task
+list hides — listening ports, services, volumes, interfaces, GPU, Ollama and its
+models, environments, repositories, installed tool groups and the bundled
+programs, joined by the relations that exist right now (`spawned`, `listens`,
+`runs-as`, `holds`, `inside`, `contains`, `stored-on`). Gradient edges between
+the two node hues with flow particles; hue by kind; filter chips; search. A node
+opens its facts, its actions (end process, restart / stop service, open folder,
+inspect port) and **Ask AEDi**, which answers from the node, its relations and
+the registered sets its kind belongs to. Sources that failed are listed as gaps
+and are absent from the picture — never sketched.
+
+**Environments** (`src/main/services/envs.js`, `src/renderer/manage.js`) makes
+real environments: Python venv, uv venv, conda, Node project, Docker compose
+stack. Describe what you need and **Draft it**: AEDi returns a JSON recipe, the
+form fills, Create runs the real commands and streams them. Nothing is reported
+created until its marker (`pyvenv.cfg`, `package.json`, the compose file,
+`conda env list`) is there. Per environment: open folder, terminal here, pip
+list, freeze, add packages, compose up / down / status, remove (only inside the
+managed roots, only with a marker present).
+
+**System** (`src/main/services/system.js`) is what is running, seen and unseen:
+Processes, Services, Startup and Ports as sortable, filterable tables read from
+the OS — Win32_Process + Get-Process, Win32_Service, Run keys / Startup folders
+/ Task Scheduler, Get-NetTCPConnection on Windows; `ps`, `systemctl`,
+`launchctl`, `ss` or `/proc/net` elsewhere. One action per row: End, Start /
+Stop / Restart, Disable / Enable (backed up to `<userData>/startup-backups`
+first, restorable), Inspect.
+
+**No simulated data.** Every DOME score names its source class and a constant
+is never labelled `measured`; two dead segments (Doctor findings, reclaimable
+space) read again; resolvers probe winget / choco / brew / apt / uv / conda; the
+standby list comes from the Memory performance counters; a model pull that
+fails says *failed*. The registry is now 26 segments, 34 sets, 14 presets. The
+intro is the IONITY GLOBAL wordmark and the DOME in the brand gradient, drawn
+from facts read off the machine. `node scripts/ui-check-350.js` drives the real
+application — 33 checks, including a venv created and removed through the
+surface — and CI runs it on every push.
+
 ---
 
 ## The download page

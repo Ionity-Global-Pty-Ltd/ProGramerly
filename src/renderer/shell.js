@@ -34,6 +34,9 @@
     about: SVG('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'),
     dome: SVG('<path d="M3 17a9 9 0 0 1 18 0"/><path d="M2 17h20"/><path d="M6.5 17a5.5 5.5 0 0 1 11 0"/><path d="M12 8V5"/>'),
     reading: SVG('<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>'),
+    relations: SVG('<circle cx="12" cy="12" r="2.6"/><circle cx="4.5" cy="6" r="2"/><circle cx="19.5" cy="6" r="2"/><circle cx="4.5" cy="18" r="2"/><circle cx="19.5" cy="18" r="2"/><path d="M6.3 7.2l3.8 3.2M17.7 7.2l-3.8 3.2M6.3 16.8l3.8-3.2M17.7 16.8l-3.8-3.2"/>'),
+    envs: SVG('<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>'),
+    system: SVG('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 9h4M7 12h7"/>'),
   };
   /* Segment icons live with the DOME surface so both use the same set. */
   const SEG = () => (window.PGApps && window.PGApps.GLYPHS) || {};
@@ -42,10 +45,10 @@
      app shows (fans reuses the Hardware workspace); `tool` is a programs.json
      id; `launch` means the app is the tool itself and opens no window. */
   const APPS = {
-    software: { name: 'Software', sub: 'Provision a complete toolchain', view: 'softwareApp', tab: 'software', hue: '#2f7ff0', scope: 'toolchain', desc: 'Profiles, catalogue, one elevated install run.' },
-    ai: { name: 'Local AI', sub: 'Models, chat, GPU and environments', view: 'aiView', tab: 'ai', hue: '#00c8f0', scope: 'intelligence', desc: 'Ollama on this machine. Nothing leaves it.' },
-    projects: { name: 'Projects', sub: 'Git state across every workspace', view: 'projectsView', tab: 'projects', hue: '#8b7cf5', scope: 'repos', desc: 'Every repository under the dev root, live.' },
-    monitor: { name: 'Monitor', sub: 'Telemetry, disks and network history', view: 'monitorView', tab: 'monitor', hue: '#bdd631', scope: 'all', desc: 'The gauges behind the dome, in detail.' },
+    software: { name: 'Software', sub: 'Provision a complete toolchain', view: 'softwareApp', tab: 'software', hue: '#2f7ff0', scope: 'toolchain', desc: 'Tick. Install. Done - one elevated run.' },
+    ai: { name: 'AEDi · Local AI', sub: 'Powered by Ollama on this machine', view: 'aiView', tab: 'ai', hue: '#00c8f0', scope: 'intelligence', desc: 'Models, chat, GPU. Nothing leaves this machine.' },
+    projects: { name: 'Projects', sub: 'Git state across every workspace', view: 'projectsView', tab: 'projects', hue: '#8b7cf5', scope: 'repos', desc: 'Every repo under the dev root, live.' },
+    monitor: { name: 'Monitor', sub: 'Telemetry, disks and network history', view: 'monitorView', tab: 'monitor', hue: '#bdd631', scope: 'all', desc: 'CPU, memory, drives, network - live.' },
     network: { name: 'Network', sub: 'Sweep, throughput and official links', view: 'networkView', tab: 'network', hue: '#2f7ff0', scope: 'services-ports', desc: 'Regions, speed test, link registry.' },
     hardware: { name: 'Hardware', sub: 'Sensors, cooling, RGB and memory', view: 'hardwareView', tab: 'hardware', hue: '#f0a03c', scope: 'hardware', desc: 'Sensors, fans, RGB and RAM.' },
     doctor: { name: 'Doctor', sub: 'Diagnostics, cleanup and ports', view: 'doctorView', tab: 'doctor', hue: '#f0686a', scope: 'health-scan', desc: 'Scan, then fix - with a report folder.' },
@@ -54,14 +57,17 @@
     updates: { name: 'Operations', sub: 'Updates, sync and releases', view: 'updatesView', tab: 'updates', hue: '#3d8f63', scope: 'toolchain', desc: 'Update checks, scheduled sync, push & release.' },
     settings: { name: 'Settings', sub: 'Profile, startup and application controls', view: 'settingsView', tab: 'settings', hue: '#5d7181', desc: 'Startup, tray, kiosk, profile.' },
     // Ionity tools - capabilities of ProGramerly, laid out the Ai-OS way
-    dome: { name: 'The Ionity DOME', sub: 'Five strata · 24 segments · the sets behind them', builtin: 'dome', hue: '#00c8f0', scope: 'all', desc: 'The workstation as structure, drillable, with the local model reporting from the real sets.' },
-    reading: { name: 'Reading', sub: 'OCR engines · local vision models', builtin: 'ocr', scope: 'vision', hue: '#8b7cf5', desc: 'Turn a page, a screenshot or a PDF into text - on this machine, with the reader you choose.' },
-    fans: { name: 'Fan control', sub: 'Channels · curves · thermal sources', builtin: 'fans', tool: 'fanzi', hue: '#00c8f0', scope: 'thermal', desc: 'Every fan channel, the curves that drive them, and what each would command right now.' },
+    dome: { name: 'The Ionity DOME', sub: 'Five strata · 25 segments · live sets', builtin: 'dome', hue: '#00c8f0', scope: 'all', desc: 'The workstation as structure. Drill in. Ask AEDi.' },
+    relations: { name: 'Relations', sub: 'Processes · ports · services · models · repos, as one graph', builtin: 'relations', hue: '#2f7ff0', scope: 'all', desc: 'Everything running, seen and unseen, and how it connects.' },
+    envs: { name: 'Environments', sub: 'venv · uv · conda · Node · Docker', builtin: 'envs', hue: '#8b7cf5', scope: 'toolchain', desc: 'Make one in a sentence. Real commands, real folders.' },
+    system: { name: 'System', sub: 'Processes · services · startup · ports', builtin: 'system', hue: '#a9762d', scope: 'system', desc: 'End, stop, restart, disable - one click each.' },
+    reading: { name: 'Reading', sub: 'OCR engines · local vision models', builtin: 'ocr', scope: 'vision', hue: '#8b7cf5', desc: 'Page, screenshot or PDF → text. On this machine.' },
+    fans: { name: 'Fan control', sub: 'Channels · curves · thermal sources', builtin: 'fans', tool: 'fanzi', hue: '#00c8f0', scope: 'thermal', desc: 'Every channel, its curve, and what it commands now.' },
     cic: { name: 'CiC', sub: 'Central Ionity Control', tool: 'cic', launch: true, hue: '#0e9ab8', desc: 'The IONITY CiC workstation utility.' },
     mcp: { name: 'MCP audit', sub: 'Internal side tool · maintainers', tool: 'mcp-audit', launch: true, side: true, hue: '#8b7cf5', desc: 'Internal. Asks before it runs.' },
     about: { name: 'About ProGramerly', sub: 'Ionity (Pty) Ltd · AEDI', about: true, hue: '#00c8f0', desc: '' },
   };
-  const TILE_ORDER = ['dome', 'software', 'ai', 'reading', 'projects', 'fans', 'cic', 'monitor'];
+  const TILE_ORDER = ['dome', 'relations', 'ai', 'envs', 'system', 'software', 'reading', 'projects', 'fans', 'cic', 'monitor'];
 
   /* One hue per stratum. The dome, its legend and every segment icon carry it,
      so the deck reads as five subjects rather than five grey rings. */
@@ -235,9 +241,11 @@
   // Wrap renderer.js navigation: any showTab() from a button inside a
   // workspace now lands in the app window too.
   showTab = function shellShowTab(tab) {
-    if (!VIEWS[tab]) return;
+    if (!VIEWS[tab] && !APPS[tab]) return;
     openApp(tab);
   };
+  // Built-in surfaces can hand off to one another (Relations → Environments).
+  window.PGShell = { openApp, closeApp, toast };
 
   async function launchTool(toolId, button) {
     const tool = tools.find((t) => t.id === toolId);
@@ -503,29 +511,32 @@
       preferredTarget = pickTarget(list);
       if (preferredTarget) {
         const idx = list.indexOf(preferredTarget); if (idx >= 0) $('aiTarget').value = String(idx);
-        $('engine-chip').className = ''; setText('engine-label', `Local core · ${preferredTarget.model}`);
+        $('engine-chip').className = ''; setText('engine-label', `AEDi · ${preferredTarget.model}`);
+        $('engine-chip').title = `AEDi - the Ionity local core. Powered by Ollama on this machine · model ${preferredTarget.model}`;
         $('ask-orb').classList.remove('off'); $('ask-send').disabled = false;
-        $('ask-input').placeholder = `Ask ${preferredTarget.model}, or type a workspace name… (Ctrl+K)`;
+        $('ask-input').placeholder = `Ask AEDi (${preferredTarget.model}), or type a workspace name… (Ctrl+K)`;
         showAiSetup(String(preferredTarget.model || '').startsWith(defaultModel().split(':')[0]) ? null : 'pull', `Add ${defaultModel()}`);
       } else if (ollama && ollama.up) {
-        $('engine-chip').className = 'off'; setText('engine-label', 'Local core · no model');
+        $('engine-chip').className = 'off'; setText('engine-label', 'AEDi · no model yet');
+        $('engine-chip').title = 'Ollama is running but holds no model - AEDi cannot answer until one is pulled';
         $('ask-orb').classList.add('off'); $('ask-send').disabled = true;
-        $('ask-input').placeholder = `Ollama is running - get ${defaultModel()} to ask here (Ctrl+K opens a workspace)`;
-        showAiSetup('pull', `Get ${defaultModel()} (~1.3 GB)`);
+        $('ask-input').placeholder = `AEDi needs a model - get ${defaultModel()} to ask here`;
+        showAiSetup('pull', `Get ${defaultModel()}`);
       } else {
-        $('engine-chip').className = 'off'; setText('engine-label', 'Local core · offline');
+        $('engine-chip').className = 'off'; setText('engine-label', 'AEDi · offline');
+        $('engine-chip').title = 'AEDi runs on Ollama, which is not installed or not running on this machine';
         $('ask-orb').classList.add('off'); $('ask-send').disabled = true;
-        $('ask-input').placeholder = 'Type a workspace name, or set up local AI to ask questions here';
-        showAiSetup('install', 'Set up local AI');
+        $('ask-input').placeholder = 'Type a workspace name, or set up AEDi to ask questions here';
+        showAiSetup('install', 'Set up AEDi');
       }
     } catch {
-      $('engine-chip').className = 'off'; setText('engine-label', 'Local core · unavailable'); showAiSetup(null);
+      $('engine-chip').className = 'off'; setText('engine-label', 'AEDi · unavailable'); showAiSetup(null);
     }
     // Every surface that needs a model follows the same answer.
     const ready = Boolean(preferredTarget);
     const askBtn = $('aw-ask-btn'); if (askBtn) askBtn.disabled = !ready;
     document.querySelectorAll('#suggest .preset-chip').forEach((b) => { b.disabled = !ready; });
-    setText('om-model', ready ? `${preferredTarget.model} · on this machine` : 'no local model yet');
+    setText('om-model', ready ? `${preferredTarget.model} · Ollama on this machine` : 'no local model yet');
     paintOptions();
   }
   async function runAiSetup() {
@@ -534,12 +545,12 @@
       ['ollama', 'ollama-small'].forEach((id) => { if (CATALOG.items.some((i) => i.id === id)) selected.add(id); });
       renderItems();
       openApp('software');
-      toast('Ollama and the starter model are ticked - press Install.', 'good');
+      toast('AEDi core (Ollama) and the starter model are ticked - press Install.', 'good');
       return;
     }
     if (aiSetup === 'pull') {
       aiPulling = true; showAiSetup('busy', `Pulling ${model}…`); $('ask-orb').classList.add('busy');
-      toast(`Pulling ${model} - progress is in the Local AI log.`);
+      toast(`Pulling ${model} for AEDi - progress is in the AEDi log.`);
       try {
         const r = await api.aiPull(model);
         toast(r && r.ok ? `${model} is on this machine.` : `Pull failed: ${(r && (r.error || r.code)) || 'unknown'}`, r && r.ok ? 'good' : 'bad');
@@ -648,7 +659,7 @@
       toast(aiSetup === 'install' ? 'Set up local AI first - one click on the chip below.' : `Get ${defaultModel()} to have the machine read itself.`, 'bad');
       return;
     }
-    if (briefBusy) { toast('The local core is still reporting.'); return; }
+    if (briefBusy) { toast('AEDi is still reporting.'); return; }
     briefBusy = true;
     const id = presetId || shellSettings.aiBriefPreset || 'state-of-machine';
     const preset = domePresets.find((p) => p.id === id);
@@ -747,7 +758,7 @@
         scope: app.scope,
         presetId: preset ? preset.id : undefined,
         box,
-        title: `${app.name} · local core`,
+        title: `${app.name} · AEDi`,
       });
     });
     extra.appendChild(b);
@@ -863,7 +874,7 @@
     ['tools', 'verifying the integrated tools…'],
     ['presets', 'loading the analysis presets…'],
     ['metrics', 'reading sensors and volumes…'],
-    ['core', 'waking the local core…'],
+    ['core', 'waking AEDi - the local core…'],
     ['dome', 'assembling the dome…'],
   ];
   const bootDone = new Set();

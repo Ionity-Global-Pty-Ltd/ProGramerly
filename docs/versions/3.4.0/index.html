@@ -106,10 +106,6 @@ h1 .grad{
 .btn-primary:hover{box-shadow:var(--shadow-lg)}
 .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--line)}
 .btn-ghost:hover{border-color:var(--accent)}
-.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:22px}
-.shots a{display:block;border-radius:14px;overflow:hidden;border:1px solid var(--line, rgba(128,128,128,.25));background:#0b1218}
-.shots img{display:block;width:100%;height:auto;transition:transform .35s ease}
-.shots a:hover img{transform:scale(1.02)}
 .relmeta{margin-top:20px;font-size:13px;color:var(--text-faint);min-height:19px}
 .relmeta a{color:var(--accent);text-decoration:none;font-weight:600}
 .relmeta a:hover{text-decoration:underline}
@@ -163,6 +159,7 @@ footer ul{list-style:none}
 <div class="veil" aria-hidden="true"></div>
 
 <div class="page">
+  <div style="background:#1a6ee6;color:#fff;text-align:center;padding:9px 14px;font:600 13px/1.4 'Segoe UI',system-ui,sans-serif">Archived page for ProGramerly 3.4.0 · <a href="../../" style="color:#fff;text-decoration:underline">the current version is here</a></div>
 
   <div class="topbar">
     <div class="wordmark">
@@ -179,12 +176,11 @@ footer ul{list-style:none}
   </div>
 
   <main class="hero">
-    <div class="badge"><span class="dot"></span> Ionity (Pty) Ltd · AEDI · Free forever · v3.5.0</div>
-    <h1>Your whole workstation, <span class="grad">seen and unseen</span></h1>
+    <div class="badge"><span class="dot"></span> Ionity (Pty) Ltd · AEDI · Free forever</div>
+    <h1>Your whole dev environment, <span class="grad">installed for you</span></h1>
     <p class="sub">
-      One free desktop app that installs a complete toolchain, watches the machine live, draws every
-      process, port, service, model and repository as one graph, makes environments from a sentence,
-      and answers through <b>AEDi</b> — the Ionity local core, powered by Ollama on your own machine.
+      Runtimes, editors, SDKs, shells, databases and AI tooling — installed on Windows, macOS
+      or Linux in one run, then kept in sync and repaired for you.
     </p>
     <div class="actions">
       <a class="btn btn-primary" id="dlPrimary" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">
@@ -230,8 +226,8 @@ footer ul{list-style:none}
         </div>
         <div class="card">
           <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 15 9l7 3-7 3-3 7-3-7-7-3 7-3 3-7z"/></svg></div>
-          <h3>AEDi, on first run</h3>
-          <p>Tick <em>AEDi local core</em> in Software and Ollama plus a starter model are installed with everything else. The chip in the top bar always says which model is answering — or that none is yet. Nothing leaves the machine.</p>
+          <h3>AI tooling, first class</h3>
+          <p>The AI profile brings MCP servers, model runners and agent tooling in one pass instead of a weekend of README archaeology.</p>
         </div>
         <div class="card">
           <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div>
@@ -241,55 +237,9 @@ footer ul{list-style:none}
         <div class="card">
           <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 18v3"/><path d="m7 9 3 2-3 2"/><path d="M12 13h4"/></svg></div>
           <h3>The Ai-OS shell and the DOME</h3>
-          <p>ProGramerly opens in the IONITY Ai-OS operator layout: one ask box wired to AEDi, the workstation DOME — five strata, 26 segments, drillable — stats, tiles and a dock. Every percentage on the dome says whether it is <em>measured</em>, <em>computed</em>, an <em>assessment</em> or <em>state</em>; nothing is scored from a constant.</p>
+          <p>ProGramerly opens in the IONITY Ai-OS operator layout: one ask box wired to the local model, the workstation DOME — five strata, 24 segments, drillable — stats, tiles and a dock. Every workspace and every Ionity tool opens as an app window over it.</p>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="sheet" id="new">
-    <div class="wrap">
-      <h2>New in 3.5.0 — less text, more action</h2>
-      <p class="lede">Three new workspaces, one honest AI, and a rebuilt intro in Ionity Global branding.</p>
-      <div class="grid">
-        <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.6"/><circle cx="4.5" cy="6" r="2"/><circle cx="19.5" cy="6" r="2"/><circle cx="4.5" cy="18" r="2"/><circle cx="19.5" cy="18" r="2"/><path d="M6.3 7.2l3.8 3.2M17.7 7.2l-3.8 3.2M6.3 16.8l3.8-3.2M17.7 16.8l-3.8-3.2"/></svg></div>
-          <h3>Relations</h3>
-          <p>The machine as a living graph: processes (including the session-0 ones a task list hides), listening ports, services, volumes, Ollama and its models, environments and repositories — joined by the relations that exist right now, drawn as gradient paths with flow. Click anything: its facts, its actions, and <em>Ask AEDi</em> about it.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></div>
-          <h3>Environments</h3>
-          <p>Make a Python venv, a uv venv, a conda env, a Node project or a Docker compose stack — by hand, or by telling AEDi what you need and confirming the recipe it drafts. Real commands stream back; nothing is reported as created until its marker file is there. Packages, freeze, compose up/down, terminal here, remove.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 9h4M7 12h7"/></svg></div>
-          <h3>System — seen and unseen</h3>
-          <p>Every process, every service, every startup entry (Run keys, Startup folders, scheduled tasks) and every listening socket, read from the OS itself. End a process, start / stop / restart a service, disable a startup entry — it is backed up first and can be put back with one click.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 15 9l7 3-7 3-3 7-3-7-7-3 7-3 3-7z"/></svg></div>
-          <h3>AEDi is honest about what it is</h3>
-          <p>AEDi is the Ionity intelligence layer; Ollama is the engine under it, and the app says so everywhere the name appears. When no model is present the ask box, the orb and every Ask button say so — there is no canned answer, anywhere.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17a9 9 0 0 1 18 0"/><path d="M2 17h20"/></svg></div>
-          <h3>No simulated data</h3>
-          <p>Every DOME score now names its source. Two segments that were silently dead (Doctor findings, reclaimable space) read again. The resolver segment probes winget, Chocolatey, Homebrew and uv. The standby list is read from the real performance counters. A model pull that fails says <em>failed</em>, never <em>skipped</em>.</p>
-        </div>
-        <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"/></svg></div>
-          <h3>Verified on the real application</h3>
-          <p>Every release boots the actual Electron app on GitHub's runners and drives it — 33 checks, including creating and removing a real venv through the surface. The screenshots below are from that run.</p>
-        </div>
-      </div>
-      <div class="shots">
-        <a href="screenshots/3.5.0/ui-350-relations.png"><img src="screenshots/3.5.0/ui-350-relations.png" alt="Relations - the machine as a graph" loading="lazy"></a>
-        <a href="screenshots/3.5.0/ui-350-envs.png"><img src="screenshots/3.5.0/ui-350-envs.png" alt="Environments maker" loading="lazy"></a>
-        <a href="screenshots/3.5.0/ui-350-system.png"><img src="screenshots/3.5.0/ui-350-system.png" alt="System - ports, processes, services" loading="lazy"></a>
-        <a href="screenshots/3.5.0/intro-dome.png"><img src="screenshots/3.5.0/intro-dome.png" alt="The Ionity DOME intro" loading="lazy"></a>
-      </div>
-      <p class="relmeta" style="text-align:left;margin-top:14px"><a href="versions/">Older versions of this page</a> · <a href="RELEASE-3.5.0.md">Release notes 3.5.0</a> · <a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases">Every release</a></p>
     </div>
   </section>
 
@@ -356,12 +306,12 @@ footer ul{list-style:none}
         <div class="suite">
           <div class="glyph">DOME</div>
           <h3>The DOME, and what it can see</h3>
-          <p>The machine as navigable structure: Hardware, System, Storage, Toolchain, Intelligence — 26 segments, each bound to a real data set, scored live. 34 sets are registered as readable by AEDi, each tagged <em>measured</em>, <em>catalogue</em>, <em>manifest</em>, <em>state</em> or <em>computed</em>, so every figure it quotes can be traced. Fourteen standing presets — including <em>what is running, seen and unseen</em> and <em>what starts by itself</em>.</p>
+          <p>The machine as navigable structure: Hardware, System, Storage, Toolchain, Intelligence — 25 segments, each bound to a real data set, scored live. 29 sets are registered as readable by the local model, each tagged <em>measured</em>, <em>catalogue</em>, <em>manifest</em>, <em>state</em> or <em>computed</em>, so every figure it quotes can be traced. Eleven standing presets ask the questions worth asking the same way twice.</p>
         </div>
         <div class="suite">
           <div class="glyph">AI</div>
-          <h3>AEDi — local AI, ready on first run</h3>
-          <p>AEDi answers through Ollama with a small default model (<code>llama3.2:1b</code>, about 1.3&nbsp;GB, runs on CPU) so the copilot answers on a laptop without sending anything anywhere. Gemma is first class — <code>gemma4:e2b</code> for everyday work, <code>gemma3:1b</code> for quick triage, <code>gemma4:e4b</code> where the memory is there — and every curated model declares what it is for: chat, code, reasoning, vision or embeddings.</p>
+          <h3>Local AI, ready on first run</h3>
+          <p>Ollama with a small default model (<code>llama3.2:1b</code>, about 1.3&nbsp;GB, runs on CPU) so the copilot answers on a laptop without sending anything anywhere. Gemma is first class — <code>gemma4:e2b</code> for everyday work, <code>gemma3:1b</code> for quick triage, <code>gemma4:e4b</code> where the memory is there — and every curated model declares what it is for: chat, code, reasoning, vision or embeddings.</p>
         </div>
         <div class="suite">
           <div class="glyph">OCR</div>
@@ -393,9 +343,7 @@ footer ul{list-style:none}
           <li><a href="https://www.ionity.world">ionity.world — profile</a></li>
           <li><a href="https://www.ionity.fun">www.ionity.fun — this page</a></li>
           <li><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly">github.com/Ionity-Global-Pty-Ltd/ProGramerly</a></li>
-          <li><a href="AI-AND-ML.md">The AI and ML structure</a></li>
-          <li><a href="RELEASE-3.5.0.md">Release notes 3.5.0</a></li>
-          <li><a href="versions/">Older versions of this page</a></li>
+          <li><a href="../../AI-AND-ML.md">The AI and ML structure</a></li>
           <li><a href="#suite">What is inside</a></li>
         </ul>
       </div>

@@ -54,6 +54,8 @@ const services = {
   get ocr() { return require('./ocr'); },
   get programs() { return require('./programs'); },
   get settings() { return require('./settings'); },
+  get system() { return require('./system'); },
+  get envs() { return require('./envs'); },
   get sync() { return require('./sync'); },
   get openrgb() { return require('./openrgb'); },
 };
@@ -124,7 +126,7 @@ const READERS = {
 
   async metrics() {
     const m = services.metrics.snapshot();
-    if (!m) return gone('No metrics sample yet.');
+    if (!m || !m.at) return gone('No metrics sample has been taken yet.');
     return ok([{
       host: m.host, platform: m.platform, uptimeSec: m.uptimeSec,
       cpuLoadPct: m.cpu && m.cpu.load, cpuCores: m.cpu && m.cpu.cores, cpuMHz: m.cpu && m.cpu.speedMHz,
@@ -136,7 +138,7 @@ const READERS = {
 
   async disks() {
     const m = services.metrics.snapshot();
-    const rows = (m && Array.isArray(m.disks) ? m.disks : [])
+    const rows = (m && m.at && Array.isArray(m.disks) ? m.disks : [])
       .map((d) => ({ name: d.name, usedPct: d.usedPct, freeBytes: d.free, totalBytes: d.total }));
     return rows.length ? ok(rows) : gone('No volume data in the current sample.');
   },
@@ -181,7 +183,7 @@ const READERS = {
 
   async doctorFindings() {
     const r = await services.doctor.diagnose();
-    const rows = (r && (r.items || r.findings || r.rows)) || [];
+    const rows = (r && (r.results || r.items || r.findings || r.rows)) || [];
     return Array.isArray(rows) && rows.length ? ok(rows.map((x) => ({
       id: x.id, title: x.title || x.name, status: x.status || x.state, detail: x.detail || x.desc, fix: x.fix || x.action,
     }))) : gone('The diagnostic pass returned no items.');
@@ -189,7 +191,7 @@ const READERS = {
 
   async reclaim() {
     const r = await services.doctor.cleanupPreview();
-    const rows = (r && (r.items || r.candidates || r.rows)) || [];
+    const rows = (Array.isArray(r) ? r : (r && (r.items || r.candidates || r.rows))) || [];
     return Array.isArray(rows) && rows.length ? ok(rows.map((x) => ({
       label: x.label || x.name, path: x.path, bytes: x.bytes ?? x.size,
     }))) : gone('Nothing measurable to reclaim was found.');
@@ -283,9 +285,9 @@ const READERS = {
   async envs() {
     const e = await services.ai.environments(ctx.devRoot());
     const rows = [];
-    for (const v of (e && e.venvs) || []) rows.push({ kind: 'venv', name: v.name, path: v.path, python: v.python });
-    for (const c of (e && e.conda) || []) rows.push({ kind: 'conda', name: c.name, path: c.path });
-    for (const n of (e && e.node) || []) rows.push({ kind: 'node', name: n.version || n.name, path: n.path, current: n.current });
+    for (const v of (e && e.venvs) || []) rows.push({ kind: v.kind || 'venv', name: v.name, path: v.dir || v.path, python: v.python || v.version || null });
+    for (const c of (e && e.conda) || []) rows.push({ kind: 'conda', name: c.name, path: c.dir || c.path, python: c.python || null });
+    for (const n of (e && e.node) || []) rows.push({ kind: 'node', name: `${n.manager || 'node'} ${n.version || ''}`.trim(), path: n.path || null, current: n.current });
     return rows.length ? ok(rows) : gone('No environments found under the development root.');
   },
 
@@ -313,7 +315,38 @@ const READERS = {
     const items = ((cat && cat.items) || []).filter((i) => i.group === 'mcp' || /mcp/i.test(i.id));
     const installed = new Set(services.settings.get('installedIds') || []);
     if (!items.length) return gone('No MCP entries in the catalogue.');
-    return ok(items.map((i) => ({ id: i.id, name: i.name, installed: installed.has(i.id) })));
+    return ok(items.map((i) => ({ id: i.id, name: i.name, installed: installed.has(i.id) })), { reader: 'catalogue + installedIds - the client config files themselves are not read' });
+  },
+
+  async processes() {
+    const r = await services.system.processes();
+    if (!r.available) return gone(r.reason);
+    return ok(r.rows.map((p) => ({ pid: p.pid, ppid: p.ppid, name: p.name, path: p.path, rss: p.rss, cpuSec: p.cpuSec, cpuPct: p.cpuPct, hidden: p.hidden, user: p.user, company: p.company })), { reader: r.source });
+  },
+
+  async services() {
+    const r = await services.system.services();
+    if (!r.available) return gone(r.reason);
+    return ok(r.rows.map((x) => ({ name: x.name, label: x.label, state: x.state, start: x.start, pid: x.pid, path: x.path, account: x.account, os: x.microsoft })), { reader: r.source });
+  },
+
+  async startup() {
+    const r = await services.system.startup();
+    if (!r.available) return gone(r.reason);
+    return ok(r.rows.map((x) => ({ kind: x.kind, source: x.source, scope: x.scope, name: x.name, command: x.command, enabled: x.enabled })), { reader: r.source });
+  },
+
+  async listeners() {
+    const r = await services.system.listeners();
+    if (!r.available) return gone(r.reason);
+    return ok(r.rows, { reader: r.source });
+  },
+
+  async envsAll() {
+    const r = await services.envs.list();
+    const rows = (r && r.rows) || [];
+    return rows.length ? ok(rows.map((x) => ({ kind: x.kind, name: x.name, dir: x.dir, python: x.python, status: x.status, deps: x.deps })), { roots: r.roots })
+      : gone('No environments under the development root.');
   },
 
   async selfDatasets() {
@@ -375,6 +408,14 @@ function presets(scope) {
 
 /* ----------------------------------------------------------- readiness */
 
+/* Score sources - the word next to every percentage on the dome:
+     measured   = a raw reading rescaled (free memory, VRAM, disk headroom)
+     computed   = derived from real readings by a stated formula
+     assessment = a judgement bucket (present / absent / both)
+     state      = what this install recorded
+     manifest   = pinned digests
+     catalogue  = shipped data
+   A percentage is only ever 'measured' when the underlying set is. */
 const pct = (v) => (v == null ? null : Math.max(0, Math.min(100, Math.round(v))));
 const scoreOf = (value, level, label, source, detail) => ({ value: pct(value), level, label, source, detail: detail || null });
 const IDLE = (label, source = 'measured', detail = null) => ({ value: null, level: 'idle', label, source, detail });
@@ -391,7 +432,7 @@ const SCORERS = {
     // Headroom against a 95 °C ceiling, floored at 30.
     const headroom = ((95 - hottest) / (95 - 30)) * 100;
     const level = hottest >= 88 ? 'err' : hottest >= 75 ? 'warn' : 'ok';
-    return scoreOf(headroom, level, `${Math.round(hottest)} °C hottest`, 'measured', `${temps.length || 1} temperature source(s)`);
+    return scoreOf(headroom, level, `${Math.round(hottest)} °C hottest`, 'computed', `${temps.length || 1} temperature source(s) · headroom to a 95 °C ceiling`);
   },
 
   async airflow(get) {
@@ -403,20 +444,20 @@ const SCORERS = {
     const controllable = chans.filter((x) => x.controllable).length;
     const value = (controllable / chans.length) * 100;
     const level = spinning === 0 ? 'err' : controllable === 0 ? 'warn' : 'ok';
-    return scoreOf(value, level, `${spinning}/${chans.length} spinning`, 'measured', `${controllable} controllable`);
+    return scoreOf(value, level, `${spinning}/${chans.length} spinning`, 'computed', `${controllable} controllable · share of channels with a curve`);
   },
 
   async power(get) {
     const s = await get('sensors.tree');
     const rows = (s.rows || []).filter((r) => (r.type === 'Voltage' || r.type === 'Power') && r.value != null);
     if (!rows.length) return IDLE('no rail data', 'measured', s.reason || 'The board exposes no voltage or power sensors.');
-    return scoreOf(100, 'ok', `${rows.length} rails reported`, 'measured');
+    return scoreOf(100, 'ok', `${rows.length} rails reported`, 'computed', 'present/absent only - a rail count is not a health reading');
   },
 
   async lighting(get) {
     const r = await get('rgb.devices');
     if (!r.available) return IDLE('not connected', 'measured', r.reason);
-    return scoreOf(100, 'ok', `${(r.rows || []).length} device(s)`, 'measured');
+    return scoreOf(100, 'ok', `${(r.rows || []).length} device(s)`, 'computed', 'connected/not connected only');
   },
 
   async 'memory-phys'(get) {
@@ -424,16 +465,16 @@ const SCORERS = {
     const row = (m.rows || [])[0];
     if (!row || row.memUsedPct == null) return IDLE('no sample', 'measured');
     const level = row.memUsedPct >= 92 ? 'err' : row.memUsedPct >= 80 ? 'warn' : 'ok';
-    return scoreOf(100 - row.memUsedPct, level, `${Math.round(row.memUsedPct)}% in use`, 'measured', 'free share of installed memory');
+    return scoreOf(100 - row.memUsedPct, level, `${Math.round(row.memUsedPct)}% in use`, 'measured', 'free share of installed memory, from the live sample');
   },
 
   async privilege(get) {
     const p = await get('system.privilege');
     const row = (p.rows || [])[0] || {};
-    if (row.platform !== 'win32') return scoreOf(100, 'ok', 'prompts when needed', 'measured');
+    if (row.platform !== 'win32') return scoreOf(100, 'ok', 'prompts when needed', 'state');
     return row.elevated
-      ? scoreOf(100, 'ok', 'administrator', 'measured', 'installers inherit this token')
-      : scoreOf(50, 'warn', 'standard user', 'measured', 'admin items will prompt or skip');
+      ? scoreOf(100, 'ok', 'administrator', 'state', 'installers inherit this token')
+      : scoreOf(50, 'warn', 'standard user', 'state', 'admin items will prompt or skip');
   },
 
   async registry(get) {
@@ -443,13 +484,13 @@ const SCORERS = {
     const actionable = rows.filter((x) => x.status === 'actionable').length;
     const level = actionable > 6 ? 'warn' : 'ok';
     return scoreOf(rows.length ? ((rows.length - actionable) / rows.length) * 100 : 100, level,
-      `${actionable} actionable`, 'measured', `${rows.length} documented fixes`);
+      `${actionable} actionable`, 'computed', `${rows.length} documented fixes · share already correct`);
   },
 
   async 'services-ports'(get) {
     const p = await get('ports.listeners');
     if (!p.available) return IDLE(p.rows && p.rows.length === 0 && !p.reason ? 'clear' : 'not scanned', 'measured', p.reason);
-    return scoreOf(100, 'ok', `${(p.rows || []).length} listener(s)`, 'measured');
+    return scoreOf(100, 'ok', `${(p.rows || []).length} listener(s)`, 'computed', 'scan completed - listener count is information, not a score');
   },
 
   async 'env-path'(get) {
@@ -458,7 +499,7 @@ const SCORERS = {
     const rows = e.rows || [];
     const found = rows.filter((t) => t.found || t.version || t.path).length;
     return scoreOf(rows.length ? (found / rows.length) * 100 : null, found === rows.length ? 'ok' : 'warn',
-      `${found}/${rows.length} resolved`, 'measured');
+      `${found}/${rows.length} resolved`, 'computed', 'share of probed tools on PATH');
   },
 
   async 'health-scan'(get) {
@@ -469,7 +510,25 @@ const SCORERS = {
     const warn = rows.filter((x) => /warn|attention/i.test(String(x.status || ''))).length;
     const level = bad ? 'err' : warn ? 'warn' : 'ok';
     return scoreOf(rows.length ? ((rows.length - bad - warn) / rows.length) * 100 : 100, level,
-      bad || warn ? `${bad} failed · ${warn} warned` : `${rows.length} clean`, 'measured');
+      bad || warn ? `${bad} failed · ${warn} warned` : `${rows.length} clean`, 'computed', 'share of checks that passed');
+  },
+
+  async processes(get) {
+    const p = await get('system.processes');
+    if (!p.available) return IDLE('not read', 'measured', p.reason);
+    const s = await get('system.services');
+    const st = await get('system.startup');
+    const procs = p.rows || [];
+    const hidden = procs.filter((x) => x.hidden).length;
+    const running = (s.rows || []).filter((x) => x.state === 'running');
+    const nonOs = running.filter((x) => !x.os).length;
+    const starts = (st.rows || []).filter((x) => x.enabled).length;
+    const level = starts > 12 ? 'warn' : 'ok';
+    // Information, not a health figure: the value is the share of running
+    // processes that are visible to the operator, so "unseen" is one glance.
+    return scoreOf(procs.length ? ((procs.length - hidden) / procs.length) * 100 : null, level,
+      `${procs.length} processes · ${hidden} unseen`, 'computed',
+      `${running.length} services running (${nonOs} not OS) · ${starts} startup entries · visible share of processes`);
   },
 
   async volumes(get) {
@@ -478,7 +537,7 @@ const SCORERS = {
     if (!rows.length) return IDLE('no volumes', 'measured', d.reason);
     const worst = Math.max(...rows.map((x) => Number(x.usedPct) || 0));
     const level = worst >= 92 ? 'err' : worst >= 82 ? 'warn' : 'ok';
-    return scoreOf(100 - worst, level, `${Math.round(worst)}% on the fullest`, 'measured', `${rows.length} volume(s)`);
+    return scoreOf(100 - worst, level, `${Math.round(worst)}% on the fullest`, 'measured', `${rows.length} volume(s) · free share of the fullest`);
   },
 
   async devroot(get) {
@@ -494,7 +553,7 @@ const SCORERS = {
     const bytes = (r.rows || []).reduce((a, x) => a + (Number(x.bytes) || 0), 0);
     const gb = bytes / 1e9;
     const level = gb >= 20 ? 'warn' : 'ok';
-    return scoreOf(Math.max(0, 100 - gb * 2), level, `${gb.toFixed(1)} GB reclaimable`, 'measured', `${(r.rows || []).length} candidates`);
+    return scoreOf(Math.max(0, 100 - gb * 2), level, `${gb.toFixed(1)} GB reclaimable`, 'computed', `${(r.rows || []).length} candidates · 2 points per GB`);
   },
 
   async payload(get) {
@@ -502,10 +561,13 @@ const SCORERS = {
     const rows = p.rows || [];
     if (!rows.length) return IDLE('no payload', 'manifest');
     const bad = rows.filter((x) => x.integrity === 'invalid').length;
+    const verified = rows.filter((x) => x.integrity === 'verified').length;
     const here = rows.filter((x) => x.available).length;
     const level = bad ? 'err' : here === rows.length ? 'ok' : 'warn';
-    return scoreOf((here / rows.length) * 100, level, `${here}/${rows.length} in this build`, 'manifest',
-      bad ? `${bad} failed their pin` : 'all pins match');
+    const detail = bad ? `${bad} failed their pin`
+      : verified === rows.length ? 'all pins hashed and matched'
+        : `${verified} hashed · ${here - verified} size-matched, hashed on first launch`;
+    return scoreOf((here / rows.length) * 100, level, `${here}/${rows.length} in this build`, 'manifest', detail);
   },
 
   async catalogue(get) {
@@ -537,11 +599,11 @@ const SCORERS = {
   async resolvers(get) {
     const e = await get('env.resolved');
     if (!e.available) return IDLE('not scanned', 'measured', e.reason);
-    const want = WIN ? ['winget', 'choco', 'npm', 'pip'] : ['brew', 'npm', 'pip'];
+    const want = WIN ? ['winget', 'choco', 'npm', 'pip'] : process.platform === 'darwin' ? ['brew', 'npm', 'pip'] : ['apt|dnf|pacman', 'npm', 'pip'];
     const rows = e.rows || [];
     const have = want.filter((w) => rows.some((t) => new RegExp(w, 'i').test(String(t.name || '')) && (t.found || t.version || t.path)));
     return scoreOf((have.length / want.length) * 100, have.length === want.length ? 'ok' : 'warn',
-      `${have.length}/${want.length} engines`, 'measured', have.join(', ') || 'none resolved');
+      `${have.length}/${want.length} engines`, 'computed', have.join(', ') || 'none resolved');
   },
 
   async mcp(get) {
@@ -563,7 +625,7 @@ const SCORERS = {
     const value = 100 - (dirty / rows.length) * 25 - (behind / rows.length) * 35;
     const level = behind ? 'warn' : 'ok';
     return scoreOf(value, level, `${rows.length} repositor${rows.length === 1 ? 'y' : 'ies'}`,
-      'measured', `${dirty} with uncommitted work · ${behind} behind`);
+      'computed', `${dirty} with uncommitted work · ${behind} behind · weighted share`);
   },
 
   /* Reading a page locally needs one of two things, and they are not equal:
@@ -577,15 +639,15 @@ const SCORERS = {
     const engines = rows.filter((x) => x.kind === 'engine' && x.available);
     const models = rows.filter((x) => x.kind === 'vision' && x.available);
     if (!engines.length && !models.length) {
-      return scoreOf(0, 'err', 'nothing can read a page', 'measured',
+      return scoreOf(0, 'err', 'nothing can read a page', 'assessment',
         'Install the Tesseract engine or a tiny vision model from the Software workspace.');
     }
     const label = [
       engines.length ? `${engines.map((e) => e.name).join(', ')}` : 'no OCR engine',
       models.length ? `${models.length} vision model${models.length === 1 ? '' : 's'}` : 'no vision model',
     ].join(' · ');
-    if (engines.length && models.length) return scoreOf(100, 'ok', label, 'measured');
-    return scoreOf(55, 'warn', label, 'measured',
+    if (engines.length && models.length) return scoreOf(100, 'ok', label, 'assessment', 'both kinds of reader present');
+    return scoreOf(55, 'warn', label, 'assessment',
       engines.length ? 'No vision model: handwriting and awkward layouts will not read well.'
         : 'No OCR engine: every page goes through a model, which is slower and less literal.');
   },
@@ -595,8 +657,8 @@ const SCORERS = {
     if (!m.available) return IDLE('no models', 'measured', m.reason);
     const rows = m.rows || [];
     const loaded = rows.filter((x) => x.loaded).length;
-    return scoreOf(Math.min(100, rows.length * 25), 'ok', `${rows.length} model(s)`, 'measured',
-      loaded ? `${loaded} resident` : 'none resident');
+    return scoreOf(Math.min(100, rows.length * 25), 'ok', `${rows.length} model(s)`, 'computed',
+      `${loaded ? `${loaded} resident` : 'none resident'} · 25 points per model, capped`);
   },
 
   async accel(get) {
@@ -606,13 +668,13 @@ const SCORERS = {
     const free = rows.reduce((a, x) => a + (Number(x.vramFreeMb) || 0), 0);
     const total = rows.reduce((a, x) => a + (Number(x.vramTotalMb) || 0), 0);
     return scoreOf(total ? (free / total) * 100 : null, 'ok', `${(free / 1024).toFixed(1)} GB free`, 'measured',
-      rows.map((x) => x.name).join(', '));
+      `${rows.map((x) => x.name).join(', ')} · free share of VRAM`);
   },
 
   async pyenv(get) {
     const e = await get('python.envs');
     if (!e.available) return IDLE('not scanned', 'measured', e.reason);
-    return scoreOf(Math.min(100, (e.rows || []).length * 20), 'ok', `${(e.rows || []).length} environment(s)`, 'measured');
+    return scoreOf(Math.min(100, (e.rows || []).length * 20), 'ok', `${(e.rows || []).length} environment(s)`, 'computed', '20 points per environment, capped');
   },
 
   async datasets(get) {
@@ -625,7 +687,7 @@ const SCORERS = {
 
   async presets(get) {
     const p = await get('dome.presets');
-    return scoreOf(100, 'ok', `${(p.rows || []).length} presets`, 'catalogue', 'standing questions');
+    return scoreOf(null, 'ok', `${(p.rows || []).length} presets`, 'catalogue', 'standing questions - a count, not a score');
   },
 };
 

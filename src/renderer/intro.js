@@ -2,52 +2,18 @@
 /* ProGramerly - intro sequence
    Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
 
-   The IONITY LOADER v3.2 console intro, beat for beat: the charging beam with
-   its rising tone, the 6 kHz impact and quadruple flash, the block logo, the
-   typed subtitle, the loader bar with its status lines, then six pulses with
-   scattered stars at 4 kHz. Console.Beep was a square wave, so the audio here
-   is a square oscillator with a short envelope - same instrument. */
+   The IONITY LOADER beats - the charging beam with its rising tone, the
+   impact and flash, the wordmark, the typed line, the DOME assembling from
+   real facts, then the pulses - in Ionity Global branding. Console.Beep was a
+   square wave, so the audio here is a square oscillator with a short
+   envelope - same instrument, quieter. */
 
 const api = window.programerly;
 const $ = (id) => document.getElementById(id);
 
-/* The wordmark is drawn from blocks rather than typed with box-drawing
-   characters: the console original relied on a font that is not on every
-   machine, and a missing glyph turns the logo into rubble. Same shape, drawn
-   with rectangles, identical on every OS. */
-const GLYPHS = {
-  I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
-  O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
-  N: ['10001', '11001', '11001', '10101', '10011', '10011', '10001'],
-  T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
-  Y: ['10001', '10001', '01010', '00100', '00100', '00100', '00100'],
-};
-const WORD = 'IONITY';
-const CELL = 11;
-const GAP = 1.4;
-const LETTER_GAP = 2;
-
-function buildLogo() {
-  const cols = WORD.length * 5 + (WORD.length - 1) * LETTER_GAP;
-  const w = cols * CELL;
-  const h = 7 * CELL;
-  const rects = [];
-  let cursor = 0;
-  for (const ch of WORD) {
-    const rows = GLYPHS[ch];
-    rows.forEach((row, y) => {
-      [...row].forEach((bit, x) => {
-        if (bit !== '1') return;
-        rects.push(`<rect x="${((cursor + x) * CELL).toFixed(1)}" y="${(y * CELL).toFixed(1)}" `
-          + `width="${(CELL - GAP).toFixed(1)}" height="${(CELL - GAP).toFixed(1)}" rx="1" />`);
-      });
-    });
-    cursor += 5 + LETTER_GAP;
-  }
-  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${rects.join('')}</svg>`;
-}
-
-const SUBTITLE = 'ANYTHING IS POSSIBLE | BY CREATOR FOR CREATION';
+/* The wordmark is the IONITY GLOBAL mark itself (assets/ionity-mark.png),
+   revealed with a light sweep - the brand, not a console approximation of it. */
+const SUBTITLE = 'Building Tomorrow, Today.';
 
 /* The colour each stratum draws in. The dome is the first thing anyone sees,
    so it arrives in the palette the shell keeps using - not in grey. */
@@ -64,12 +30,14 @@ let CFG = {};
 
 function factFor(st) {
   switch (st.id) {
-    case 'hardware': return `${CFG.cores || '?'} threads · ${CFG.memGb || '?'} GB · ${CFG.disks || 0} volumes`;
-    case 'system': return `${CFG.os || 'this machine'}`;
-    case 'storage': return `${CFG.tools || 0}/${CFG.toolsTotal || 0} tools verified`;
-    case 'toolchain': return `${CFG.catalogue || 0} catalogue items · ${CFG.installed || 0} installed`;
-    case 'intelligence': return `${CFG.datasets || 0} data sets · ${CFG.presets || 0} presets`;
-    default: return `${st.segments} segments`;
+    // Only facts that were actually read are spoken. A missing read is an
+    // empty line, never a "0" dressed up as a count.
+    case 'hardware': return CFG.cores ? `${CFG.cores} threads · ${CFG.memGb} GB · ${CFG.disks ?? '–'} volumes` : '';
+    case 'system': return CFG.os || '';
+    case 'storage': return CFG.toolsTotal ? `${CFG.tools}/${CFG.toolsTotal} tools present` : '';
+    case 'toolchain': return CFG.catalogue ? `${CFG.catalogue} catalogue items · ${CFG.installed || 0} installed` : '';
+    case 'intelligence': return CFG.datasets ? `${CFG.datasets} data sets · ${CFG.presets} presets` : '';
+    default: return st.segments ? `${st.segments} segments` : '';
   }
 }
 
@@ -124,6 +92,20 @@ function impactThump() {
 }
 
 const wait = (ms) => new Promise((r) => { setTimeout(r, ms); });
+
+/** A timer-driven ease-out tween: apply(t) with t from 0 to 1 over ms. */
+function tween(ms, apply) {
+  const t0 = performance.now();
+  const ease = (x) => 1 - (1 - x) ** 3;
+  return new Promise((resolve) => {
+    const tick = () => {
+      const t = Math.min(1, (performance.now() - t0) / ms);
+      apply(ease(t));
+      if (t < 1 && !finished) setTimeout(tick, 16); else { apply(1); resolve(); }
+    };
+    tick();
+  });
+}
 
 /* ----------------------------------------------------------------- stars -- */
 
@@ -201,7 +183,7 @@ async function impact() {
   beep(6000, 150, 0.07);
   impactThump();
   const flash = $('flash');
-  const colours = ['#ffffff', '#00c6ff', '#087f9e', '#03070d'];
+  const colours = ['#ffffff', '#1a6ee6', '#ff7a00', '#07080d'];
   for (const c of colours) {
     flash.style.background = c;
     flash.style.opacity = '0.92';
@@ -214,10 +196,8 @@ async function impact() {
 }
 
 async function revealLogo() {
-  const el = $('logo');
-  el.innerHTML = buildLogo();
-  el.classList.add('on');
-  await wait(150);
+  $('logo').classList.add('on');
+  await wait(420);
 }
 
 async function typeSubtitle() {
@@ -229,6 +209,8 @@ async function typeSubtitle() {
     await wait(9);
   }
   el.classList.add('done');
+  $('strap').classList.add('on');
+  await wait(220);
 }
 
 
@@ -247,13 +229,11 @@ function arcPath(r) {
  * through the CSSOM - a parsed style attribute would be dropped by the CSP.
  */
 async function assembleDome() {
-  const strata = Array.isArray(CFG.strata) && CFG.strata.length ? CFG.strata : [
-    { id: 'hardware', label: 'Hardware', strap: 'the machine itself', segments: 5 },
-    { id: 'system', label: 'System', strap: 'the operating system', segments: 5 },
-    { id: 'storage', label: 'Storage', strap: 'what is on disk', segments: 4 },
-    { id: 'toolchain', label: 'Toolchain', strap: 'the installed code base', segments: 5 },
-    { id: 'intelligence', label: 'Intelligence', strap: 'the local model layer', segments: 5 },
-  ];
+  // The strata come from the main process (dome.FRAMEWORK). If that read did
+  // not arrive there is nothing real to draw, so the dome is skipped rather
+  // than sketched from a stand-in.
+  const strata = Array.isArray(CFG.strata) && CFG.strata.length ? CFG.strata : [];
+  if (!strata.length) return;
 
   const wrap = $('domewrap');
   const arcs = $('arcs');
@@ -267,9 +247,8 @@ async function assembleDome() {
     const r = outer - i * step;
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', arcPath(r));
-    path.setAttribute('class', 'arc');
+    path.setAttribute('class', i === 0 ? 'arc outer' : 'arc');
     path.dataset.stratum = st.id;
-    path.style.stroke = STRATUM_HUE[st.id] || '#00c8f0';
     arcs.appendChild(path);
 
     const li = document.createElement('li');
@@ -280,8 +259,13 @@ async function assembleDome() {
   });
 
   wrap.classList.add('on');
+  wrap.style.opacity = '1'; wrap.style.transform = 'none';
   await wait(140);
 
+  /* Each arc is stroked in by a timer-driven tween rather than a CSS
+     transition: a window that is not being composited (a headless check, a
+     driver hiccup, a VM without a compositor) does not advance CSS
+     transitions, and the dome must still end up drawn. */
   for (let i = 0; i < strata.length; i += 1) {
     if (finished) break;
     const st = strata[i];
@@ -290,17 +274,16 @@ async function assembleDome() {
     const len = path.getTotalLength();
     path.style.strokeDasharray = `${len}`;
     path.style.strokeDashoffset = `${len}`;
-    // Force the starting offset to be committed before the transition begins.
-    void path.getBoundingClientRect();
-    path.style.transition = 'stroke-dashoffset .62s cubic-bezier(.22,1,.36,1), opacity .3s';
-    path.style.strokeDashoffset = '0';
+    path.style.opacity = '0.96';
     path.classList.add('on');
     li.classList.add('on');
+    li.style.opacity = '1'; li.style.transform = 'none';
     li.querySelector('em').textContent = factFor(st);
     $('status').textContent = `${st.label.toUpperCase()} · ${st.segments} segments · ${factFor(st)}`;
     beep(420 + i * 130, 42, 0.03);
+    tween(560, (t) => { path.style.strokeDashoffset = `${len * (1 - t)}`; });
     // eslint-disable-next-line no-await-in-loop
-    await wait(300);
+    await wait(380);
   }
 
   // The segment ring: one dot per segment, sweeping the apex arc.
@@ -320,14 +303,16 @@ async function assembleDome() {
       // eslint-disable-next-line no-await-in-loop
       if (i % 3 === 0) await wait(16);
       c.classList.add('on');
+      c.style.opacity = '0.9';
     }
     beep(2600, 60, 0.035);
     // The apex sits on the innermost arc, not at a guessed height.
     const apex = $('apex');
     apex.setAttribute('cx', String(CX));
     apex.setAttribute('cy', String(CY - (outer - (strata.length - 1) * step)));
-    apex.setAttribute('r', '5');
+    apex.setAttribute('r', '7');
     apex.classList.add('on');
+    apex.style.opacity = '1';
     $('status').textContent = `${total} SEGMENTS BOUND · ${CFG.datasets || 0} DATA SETS IN REACH`;
   }
 }
@@ -335,6 +320,7 @@ async function assembleDome() {
 async function finalPulse() {
   const logo = $('logo');
   $('colophon').classList.add('on');
+  const mark = $('watermark'); if (mark) mark.classList.add('on');
   if (CFG.version) {
     $('colo-meta').textContent = `v${CFG.version} · ${CFG.host || ''} · Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd`;
   }
@@ -347,7 +333,8 @@ async function finalPulse() {
     await wait(125);
   }
   logo.classList.remove('pulse-white');
-  $('status').textContent = '<......READY.....>';
+  $('status').textContent = 'AEDi · READY';
+  $('status').classList.add('ready');
 }
 
 async function play() {
@@ -355,7 +342,7 @@ async function play() {
     CFG = await api.introConfig() || {};
     sound = CFG.sound !== false;
   } catch { sound = true; CFG = {}; }
-  if (CFG.watermark === false) $('watermark').remove();
+  if (CFG.watermark === false) { const w = $('watermark'); if (w) w.remove(); }
 
   await chargingBeam();
   if (!finished) await impact();
@@ -363,7 +350,7 @@ async function play() {
   if (!finished) await typeSubtitle();
   if (!finished) await assembleDome();
   if (!finished) await finalPulse();
-  if (!finished) await wait(320);
+  if (!finished) await wait(650);
   done();
 }
 

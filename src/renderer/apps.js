@@ -131,7 +131,7 @@
             <div class="dome-actions">
               <button class="btn ghost" data-act="datasets">${GLYPHS.dataset}Data sets</button>
               <button class="btn ghost" data-act="refresh">Re-read</button>
-              <button class="btn primary" data-act="ask" data-scope="all">${GLYPHS.spark}Ask the model</button>
+              <button class="btn primary" data-act="ask" data-scope="all">${GLYPHS.spark}Ask AEDi</button>
             </div>
           </header>
           <p class="dome-note">${esc(s.sourceNote)}</p>
@@ -884,5 +884,5 @@
     },
   };
 
-  window.PGApps = { GLYPHS, dome, fans, ocr, esc, bytes };
+  window.PGApps = Object.assign(window.PGApps || {}, { GLYPHS, dome, fans, ocr, esc, bytes });
 })();
