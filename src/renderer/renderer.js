@@ -25,6 +25,11 @@ const SIZE_GB = {
   mongodb: 0.8, postgresql: 0.4, mysql: 0.5, sqlserver: 3.2, xampp: 0.6,
   'jetbrains-toolbox': 0.4, antigravity: 0.6, cursor: 0.5, windsurf: 0.5,
   arduino: 0.9, 'esp-embedded-extras': 0.4, 'react-native': 0.4, postman: 0.5,
+  'unity-hub': 1.2, godot: 0.15, blender: 0.45, freecad: 0.6, kicad: 3.0, slicers: 0.6,
+  libreoffice: 0.4, teams: 0.3, zoom: 0.2, 'slack-discord': 0.4, 'telegram-signal': 0.3,
+  whatsapp: 0.25, 'google-drive': 0.3, onedrive: 0.15, dropbox: 0.25, 'bun-deno': 0.2,
+  'node-toolbelt': 0.35, 'firebase-cli': 0.6, n8n: 0.5, 'github-extras': 0.4, archify: 0.3,
+  'claude-code-github': 0.05, bruno: 0.2, powertoys: 0.3,
 };
 const DEFAULT_GB = 0.18;
 
@@ -296,7 +301,46 @@ function updateFooter() {
   const gb = [...selected].reduce((sum, id) => sum + (SIZE_GB[id] ?? DEFAULT_GB), 0);
   $('selSize').textContent = n ? `~${gb < 1 ? `${Math.round(gb * 1000)} MB` : `${gb.toFixed(1)} GB`} to download` : '—';
   $('installBtn').disabled = n === 0;
+  scheduleForecastLine();
 }
+
+/* ------------------------------------------------------ AEDi Predict line */
+/* One line in the Software footer: the forecast for what is ticked, redone
+   half a second after the last tick. The full surface is the Predict app;
+   this is the glance. Facts are cached a minute in the main process, so a
+   re-forecast is cheap. */
+let forecastTimer = null;
+let forecastSeq = 0;
+function scheduleForecastLine() {
+  const el = $('selForecast'); if (!el || !api.predict) return;
+  clearTimeout(forecastTimer);
+  if (!selected.size) { el.textContent = 'forecast…'; el.title = 'AEDi Predict - tick something first'; return; }
+  el.textContent = 'forecasting…';
+  forecastTimer = setTimeout(async () => {
+    const seq = ++forecastSeq;
+    try {
+      const p = await api.predict.forecast([...selected]);
+      if (seq !== forecastSeq) return;
+      const risks = p.risks.filter((r) => r.level !== 'low').length;
+      const clean = Math.max(0, Math.round(p.count - p.likelihood.expectedFailures));
+      el.textContent = `AEDi Predict: ~${p.minutes.expected} min · ≈${clean}/${p.count} clean · ${risks ? `${risks} risk${risks === 1 ? '' : 's'}` : 'no risk found'}${p.facts.online ? '' : ' · offline'}`;
+      el.title = `${p.minutes.low}–${p.minutes.high} min (${p.minutes.class}) · ${p.disk.gb} GB (assumed) · ${p.disk.freeGb != null ? `${p.disk.freeGb} GB free (measured)` : ''} · open AEDi Predict for the item-by-item view`;
+      el.classList.toggle('warn', risks > 0 || p.likelihood.expectedFailures >= Math.max(1, p.count * 0.25));
+    } catch { if (seq === forecastSeq) el.textContent = 'forecast unavailable'; }
+  }, 500);
+}
+
+/* What the shell's surfaces may do with the Software selection. */
+window.PGSelection = {
+  get: () => [...selected],
+  has: (id) => selected.has(id),
+  add: (id) => {
+    if (!CATALOG || !CATALOG.items.some((i) => i.id === id) || selected.has(id)) return false;
+    selected.add(id); activeProfile = 'custom';
+    renderProfiles(); renderItems(); renderNav(); updateFooter();
+    return true;
+  },
+};
 
 function paintTally() {
   $('tallyOk').textContent = tally.ok;
@@ -1978,7 +2022,7 @@ window.addEventListener('resize', () => { if (activeTab === 'monitor') drawNetCh
   // apps.js (DOME, fans, reading), relations.js (the graph) and manage.js
   // (environments, system) each register their surfaces on window.PGApps;
   // the shell loads once all three have settled, loaded or not.
-  const SURFACES = ['apps.js', 'relations.js', 'manage.js'];
+  const SURFACES = ['apps.js', 'relations.js', 'manage.js', 'predict.js'];
   let pendingSurfaces = SURFACES.length;
   const afterApps = () => { if (--pendingSurfaces === 0) document.body.appendChild(shell); };
   const surfaceScripts = SURFACES.map((src) => {

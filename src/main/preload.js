@@ -238,6 +238,18 @@ contextBridge.exposeInMainWorld('programerly', {
     ask: (nodeId, question) => ipcRenderer.invoke('graph:ask', { nodeId, question }),
   },
 
+  /* ------------------------------------------------------- AEDi Predict */
+  predict: {
+    forecast: (ids) => ipcRenderer.invoke('predict:forecast', ids),
+    machine: () => ipcRenderer.invoke('predict:machine'),
+    suggest: (ids) => ipcRenderer.invoke('predict:suggest', ids),
+    history: () => ipcRenderer.invoke('predict:history'),
+    facts: (force) => ipcRenderer.invoke('predict:facts', force),
+    explain: (req) => ipcRenderer.invoke('predict:explain', req),
+    reset: () => ipcRenderer.invoke('predict:reset'),
+    onToken: (cb) => on('predict:token', cb),
+  },
+
   /* ------------------------------------------------------------- events */
   onLog: (cb) => on('install:log', cb),
   onItem: (cb) => on('install:item', cb),

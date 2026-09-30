@@ -65,6 +65,18 @@ function serverDefs() {
       command: uvx,
       args: ['mcp-server-time', '--local-timezone', 'Africa/Johannesburg'],
     },
+    // Firebase's own MCP server, served by firebase-tools. It talks to
+    // whatever project the user has selected with `firebase use`; nothing is
+    // signed in or selected by ProGramerly.
+    firebase: {
+      command: npx,
+      args: ['-y', 'firebase-tools@latest', 'experimental:mcp'],
+    },
+    // Terminal + file access for Claude Desktop, scoped to the dev root.
+    'desktop-commander': {
+      command: npx,
+      args: ['-y', '@wonderwhy-er/desktop-commander@latest'],
+    },
   };
 }
 

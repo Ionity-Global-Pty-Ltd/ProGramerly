@@ -1,0 +1,182 @@
+{
+  "at": "2026-09-29T07:20:18.617Z",
+  "platform": "linux",
+  "results": [
+    {
+      "pass": true,
+      "name": "the shell window is up",
+      "detail": "index.html"
+    },
+    {
+      "pass": true,
+      "name": "the DOME boot cleared on its milestones"
+    },
+    {
+      "pass": true,
+      "name": "the top bar carries the version",
+      "detail": "v3.6.0"
+    },
+    {
+      "pass": true,
+      "name": "the AEDi Predict tile is on the deck",
+      "detail": "dome relations ai predict envs system software reading projects fans cic monitor"
+    },
+    {
+      "pass": true,
+      "name": "the dock has a Predict button"
+    },
+    {
+      "pass": true,
+      "name": "predict.js registered its surface and renderer.js exposed the selection bridge"
+    },
+    {
+      "pass": true,
+      "name": "the catalog carries the \"Communication\" group"
+    },
+    {
+      "pass": true,
+      "name": "the catalog carries the \"Cloud Drives & Sync\" group"
+    },
+    {
+      "pass": true,
+      "name": "the catalog carries the \"Maker · CAD · PCB · 3D\" group"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"whatsapp\" is in the catalog and rightly absent on linux"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"google-drive\" is in the catalog and rightly absent on linux"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"onedrive\" is in the catalog and rightly absent on linux"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"dropbox\" is in the catalog and rightly absent on linux"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"gemini-cli\" is on the list"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"copilot-cli\" is on the list"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"claude-code-github\" is on the list"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"firebase-cli\" is on the list"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"archify\" is on the list"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"node-toolbelt\" is on the list"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"kicad\" is in the catalog and rightly absent on linux"
+    },
+    {
+      "pass": true,
+      "name": "catalog item \"unity-hub\" is in the catalog and rightly absent on linux"
+    },
+    {
+      "pass": true,
+      "name": "catalog 1.3.0 with 143+ items",
+      "detail": "143 items"
+    },
+    {
+      "pass": true,
+      "name": "the AI Dev profile ticks its items",
+      "detail": "31 selected"
+    },
+    {
+      "pass": true,
+      "name": "the Software footer forecasts the ticked selection",
+      "detail": "AEDi Predict: ~124 min · ≈24/31 clean · 4 risks"
+    },
+    {
+      "pass": true,
+      "name": "the forecast line names the class of its figures",
+      "detail": "81–211 min (assumed) · 20.7 GB (assumed) · 31 GB free (measured) · open AEDi Predict for the item-by-item view"
+    },
+    {
+      "pass": true,
+      "name": "the forecast for the selection was read",
+      "detail": "31 selected · online · 09:20 AM"
+    },
+    {
+      "pass": true,
+      "name": "four stat tiles: time, download, likelihood, learned share",
+      "detail": "Run time=124 min · Download=20.7 GB · Expected clean=≈24 of 31 · Learned share=0%"
+    },
+    {
+      "pass": true,
+      "name": "figures carry their class (measured / assumed at least)",
+      "detail": "assumed, computed, measured, learned"
+    },
+    {
+      "pass": true,
+      "name": "the item table lists the selection in run order, dependencies included",
+      "detail": "31 rows for 31 ticked"
+    },
+    {
+      "pass": true,
+      "name": "every item has a likelihood bar with a real width (CSP-safe)",
+      "detail": "31/31"
+    },
+    {
+      "pass": true,
+      "name": "the engines strip is read from PATH",
+      "detail": "brew:off npm:ok git:ok python:ok uv:ok code:off ollama:off java:ok administrator:ok"
+    },
+    {
+      "pass": true,
+      "name": "package hosts were probed with a TCP connect",
+      "detail": "winget CDN 143ms · Chocolatey 143ms · Homebrew 143ms · npm registry 143ms · GitHub 143ms"
+    },
+    {
+      "pass": true,
+      "name": "the machine card reads memory and disks",
+      "detail": "Machine forecast 5 samples · 0 h Trend lines need at least six samples over two hours of use; ProGramerly keeps one every five minutes while"
+    },
+    {
+      "pass": true,
+      "name": "the suggestions card is stated relations, not statistics",
+      "detail": "Belongs next stated relations, not statistics"
+    },
+    {
+      "pass": true,
+      "name": "clicking a suggestion adds it to the Software selection",
+      "detail": "ionity-assets · 31 → 32"
+    },
+    {
+      "pass": true,
+      "name": "the Explain (AEDi) action is offered"
+    },
+    {
+      "pass": true,
+      "name": "Explain answers with the model or states plainly that no model runs",
+      "detail": "No local model is running. Tick \"AEDi local core\" in Software, or pull a model in AEDi · Local AI."
+    },
+    {
+      "pass": true,
+      "name": "no uncaught renderer errors",
+      "detail": "none"
+    },
+    {
+      "pass": true,
+      "name": "no console errors",
+      "detail": "none"
+    }
+  ]
+}

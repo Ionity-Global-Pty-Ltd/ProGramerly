@@ -3,22 +3,22 @@
   "meta": {
     "title": "ProGramerly - Basic Coding Software for All",
     "documentId": "DOC-2026-09-002",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "governance": "Policy 986 AED",
     "author": "Johan Wilhelm van Antwerp",
     "organisation": "Ionity (Pty) Ltd | Antwerp Designs | AEDI",
     "web": "https://www.ionity.today",
-    "updated": "2026-09-06"
+    "updated": "2026-09-29"
   },
   "profiles": {
     "full": {
       "label": "Full Stack",
-      "desc": "Everything. Every app, every runtime, every SDK, every shell. ~45-70 GB, 60-120 min.",
+      "desc": "Everything. Every app, every runtime, every SDK, every shell, comms and drives. ~55-85 GB, 75-150 min.",
       "recommended": true
     },
     "ai": {
       "label": "AI Dev",
-      "desc": "Claude, MCP servers, local models, Node, Python, Git, VS Code. ~12-20 GB.",
+      "desc": "Claude, Gemini, Codex, Copilot, MCP servers, Firebase, local models, Node, Python, Git, VS Code. ~14-24 GB.",
       "recommended": false
     },
     "minimal": {
@@ -41,7 +41,7 @@
     {
       "id": "vcs",
       "label": "Source Control",
-      "desc": "Git and friends."
+      "desc": "Git, GitHub CLI, GitHub Desktop, GitKraken, lazygit."
     },
     {
       "id": "shells",
@@ -51,17 +51,17 @@
     {
       "id": "runtimes",
       "label": "Language Runtimes",
-      "desc": "Node, Python, .NET, Java, Go, Rust, C/C++."
+      "desc": "Node (fnm + system + toolbelt), Bun, Deno, Python, .NET, Java, Go, Rust, C/C++."
     },
     {
       "id": "ide",
       "label": "IDEs & Editors",
-      "desc": "Visual Studio, VS Code, Android Studio."
+      "desc": "Visual Studio, VS Code, Android Studio, Unity Hub, Godot."
     },
     {
       "id": "apps",
       "label": "Desktop Apps",
-      "desc": "Claude, Chrome, OBS, Canva, Obsidian, Notion, Miro."
+      "desc": "Claude, Chrome, OBS, Canva, Obsidian, Notion, Miro, PowerToys, LibreOffice."
     },
     {
       "id": "browser",
@@ -69,9 +69,19 @@
       "desc": "Chrome, Edge, Firefox Dev, ad blocking, Claude in Chrome."
     },
     {
+      "id": "comms",
+      "label": "Communication",
+      "desc": "WhatsApp, Teams, Zoom, Slack, Discord, Telegram, Signal. Installed, never signed in."
+    },
+    {
+      "id": "drives",
+      "label": "Cloud Drives & Sync",
+      "desc": "Google Drive, OneDrive, Dropbox, rclone. Installed - you sign in, ProGramerly never does."
+    },
+    {
       "id": "ai",
       "label": "AI CLIs & Models",
-      "desc": "Claude Code, Qwen Code, Ollama, LM Studio."
+      "desc": "Claude Code, Gemini CLI, Codex CLI, Copilot CLI, Ollama, LM Studio."
     },
     {
       "id": "ml",
@@ -104,6 +114,11 @@
       "desc": "Arduino IDE, arduino-cli, PlatformIO, ESP-IDF, MicroPython."
     },
     {
+      "id": "maker",
+      "label": "Maker · CAD · PCB · 3D",
+      "desc": "Blender, FreeCAD, KiCad, PrusaSlicer, Cura."
+    },
+    {
       "id": "apis",
       "label": "APIs & Testing",
       "desc": "Postman, Insomnia, HTTPie, Newman, OpenAPI tooling."
@@ -111,7 +126,7 @@
     {
       "id": "sdk",
       "label": "SDKs / ADKs / Cloud",
-      "desc": "Android SDK, Google ADK, Azure/AWS/GCP CLIs."
+      "desc": "Android SDK, Google ADK, Firebase, Azure/AWS/GCP CLIs, n8n."
     },
     {
       "id": "libs",
@@ -126,7 +141,7 @@
     {
       "id": "ionity",
       "label": "Ionity / AEDI",
-      "desc": "archify, brand assets, Policy 986 AED workspace."
+      "desc": "archify (Ionity fork), brand assets, Policy 986 AED workspace."
     }
   ],
   "items": [
@@ -326,6 +341,40 @@
         "brew": [
           "git-lfs"
         ]
+      }
+    },
+    {
+      "id": "github-extras",
+      "name": "GitKraken + lazygit",
+      "group": "vcs",
+      "desc": "A GUI and a TUI for the day the terminal is not enough.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "git"
+      ],
+      "win": {
+        "winget": [
+          "Axosoft.GitKraken",
+          "JesseDuffield.lazygit"
+        ],
+        "choco": [
+          "gitkraken",
+          "lazygit"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "formula": [
+            "lazygit"
+          ],
+          "cask": [
+            "gitkraken"
+          ]
+        },
+        "allowPartial": true
       }
     },
     {
@@ -590,6 +639,67 @@
         "yarn",
         "npm-check-updates"
       ]
+    },
+    {
+      "id": "node-toolbelt",
+      "name": "Node toolbelt (pm2, nodemon, vite, tsx, eslint, prettier, ncu, serve)",
+      "group": "runtimes",
+      "desc": "The globals every Node project reaches for: process manager, watcher, bundler, TS runner, linter, formatter, dependency updater, static server.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
+        "pm2",
+        "nodemon",
+        "vite",
+        "tsx",
+        "eslint",
+        "prettier",
+        "npm-check-updates",
+        "serve",
+        "http-server",
+        "concurrently",
+        "dotenv-cli"
+      ]
+    },
+    {
+      "id": "bun-deno",
+      "name": "Bun + Deno",
+      "group": "runtimes",
+      "desc": "The two other JavaScript runtimes.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Oven-sh.Bun",
+          "DenoLand.Deno"
+        ],
+        "choco": [
+          "bun",
+          "deno"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "oven-sh/bun/bun",
+          "deno"
+        ],
+        "allowPartial": true,
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "brew tap oven-sh/bun",
+            "allowFail": true
+          }
+        ]
+      }
     },
     {
       "id": "electron",
@@ -983,7 +1093,12 @@
             "PKief.material-icon-theme",
             "ms-vscode.hexeditor",
             "mechatroner.rainbow-csv",
-            "Gruntfuggly.todo-tree"
+            "Gruntfuggly.todo-tree",
+            "GitHub.copilot",
+            "GitHub.copilot-chat",
+            "Google.geminicodeassist",
+            "GoogleCloudTools.firebase-dataconnect-vscode",
+            "toba.vsfire"
           ],
           "allowFail": true
         }
@@ -1283,10 +1398,55 @@
       }
     },
     {
+      "id": "powertoys",
+      "name": "Microsoft PowerToys",
+      "group": "apps",
+      "platforms": [
+        "win"
+      ],
+      "desc": "FancyZones, PowerRename, Run, Color Picker, Always on Top.",
+      "profiles": [
+        "full",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.PowerToys"
+        ],
+        "choco": [
+          "powertoys"
+        ]
+      }
+    },
+    {
+      "id": "libreoffice",
+      "name": "LibreOffice",
+      "group": "apps",
+      "desc": "Writer, Calc, Impress - and the headless converter the document pipeline uses (docx -> pdf).",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "TheDocumentFoundation.LibreOffice"
+        ],
+        "choco": [
+          "libreoffice-fresh"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "libreoffice"
+          ]
+        }
+      }
+    },
+    {
       "id": "claude-code",
       "name": "Claude Code CLI",
       "group": "ai",
-      "desc": "Anthropic's agentic coding CLI.",
+      "desc": "Anthropic's agentic coding CLI. Pair it with 'Claude Code ⇄ GitHub relations' for the repo workflow.",
       "profiles": [
         "full",
         "ai",
@@ -1301,9 +1461,15 @@
         ]
       },
       "mac": {
+        "brew": {
+          "cask": [
+            "claude-code"
+          ]
+        },
         "npm": [
           "@anthropic-ai/claude-code"
-        ]
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1320,18 +1486,103 @@
       ]
     },
     {
-      "id": "other-ai-clis",
-      "name": "Gemini CLI + OpenAI Codex CLI",
+      "id": "gemini-cli",
+      "name": "Gemini CLI",
       "group": "ai",
-      "desc": "The other two mainstream terminal agents.",
+      "desc": "Google's terminal agent (@google/gemini-cli). Sign in later with `gemini` - nothing is linked by ProGramerly.",
       "profiles": [
         "full",
         "ai"
       ],
+      "dependsOn": [
+        "node-system"
+      ],
       "npm": [
-        "@google/gemini-cli",
-        "@openai/codex"
+        "@google/gemini-cli"
       ]
+    },
+    {
+      "id": "codex-cli",
+      "name": "OpenAI Codex CLI",
+      "group": "ai",
+      "desc": "OpenAI's terminal agent. winget build on Windows, npm everywhere.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "win": {
+        "winget": [
+          "OpenAI.Codex"
+        ],
+        "npm": [
+          "@openai/codex"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "npm": [
+          "@openai/codex"
+        ]
+      }
+    },
+    {
+      "id": "copilot-cli",
+      "name": "GitHub Copilot CLI",
+      "group": "ai",
+      "desc": "GitHub Copilot in the terminal (@github/copilot). Sign in later with `copilot` - never by ProGramerly.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "node-system",
+        "gh-cli"
+      ],
+      "npm": [
+        "@github/copilot"
+      ]
+    },
+    {
+      "id": "claude-code-github",
+      "name": "Claude Code ⇄ GitHub relations",
+      "group": "ai",
+      "desc": "Everything Claude Code needs to work a GitHub repo: git, gh, the official claude-code-action workflow template cloned into the dev root, and a version check of each. No token, no login.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "git",
+        "gh-cli",
+        "claude-code"
+      ],
+      "steps": [
+        {
+          "type": "gitClone",
+          "repo": "https://github.com/anthropics/claude-code-action.git",
+          "dest": "claude-code-action",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "claude --version",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "gh --version",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "git --version",
+          "allowFail": true
+        }
+      ],
+      "allowPartial": true
     },
     {
       "id": "ollama",
@@ -1468,7 +1719,7 @@
     },
     {
       "id": "mcp-servers",
-      "name": "MCP servers (filesystem, memory, git, fetch, time, sqlite, playwright, sequential-thinking)",
+      "name": "MCP servers (filesystem, memory, git, fetch, time, playwright, context7, firebase, desktop-commander)",
       "group": "mcp",
       "desc": "Pre-caches the reference MCP servers so Claude Desktop launches them instantly.",
       "profiles": [
@@ -1484,7 +1735,8 @@
         "@modelcontextprotocol/server-sequential-thinking",
         "@modelcontextprotocol/server-everything",
         "@playwright/mcp",
-        "@upstash/context7-mcp"
+        "@upstash/context7-mcp",
+        "@wonderwhy-er/desktop-commander"
       ],
       "steps": [
         {
@@ -1501,6 +1753,11 @@
         {
           "type": "shell",
           "cmd": "uvx mcp-server-time --help",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "npx -y firebase-tools@latest --version",
           "allowFail": true
         }
       ]
@@ -1762,20 +2019,37 @@
     },
     {
       "id": "archify",
-      "name": "archify (AntwerpDesignsIonity)",
+      "name": "archify (Ionity fork)",
       "group": "ionity",
-      "desc": "Clones github.com/AntwerpDesignsIonity/archify into your dev root. Private repo - needs gh auth login first.",
+      "desc": "Clones github.com/Ionity-Global-Pty-Ltd/archify (MIT upstream tt-a1i/archify) into the dev root, installs its Node dependencies, and registers it as a global agent skill for Claude Code / Codex / Cursor.",
       "profiles": [
-        "full"
+        "full",
+        "ai"
       ],
       "steps": [
         {
           "type": "gitClone",
-          "repo": "https://github.com/AntwerpDesignsIonity/archify.git",
+          "repo": "https://github.com/Ionity-Global-Pty-Ltd/archify.git",
           "dest": "archify",
           "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "cd \"${PROGRAMERLY_DEV_ROOT:-$HOME/Development}/archify/archify\" && npm install --no-fund --no-audit",
+          "winCmd": "$r = if ($env:PROGRAMERLY_DEV_ROOT) { $env:PROGRAMERLY_DEV_ROOT } else { Join-Path $HOME Development }; Set-Location (Join-Path $r \"archify\\archify\"); npm install --no-fund --no-audit",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "npx -y skills add Ionity-Global-Pty-Ltd/archify -g",
+          "allowFail": true
         }
-      ]
+      ],
+      "dependsOn": [
+        "git",
+        "node-system"
+      ],
+      "allowPartial": true
     },
     {
       "id": "ionity-assets",
@@ -1922,6 +2196,54 @@
       }
     },
     {
+      "id": "unity-hub",
+      "name": "Unity Hub",
+      "group": "ide",
+      "desc": "Installs the Hub; pick editor versions inside it. Sign in there, not here.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Unity.UnityHub"
+        ],
+        "choco": [
+          "unity-hub"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "unity-hub"
+          ]
+        }
+      }
+    },
+    {
+      "id": "godot",
+      "name": "Godot Engine",
+      "group": "ide",
+      "desc": "Open-source 2D/3D engine, standard build.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "GodotEngine.GodotEngine"
+        ],
+        "choco": [
+          "godot"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "godot"
+          ]
+        }
+      }
+    },
+    {
       "id": "browsers-extra",
       "name": "Edge Dev + Firefox Developer Edition",
       "group": "browser",
@@ -1977,6 +2299,233 @@
           "allowFail": true
         }
       ]
+    },
+    {
+      "id": "whatsapp",
+      "name": "WhatsApp Desktop",
+      "group": "comms",
+      "desc": "The desktop client. Link your phone yourself afterwards - ProGramerly never touches an account.",
+      "profiles": [
+        "full",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "9NKSQGP7F2NH"
+        ],
+        "choco": [
+          "whatsapp"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "whatsapp"
+          ]
+        }
+      }
+    },
+    {
+      "id": "teams",
+      "name": "Microsoft Teams",
+      "group": "comms",
+      "desc": "The new Teams client.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.Teams"
+        ],
+        "choco": [
+          "microsoft-teams-new-bootstrapper"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "microsoft-teams"
+          ]
+        }
+      }
+    },
+    {
+      "id": "zoom",
+      "name": "Zoom",
+      "group": "comms",
+      "desc": "Meetings client.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Zoom.Zoom"
+        ],
+        "choco": [
+          "zoom"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "zoom"
+          ]
+        }
+      }
+    },
+    {
+      "id": "slack-discord",
+      "name": "Slack + Discord",
+      "group": "comms",
+      "desc": "Team chat and community chat.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "SlackTechnologies.Slack",
+          "Discord.Discord"
+        ],
+        "choco": [
+          "slack",
+          "discord"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "slack",
+            "discord"
+          ]
+        },
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "telegram-signal",
+      "name": "Telegram + Signal",
+      "group": "comms",
+      "desc": "Two more messengers, both desktop clients.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Telegram.TelegramDesktop",
+          "OpenWhisperSystems.Signal"
+        ],
+        "choco": [
+          "telegram",
+          "signal"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "telegram",
+            "signal"
+          ]
+        },
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "google-drive",
+      "name": "Google Drive for desktop",
+      "group": "drives",
+      "desc": "Streams or mirrors My Drive and shared drives as a local drive letter. Sign in yourself afterwards.",
+      "profiles": [
+        "full",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Google.GoogleDrive"
+        ],
+        "choco": [
+          "googledrive"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "google-drive"
+          ]
+        }
+      }
+    },
+    {
+      "id": "onedrive",
+      "name": "Microsoft OneDrive",
+      "group": "drives",
+      "desc": "Usually already on Windows - this item makes sure it is current. Sign in yourself afterwards.",
+      "profiles": [
+        "full",
+        "minimal"
+      ],
+      "win": {
+        "winget": [
+          "Microsoft.OneDrive"
+        ],
+        "choco": [
+          "onedrive"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "onedrive"
+          ]
+        }
+      }
+    },
+    {
+      "id": "dropbox",
+      "name": "Dropbox",
+      "group": "drives",
+      "desc": "The desktop sync client.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Dropbox.Dropbox"
+        ],
+        "choco": [
+          "dropbox"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "dropbox"
+          ]
+        }
+      }
+    },
+    {
+      "id": "rclone",
+      "name": "rclone",
+      "group": "drives",
+      "desc": "One CLI for every cloud - Drive, OneDrive, Dropbox, S3, B2 - sync, mount, copy. Run `rclone config` to add remotes yourself.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Rclone.Rclone"
+        ],
+        "choco": [
+          "rclone"
+        ]
+      },
+      "mac": {
+        "brew": [
+          "rclone"
+        ]
+      }
     },
     {
       "id": "opencode",
@@ -2832,6 +3381,107 @@
       }
     },
     {
+      "id": "blender",
+      "name": "Blender",
+      "group": "maker",
+      "desc": "3D modelling, rendering, animation.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "BlenderFoundation.Blender"
+        ],
+        "choco": [
+          "blender"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "blender"
+          ]
+        }
+      }
+    },
+    {
+      "id": "freecad",
+      "name": "FreeCAD",
+      "group": "maker",
+      "desc": "Parametric CAD - parts, assemblies, drawings, CAM path.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "FreeCAD.FreeCAD"
+        ],
+        "choco": [
+          "freecad"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "freecad"
+          ]
+        }
+      }
+    },
+    {
+      "id": "kicad",
+      "name": "KiCad",
+      "group": "maker",
+      "desc": "Schematic capture and PCB layout, with the symbol and footprint libraries.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "KiCad.KiCad"
+        ],
+        "choco": [
+          "kicad"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "kicad"
+          ]
+        }
+      }
+    },
+    {
+      "id": "slicers",
+      "name": "PrusaSlicer + Cura",
+      "group": "maker",
+      "desc": "Two slicers for 3D printing.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Prusa3D.PrusaSlicer",
+          "Ultimaker.Cura"
+        ],
+        "choco": [
+          "prusaslicer",
+          "cura"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "prusaslicer",
+            "ultimaker-cura"
+          ]
+        },
+        "allowPartial": true
+      }
+    },
+    {
       "id": "postman",
       "name": "Postman + Insomnia",
       "group": "apis",
@@ -2892,10 +3542,34 @@
       }
     },
     {
-      "id": "serverless-clis",
-      "name": "Serverless CLIs (AWS SAM, Azure Functions, Firebase, Wrangler)",
-      "group": "sdk",
-      "desc": "AWS Lambda through SAM, Azure Functions Core Tools, Google Firebase, Cloudflare Workers via Wrangler, plus Vercel and Netlify.",
+      "id": "bruno",
+      "name": "Bruno",
+      "group": "apis",
+      "desc": "Offline-first API client; collections live in git as plain files.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "Bruno.Bruno"
+        ],
+        "choco": [
+          "bruno"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "bruno"
+          ]
+        }
+      }
+    },
+    {
+      "id": "twilio-cli",
+      "name": "Twilio CLI",
+      "group": "apis",
+      "desc": "twilio-cli for SMS, WhatsApp Business, Verify and Voice from the terminal. Log in later with `twilio login`.",
       "profiles": [
         "full"
       ],
@@ -2903,7 +3577,71 @@
         "node-system"
       ],
       "npm": [
-        "firebase-tools",
+        "twilio-cli"
+      ]
+    },
+    {
+      "id": "firebase-cli",
+      "name": "Firebase CLI + local emulators",
+      "group": "sdk",
+      "desc": "firebase-tools, then the Firestore, Database, Storage, Pub/Sub and Emulator UI jars so `firebase emulators:start` works offline. Needs Java. Nothing is deployed and no project is linked.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "node-system",
+        "java"
+      ],
+      "npm": [
+        "firebase-tools"
+      ],
+      "steps": [
+        {
+          "type": "shell",
+          "cmd": "firebase --version",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "firebase setup:emulators:firestore",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "firebase setup:emulators:database",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "firebase setup:emulators:storage",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "firebase setup:emulators:pubsub",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "firebase setup:emulators:ui",
+          "allowFail": true
+        }
+      ],
+      "allowPartial": true
+    },
+    {
+      "id": "serverless-clis",
+      "name": "Serverless CLIs (AWS SAM, Azure Functions, Wrangler, Vercel, Netlify)",
+      "group": "sdk",
+      "desc": "AWS Lambda through SAM, Azure Functions Core Tools, Cloudflare Workers via Wrangler, plus Vercel and Netlify. Firebase has its own item.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
         "wrangler",
         "vercel",
         "netlify-cli"
@@ -2961,6 +3699,21 @@
           }
         ]
       }
+    },
+    {
+      "id": "n8n",
+      "name": "n8n (workflow automation, self-hosted)",
+      "group": "sdk",
+      "desc": "npm install -g n8n, then `n8n` opens the editor on http://localhost:5678. Runs on this machine only.",
+      "profiles": [
+        "full"
+      ],
+      "dependsOn": [
+        "node-system"
+      ],
+      "npm": [
+        "n8n"
+      ]
     },
     {
       "id": "openrgb",

@@ -32,7 +32,7 @@
   <div id="shell">
     <header id="topbar">
       <div class="tb-side">
-        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.5.0</span></span>
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.6.0</span></span>
         <span class="tb-divider"></span>
         <span id="clock">--:--</span>
         <span id="date">Local time</span>
@@ -113,6 +113,7 @@
       <nav id="dock" aria-label="Dock">
         <span class="dock-side left">
         <button class="dock-btn" data-app="software"><span class="tip">Software</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><rect x="4" y="4" width="16" height="16" rx="4"/></svg></button>
+        <button class="dock-btn" data-app="predict"><span class="tip">AEDi Predict</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 3v18M5 7l7 4 7-4"/></svg></button>
         <button class="dock-btn" data-app="ai"><span class="tip">AEDi · Local AI</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
         <button class="dock-btn" data-app="relations"><span class="tip">Relations</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.6"/><circle cx="4.5" cy="6" r="2"/><circle cx="19.5" cy="6" r="2"/><circle cx="4.5" cy="18" r="2"/><circle cx="19.5" cy="18" r="2"/><path d="M6.3 7.2l3.8 3.2M17.7 7.2l-3.8 3.2M6.3 16.8l3.8-3.2M17.7 16.8l-3.8-3.2"/></svg></button>
         <button class="dock-btn" data-app="envs"><span class="tip">Environments</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></button>
@@ -232,6 +233,8 @@
       <span id="selCount">0 selected</span>
       <span class="sep">·</span>
       <span id="selSize">—</span>
+      <span class="sep">·</span>
+      <button class="linkbtn forecast" id="selForecast" title="AEDi Predict - open the full forecast" data-open-app="predict">forecast…</button>
       <span class="sep">·</span>
       <span class="muted">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd</span>
     </div>

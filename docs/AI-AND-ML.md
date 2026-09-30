@@ -273,3 +273,40 @@ for one JSON object (`kind`, `name`, `python`, `packages`, `deps`, `devDeps`,
 `services[]`, `start`, `git`, `why`); `parseRecipe` validates it; the operator
 sees the filled form and presses Create. The model never creates anything
 itself.
+
+## 3.6.0 — AEDi Predict: the forecast, its classes, and what the model may say
+
+**Predict** (`src/main/services/predict.js`) is not a model call. It is a small,
+inspectable estimator that runs before an install and learns after it:
+
+| Question | Method | Class of the answer |
+| --- | --- | --- |
+| Will item *i* install cleanly here? | Prior `p₀` from `predict-priors.json` (per item, else per group), multiplied down for a missing engine (×0.35, or ×0.85 when Chocolatey can stand in for winget), an unanswering host (×0.15; ×0.03 when every host is silent), disk past the 8 GB reserve (×0.2), no elevation on an `elevate` item (×0.6); then shrunk toward this machine's record: `p = (p₀·W + ok + ½·partial) / (W + n)`, `W = 3`. | `assumed` until `n > 0`, then `learned` |
+| How long? | Prior minutes × the machine's speed factor (an EMA of actual/assumed over runs, α = 0.35, first sample taken whole); once an item has two timings here, its learned median instead. | `assumed` → `computed` → `learned` |
+| How much disk? | Σ prior GB against the system disk's free space minus the reserve. | GB `assumed`, free `measured`, after `computed` |
+| Where is the machine going? | One sample per five minutes (`samples.jsonl`); least-squares slope of free bytes over the last seven days per fixed disk once six samples span two hours; days-to-full = free / −slope. 24-hour memory and CPU averages. | `measured` now, `computed` trend, `learned` history |
+| What belongs next? | The `affinity.pairs` table in the priors (stated relations), profile completion at ≥ 60 %, and the dependencies a queue will pull in. | `stated` — never a statistic |
+
+The engine reads its facts itself — `has()` for each engine binary and a TCP
+connect with a 2.5 s timeout to each package host — and caches them for a
+minute. An engine that an earlier item in the same queue provides (`node-system`
+before an npm item, `ollama` before a model pull) is counted as present.
+
+**What the model may do.** `predict:explain` hands the pack to the preferred
+local model through `ai.chat` with a system prompt that says: use only the
+figures given, never invent a number, never round a class up, six sentences,
+end with one action. The reply streams on `predict:token`. With no model the
+handler returns the same sentence the rest of the app uses. The forecast is
+complete without the model; the model only reads it back.
+
+**Learning is local and disposable.** `<userData>/predict/history.json` holds
+per-item counts and the last twelve durations, the last sixty runs with their
+predicted and actual figures, and the speed factor. `predict:reset` deletes it
+and the samples. Nothing is sent anywhere.
+
+**Tests.** `scripts/test-predict.js` injects facts (all engines up / npm missing /
+offline / 20 GB free) and asserts the direction of every multiplier, the
+posterior after a failure, the speed factor after a slow run, the learned median
+after two timings, a ~2 GB/day regression with days-to-full, the suggestion
+rules and the explain prompt. `scripts/ui-check-360.js` drives the surface in
+the running application.

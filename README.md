@@ -52,9 +52,9 @@ Then it stays. Four things run after the install is finished:
 
 | Profile | Items | Roughly | Good for |
 | --- | ---: | --- | --- |
-| **Full Stack** | 102 | 60–95 GB | A fresh machine you want finished |
-| **AI Dev** | 49 | 20–35 GB | Claude, MCP, local models, PyTorch, Node, Python |
-| **Minimal** | 19 | 5–10 GB | Git, Node, Python, VS Code, Chrome, pwsh, SQLite |
+| **Full Stack** | 141 | 65–110 GB | A fresh machine you want finished — apps, comms, drives, CAD, every runtime |
+| **AI Dev** | 64 | 22–40 GB | Claude, Gemini, Codex, Copilot, MCP, Firebase, local models, PyTorch, Node, Python |
+| **Minimal** | 27 | 6–12 GB | Git, Node + toolbelt, Python, VS Code, Chrome, pwsh, WhatsApp, Drive, OneDrive |
 | **Custom** | — | — | Tick exactly what you want |
 
 Every item is individually toggleable regardless of profile, and dependencies
@@ -69,7 +69,24 @@ with it.
 <summary><b>Desktop applications</b></summary>
 
 Claude Desktop · Google Chrome · GitHub Desktop · OBS Studio · Canva ·
-Obsidian · Notion · Miro · Docker Desktop · 7-Zip / Keka
+Obsidian · Notion · Miro · Docker Desktop · 7-Zip / Keka · **PowerToys** ·
+**LibreOffice**
+</details>
+
+<details>
+<summary><b>Communication</b> — 3.6.0</summary>
+
+**WhatsApp Desktop** · **Microsoft Teams** · **Zoom** · **Slack + Discord** ·
+**Telegram + Signal**. Installed and left signed out — you link your own phone
+and accounts afterwards; ProGramerly never touches one.
+</details>
+
+<details>
+<summary><b>Cloud drives and sync</b> — 3.6.0</summary>
+
+**Google Drive for desktop** · **Microsoft OneDrive** (made current — it is
+usually already there) · **Dropbox** · **rclone** for scripting any of them
+from the terminal (`rclone config` is yours to run).
 </details>
 
 <details>
@@ -78,7 +95,7 @@ Obsidian · Notion · Miro · Docker Desktop · 7-Zip / Keka
 Visual Studio Community (ManagedDesktop, NetWeb, NativeDesktop, Node, Azure,
 NetCrossPlat workloads) · Visual Studio Build Tools · VS Code + a **58-extension
 critical pack** · **Google Antigravity** (IDE + CLI) · Cursor · Windsurf · Zed ·
-JetBrains Toolbox · Neovim · Android Studio
+JetBrains Toolbox · Neovim · Android Studio · **Unity Hub** · **Godot**
 </details>
 
 <details>
@@ -93,7 +110,9 @@ or opened at their Web Store pages when you do not.
 <details>
 <summary><b>Language runtimes</b></summary>
 
-**Node** — fnm + LTS + Latest + a system Node, pnpm, Yarn, ncu
+**Node** — fnm + LTS + Latest + a system Node, pnpm, Yarn, ncu, and the
+**toolbelt** (pm2, nodemon, vite, tsx, eslint, prettier, npm-check-updates,
+serve, http-server, concurrently, dotenv-cli) · **Bun + Deno**
 **Python** — 3.13 and 3.12, uv, pipx, poetry, ruff
 **.NET** — SDK 10, 9, 8 side by side + Framework 4.8 Dev Pack
 **Java** — Temurin 21 LTS and 17 LTS
@@ -113,8 +132,11 @@ plus a "*update every shell and package source*" sweep
 <details>
 <summary><b>AI tooling</b></summary>
 
-Claude Code CLI · **OpenCode** · Qwen Code CLI · Gemini CLI · OpenAI Codex CLI ·
-**Aider** · Continue CLI · Goose · LM Studio ·
+Claude Code CLI · **Claude Code ⇄ GitHub relations** (git, gh, the official
+`claude-code-action` workflow template cloned beside your repos, version checks —
+no token, no login) · **Gemini CLI** · **OpenAI Codex CLI** · **GitHub Copilot
+CLI** · **OpenCode** · Qwen Code CLI · **Aider** · Continue CLI · Goose ·
+LM Studio ·
 **Ollama** with a five-model starter pull — `qwen2.5-coder` for code,
 `llama3.2` for chat, `deepseek-r1` for reasoning, `nomic-embed-text` for
 embeddings, `llava` for vision ·
@@ -181,14 +203,23 @@ works before MongoDB is even running
 <details>
 <summary><b>APIs and testing</b></summary>
 
-**Postman** · **Insomnia** · HTTPie · Newman · Redocly CLI · swagger-cli · http-server
+**Postman** · **Insomnia** · **Bruno** · HTTPie · Newman · Redocly CLI · swagger-cli ·
+http-server · **Twilio CLI** (SMS, WhatsApp Business, Verify, Voice — `twilio login` is yours)
+</details>
+
+<details>
+<summary><b>Maker · CAD · PCB · 3D</b> — 3.6.0</summary>
+
+**Blender** · **FreeCAD** · **KiCad** (with the symbol and footprint libraries) ·
+**PrusaSlicer + Cura**. The toolmaker's bench, one tick.
 </details>
 
 <details>
 <summary><b>MCP servers for Claude Desktop</b></summary>
 
 `filesystem` · `memory` · `sequential-thinking` · `git` · `fetch` · `time` ·
-`playwright` · `context7`
+`playwright` · `context7` · **`firebase`** (firebase-tools' own MCP server —
+talks to whatever project *you* select with `firebase use`) · **`desktop-commander`**
 
 They are pre-cached so Claude launches them instantly, and
 `claude_desktop_config.json` is **merged, not overwritten** — anything you
@@ -200,8 +231,12 @@ already configured stays, and a timestamped `.bak` is written first.
 
 Windows SDK · Android SDK · Google ADK (`google-adk`) ·
 Azure CLI · AWS CLI · Google Cloud CLI ·
-**Serverless** — AWS SAM (Lambda), Azure Functions Core Tools, Firebase,
-Cloudflare Wrangler (Workers), Vercel, Netlify ·
+**Firebase CLI + local emulators** — firebase-tools and the Firestore,
+Database, Storage, Pub/Sub and Emulator UI jars so `firebase emulators:start`
+works offline (Java as a dependency; nothing deployed, no project linked) ·
+**Serverless** — AWS SAM (Lambda), Azure Functions Core Tools,
+Cloudflare Wrangler (Workers), Vercel, Netlify · **n8n** (self-hosted workflow
+automation on `localhost:5678`) ·
 **Cloudflare WARP** desktop client + `cloudflared` ·
 jq, ripgrep, fzf, fd, bat, delta, curl, wget ·
 OpenSSL, pkg-config, libffi, protobuf
@@ -216,8 +251,10 @@ WSL 2 + Ubuntu, set to version 2. Flagged **reboot** in the UI because it needs 
 <details>
 <summary><b>Ionity / AEDI</b></summary>
 
-Clones [`archify`](https://github.com/AntwerpDesignsIonity/archify) and
-[`ionity-assets1`](https://github.com/AntwerpDesignsIonity/ionity-assets1),
+Clones the public Ionity fork of [`archify`](https://github.com/Ionity-Global-Pty-Ltd/archify)
+(MIT upstream `tt-a1i/archify`), runs `npm install` in it and registers it as a
+global agent skill for Claude Code / Codex / Cursor; clones
+[`ionity-assets1`](https://github.com/AntwerpDesignsIonity/ionity-assets1);
 then lays out the standard dev tree
 (`Projects/ Clients/ POC/ Scripts/ Assets/ Hardware/ Docs/ Archive/ Sandbox/ .mcp/`)
 with a Policy 986 AED README at the root.
@@ -1121,6 +1158,40 @@ intro is the IONITY GLOBAL wordmark and the DOME in the brand gradient, drawn
 from facts read off the machine. `node scripts/ui-check-350.js` drives the real
 application — 33 checks, including a venv created and removed through the
 surface — and CI runs it on every push.
+
+### AEDi Predict, comms, drives, maker — 3.6.0
+
+**AEDi Predict** (`src/main/services/predict.js`, `src/renderer/predict.js`)
+forecasts the run before it starts, on this machine. For the ticked selection
+it gives a likelihood per item, the expected number of clean installs, minutes
+with a range, download size against free disk and an 8 GB reserve, and a risk
+list. The inputs are read at that moment — engines on PATH, package hosts that
+answer a TCP connect, free disk, elevation — and an engine the queue installs
+earlier counts as present. Every figure carries its class: `measured`,
+`learned`, `computed`, `assumed`. After each run the outcomes and durations go
+into `<userData>/predict/history.json` and the next forecast is a shrunk
+posterior (three real outcomes outweigh the shipped prior); minutes switch to
+the learned median after two timings; a speed factor scales the priors to this
+line. One sample every five minutes feeds the **machine forecast** — GB/day and
+days-to-full per disk once six samples span two hours, 24-hour memory and CPU,
+an install budget. **Belongs next** is the catalog's stated relations, profile
+completion and the run's own dependencies; **Explain** hands the pack to the
+local model with the instruction to restate and add nothing. The Software
+footer carries the one-line version — `AEDi Predict: ~42 min · ≈29/31 clean ·
+2 risks` — redone half a second after the last tick. Nothing leaves the machine;
+**Forget the history** returns to the priors.
+
+**The catalog** grew from 116 to 143 items in 22 groups: Communication, Cloud
+Drives & Sync and Maker · CAD · PCB · 3D are new groups; Gemini CLI, Codex CLI,
+Copilot CLI, Claude Code ⇄ GitHub relations, Firebase CLI + local emulators,
+Node toolbelt, Bun + Deno, GitKraken + lazygit, PowerToys, LibreOffice, Unity
+Hub, Godot, Bruno, Twilio CLI and n8n join the existing groups. archify points
+at the public Ionity fork, installs its Node dependencies and registers itself
+as a global agent skill. The MCP writer adds Firebase's own MCP server and
+Desktop Commander. **No account is linked anywhere** — every client is
+installed and left signed out, and the Firebase web config stays a placeholder.
+`node scripts/test-predict.js` (14 checks, injected facts) and
+`node scripts/ui-check-360.js` (39 checks against the running app) cover it.
 
 ---
 

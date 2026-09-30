@@ -44,6 +44,7 @@ const ocr = require('./services/ocr');
 const system = require('./services/system');
 const envs = require('./services/envs');
 const graph = require('./services/graph');
+const predict = require('./services/predict');
 const tray = require('./tray');
 
 const IS_WIN = process.platform === 'win32';
@@ -341,6 +342,7 @@ function notifyUpdate(info) {
 function startServices() {
   metrics.start(settings.get('metricsInterval'));
   metricsUnsub = metrics.subscribe((snap) => {
+    predict.observe(snap);           // one sample per five minutes for the machine forecast
     if (win && !win.isDestroyed() && win.isVisible()) {
       win.webContents.send('metrics:tick', { metrics: snap, ping: netprobe.lastPingRef() });
     }
@@ -1186,6 +1188,40 @@ ipcMain.handle('programs:launch', (_e, id) => programs.launch(id));
 ipcMain.handle('programs:hydrate', () => programs.hydrate());
 ipcMain.handle('programs:openFolder', () => programs.openFolder());
 
+/* --- AEDi Predict ------------------------------------------------------- */
+/* Forecasts for the selection and the machine, learned from this machine's
+   own runs. Every figure carries its class; the local model may explain a
+   pack but never adds a number to it. */
+let lastForecast = null;
+
+ipcMain.handle('predict:forecast', async (_e, ids) => {
+  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
+  const elevated = IS_WIN ? await isElevated() : true;
+  lastForecast = await predict.forecast(catalog, ids || [], { snapshot: metrics.snapshot(), elevated });
+  return lastForecast;
+});
+ipcMain.handle('predict:machine', () => predict.machine(metrics.snapshot()));
+ipcMain.handle('predict:suggest', (_e, ids) => {
+  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
+  return predict.suggest(catalog, ids || [], settings.get('installedIds') || []);
+});
+ipcMain.handle('predict:history', () => predict.history());
+ipcMain.handle('predict:facts', (_e, force) => predict.readFacts(Boolean(force)));
+ipcMain.handle('predict:reset', () => predict.reset());
+ipcMain.handle('predict:explain', async (_e, req = {}) => {
+  const id = ++chatSeq;
+  const target = await preferredTarget(req.target);
+  if (!target) return { id, ok: false, error: 'No local model is running. Tick "AEDi local core" in Software, or pull a model in AEDi · Local AI.' };
+  const pack = req.pack || lastForecast;
+  if (!pack) return { id, ok: false, error: 'Nothing to explain yet - forecast a selection first.' };
+  const messages = predict.explainMessages(pack, predict.machine(metrics.snapshot()));
+  emit('predict:token', { id, start: true, model: target.model });
+  const res = await ai.chat({ endpointId: target.endpointId, port: target.port, model: target.model, messages },
+    (t) => emit('predict:token', { id, ...t }));
+  emit('predict:token', { id, done: true, ok: res.ok, error: res.error || null, stats: res.stats || null });
+  return { id, ...res, model: target.model };
+});
+
 /* --- installer ---------------------------------------------------------- */
 ipcMain.handle('install:cancel', () => { cancelRequested = true; return true; });
 
@@ -1216,8 +1252,10 @@ ipcMain.handle('install:start', async (_e, ids) => {
   emit('install:queue', queue.map((i) => ({ id: i.id, name: i.name })));
 
   const results = [];
+  const runStarted = Date.now();
   for (let idx = 0; idx < queue.length; idx += 1) {
     const item = queue[idx];
+    const itemStarted = Date.now();
     if (cancelRequested) {
       emit('install:item', { id: item.id, status: 'skipped', detail: 'cancelled' });
       results.push({ id: item.id, status: 'skipped' });
@@ -1238,12 +1276,21 @@ ipcMain.handle('install:start', async (_e, ids) => {
 
     logLine(`=> ${item.name}: ${res.status} (${res.detail})`,
       res.status === 'ok' ? 'ok' : res.status === 'failed' ? 'err' : 'warn');
+    res.ms = Date.now() - itemStarted;
     emit('install:item', { id: item.id, ...res, index: idx, total: queue.length });
     results.push({ id: item.id, ...res });
   }
 
   stopSudoKeepAlive();
   running = false;
+
+  // Teach the forecast what this machine actually did.
+  try {
+    const learned = predict.record({ results, totalMs: Date.now() - runStarted, predicted: lastForecast });
+    if (learned.ok) logLine(`AEDi Predict learned from this run (${learned.runs} run${learned.runs === 1 ? '' : 's'} on record, speed factor ${learned.speedFactor}).`);
+  } catch (err) {
+    logLine(`AEDi Predict could not record this run: ${err.message}`, 'warn');
+  }
 
   // Remember what this machine now has, so the sync run knows what to watch.
   const installed = new Set(settings.get('installedIds') || []);
@@ -1289,6 +1336,7 @@ if (!gotLock) {
       logDir: path.join(app.getPath('userData'), 'logs'),
       appPath: app.getAppPath(),
     });
+    predict.configure({ userData: app.getPath('userData') });
     Menu.setApplicationMenu(IS_MAC ? Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }]) : null);
 
     createWindow();      // hidden - warms up while the intro plays

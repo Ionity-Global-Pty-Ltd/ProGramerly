@@ -29,6 +29,7 @@ jobs:
       - run: node scripts/syntax-check.js
       - run: node scripts/validate-catalog.js
       - run: node scripts/check-programs.js
+      - run: node scripts/test-predict.js
       - run: node scripts/dry-run.js full win
       - run: node scripts/dry-run.js full mac
       - run: node scripts/dry-run.js ai win
@@ -77,6 +78,7 @@ jobs:
         run: |
           pkill -f 'electron/dist/electron' || true
           xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/ui-check-350.js
+          xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/ui-check-360.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -86,6 +88,8 @@ jobs:
             app.log
             Claude outputs/ui-350-*.png
             Claude outputs/ui-check-350.json
+            Claude outputs/ui-360-*.png
+            Claude outputs/ui-check-360.json
           if-no-files-found: warn
 
   windows:

@@ -17,6 +17,8 @@ servers = {
   "git": {"command":"uvx","args":["--from","mcp-server-git","mcp-server-git","--repository",root]},
   "fetch": {"command":"uvx","args":["mcp-server-fetch"]},
   "time": {"command":"uvx","args":["mcp-server-time","--local-timezone","Africa/Johannesburg"]},
+  "firebase": {"command":"npx","args":["-y","firebase-tools@latest","experimental:mcp"]},
+  "desktop-commander": {"command":"npx","args":["-y","@wonderwhy-er/desktop-commander@latest"]},
 }
 data = {}
 if os.path.exists(cfg):

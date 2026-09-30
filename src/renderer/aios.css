@@ -836,3 +836,69 @@ body.brief-on #chat{gap:9px}
 .mg-table tr:hover td{background:rgba(148,196,222,.04)}
 .mg-table i.st{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--sh-tx3);margin-right:6px}
 .mg-table i.st.running{background:var(--sh-lime);box-shadow:0 0 6px var(--sh-lime)}
+
+/* ===================== AEDi Predict ===================================== */
+/* The forecast surface. Four stat tiles, the facts it was read from, risks,
+   the item table, and beside it the machine trend and what belongs next.
+   Every figure carries a class chip - the same four words the DOME uses. */
+.pd-app{display:grid;gap:12px}
+.pd-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.pd-stat{position:relative;padding:12px 14px;border-radius:var(--sh-r-md);border:1px solid var(--sh-line);background:rgba(148,196,222,.035);display:grid;gap:3px}
+.pd-stat .k{font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--sh-tx1);font-variant-numeric:tabular-nums}
+.pd-stat .l{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--sh-tx3)}
+.pd-stat .t{font-size:11px;color:var(--sh-tx2);line-height:1.4}
+.pd-stat .pd-class{position:absolute;top:10px;right:10px}
+.pd-stat.warn .k{color:var(--sh-amber)}
+.pd-stat.bad .k{color:var(--sh-red)}
+.pd-class{display:inline-block;padding:1px 6px;border-radius:999px;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--sh-line);color:var(--sh-tx3);vertical-align:middle;line-height:1.5}
+.pd-class.measured{color:var(--sh-lime);border-color:rgba(189,214,49,.35)}
+.pd-class.learned{color:var(--sh-cyan);border-color:rgba(0,200,240,.35)}
+.pd-class.computed{color:var(--sh-violet);border-color:rgba(139,124,245,.35)}
+.pd-class.assumed{color:var(--sh-amber);border-color:rgba(240,160,60,.35)}
+.pd-class.stated{color:var(--sh-tx2)}
+.pd-facts{display:grid;gap:6px}
+.pd-factrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pd-factlabel{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--sh-tx3);margin-right:4px;display:inline-flex;gap:6px;align-items:center}
+.pd-factage{font-size:10.5px;color:var(--sh-tx3);margin-left:auto}
+.pd-risks{display:grid;gap:6px}
+.pd-risk{display:flex;gap:10px;align-items:center;padding:8px 12px;border-radius:var(--sh-r-md);border:1px solid var(--sh-line);font-size:12px;color:var(--sh-tx2)}
+.pd-risk i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--sh-tx3)}
+.pd-risk.high{border-color:rgba(240,104,106,.35)}.pd-risk.high i{background:var(--sh-red);box-shadow:0 0 8px var(--sh-red)}
+.pd-risk.med{border-color:rgba(240,160,60,.3)}.pd-risk.med i{background:var(--sh-amber)}
+.pd-risk > span:not(.pd-class){flex:1}
+.pd-risk .pd-class{flex:none}
+.pd-ok{font-size:12px;color:var(--sh-tx2);margin:0}
+.pd-cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.9fr);gap:12px;align-items:start}
+@media (max-width:1100px){.pd-cols{grid-template-columns:1fr}}
+.pd-table-wrap{max-height:calc(100vh - 470px);min-height:220px}
+.pd-bar{position:relative;height:6px;width:110px;border-radius:999px;background:rgba(148,196,222,.12);overflow:hidden;margin-bottom:4px}
+.pd-bar.wide{width:100%;margin:4px 0}
+.pd-bar i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--sh-tx3);transition:width .4s var(--sh-ease)}
+.pd-bar i.good{background:var(--sh-lime)}.pd-bar i.mid{background:var(--sh-amber)}.pd-bar i.bad{background:var(--sh-red)}
+.pd-side{display:grid;gap:12px}
+.pd-card{padding:12px 14px;border-radius:var(--sh-r-md);border:1px solid var(--sh-line);background:rgba(148,196,222,.035);display:grid;gap:8px}
+.pd-card h4{margin:0;font-size:12.5px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pd-card h4 small{font-size:10px;color:var(--sh-tx3);font-weight:400;text-align:right}
+.pd-card .muted{font-size:11.5px;color:var(--sh-tx3);margin:0;line-height:1.45}
+.pd-card code{font-size:10.5px;color:var(--sh-tx2)}
+.pd-disk{display:grid;gap:2px}
+.pd-disk-head{display:flex;justify-content:space-between;font-size:12px}
+.pd-disk-head span{font-size:11px;color:var(--sh-tx2)}
+.pd-disk small{font-size:10.5px;color:var(--sh-tx3)}
+.pd-kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:11.5px;margin-top:4px}
+.pd-kv span{color:var(--sh-tx3)}
+.pd-kv b{font-weight:500;color:var(--sh-tx1)}
+.pd-sugg{display:grid;gap:6px}
+.pd-sug{display:grid;gap:2px;text-align:left;padding:8px 10px;border-radius:var(--sh-r-md);border:1px solid var(--sh-line);background:transparent;color:var(--sh-tx1);cursor:pointer;transition:border-color .2s,background .2s}
+.pd-sug:hover{border-color:var(--sh-line2);background:rgba(148,196,222,.05)}
+.pd-sug b{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.pd-sug b svg{width:13px;height:13px;stroke:var(--sh-cyan);stroke-width:2;fill:none}
+.pd-sug small{font-size:10.5px;color:var(--sh-tx3);line-height:1.35}
+.pd-explain{padding:12px 14px;border-radius:var(--sh-r-md);border:1px solid rgba(0,200,240,.25);background:rgba(0,200,240,.05);display:grid;gap:6px}
+.pd-explain-head{display:flex;align-items:center;gap:8px;font-size:12px}
+.pd-explain-head small{color:var(--sh-tx3);font-size:10.5px}
+.pd-explain-body{font-size:12.5px;line-height:1.55;white-space:pre-wrap;color:var(--sh-tx1)}
+.mg-tools .btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:1.8;fill:none;margin-right:4px}
+.linkbtn.forecast{text-decoration:none;color:var(--sh-tx2);border:1px solid var(--sh-line);border-radius:999px;padding:2px 9px;font-size:11px}
+.linkbtn.forecast:hover{color:var(--sh-cyan);border-color:rgba(0,200,240,.35)}
+.linkbtn.forecast.warn{color:var(--sh-amber);border-color:rgba(240,160,60,.35)}

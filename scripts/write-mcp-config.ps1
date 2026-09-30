@@ -19,6 +19,8 @@ $servers = [ordered]@{
     git                   = @{ command = 'uvx.exe'; args = @('--from','mcp-server-git','mcp-server-git','--repository', $root) }
     fetch                 = @{ command = 'uvx.exe'; args = @('mcp-server-fetch') }
     time                  = @{ command = 'uvx.exe'; args = @('mcp-server-time','--local-timezone','Africa/Johannesburg') }
+    firebase              = @{ command = 'npx.cmd'; args = @('-y','firebase-tools@latest','experimental:mcp') }
+    'desktop-commander'   = @{ command = 'npx.cmd'; args = @('-y','@wonderwhy-er/desktop-commander@latest') }
 }
 
 if ($WhatIf) {

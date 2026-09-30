@@ -37,6 +37,7 @@
     relations: SVG('<circle cx="12" cy="12" r="2.6"/><circle cx="4.5" cy="6" r="2"/><circle cx="19.5" cy="6" r="2"/><circle cx="4.5" cy="18" r="2"/><circle cx="19.5" cy="18" r="2"/><path d="M6.3 7.2l3.8 3.2M17.7 7.2l-3.8 3.2M6.3 16.8l3.8-3.2M17.7 16.8l-3.8-3.2"/>'),
     envs: SVG('<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>'),
     system: SVG('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 9h4M7 12h7"/>'),
+    predict: SVG('<path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 3v18M5 7l7 4 7-4"/>'),
   };
   /* Segment icons live with the DOME surface so both use the same set. */
   const SEG = () => (window.PGApps && window.PGApps.GLYPHS) || {};
@@ -61,13 +62,14 @@
     relations: { name: 'Relations', sub: 'Processes · ports · services · models · repos, as one graph', builtin: 'relations', hue: '#2f7ff0', scope: 'all', desc: 'Everything running, seen and unseen, and how it connects.' },
     envs: { name: 'Environments', sub: 'venv · uv · conda · Node · Docker', builtin: 'envs', hue: '#8b7cf5', scope: 'toolchain', desc: 'Make one in a sentence. Real commands, real folders.' },
     system: { name: 'System', sub: 'Processes · services · startup · ports', builtin: 'system', hue: '#a9762d', scope: 'system', desc: 'End, stop, restart, disable - one click each.' },
+    predict: { name: 'AEDi Predict', sub: 'Likelihood · time · disk · what belongs next', builtin: 'predict', hue: '#f0a03c', scope: 'toolchain', desc: 'Forecast the run before it starts. Learns from every run here.' },
     reading: { name: 'Reading', sub: 'OCR engines · local vision models', builtin: 'ocr', scope: 'vision', hue: '#8b7cf5', desc: 'Page, screenshot or PDF → text. On this machine.' },
     fans: { name: 'Fan control', sub: 'Channels · curves · thermal sources', builtin: 'fans', tool: 'fanzi', hue: '#00c8f0', scope: 'thermal', desc: 'Every channel, its curve, and what it commands now.' },
     cic: { name: 'CiC', sub: 'Central Ionity Control', tool: 'cic', launch: true, hue: '#0e9ab8', desc: 'The IONITY CiC workstation utility.' },
     mcp: { name: 'MCP audit', sub: 'Internal side tool · maintainers', tool: 'mcp-audit', launch: true, side: true, hue: '#8b7cf5', desc: 'Internal. Asks before it runs.' },
     about: { name: 'About ProGramerly', sub: 'Ionity (Pty) Ltd · AEDI', about: true, hue: '#00c8f0', desc: '' },
   };
-  const TILE_ORDER = ['dome', 'relations', 'ai', 'envs', 'system', 'software', 'reading', 'projects', 'fans', 'cic', 'monitor'];
+  const TILE_ORDER = ['dome', 'relations', 'ai', 'predict', 'envs', 'system', 'software', 'reading', 'projects', 'fans', 'cic', 'monitor'];
 
   /* One hue per stratum. The dome, its legend and every segment icon carry it,
      so the deck reads as five subjects rather than five grey rings. */
