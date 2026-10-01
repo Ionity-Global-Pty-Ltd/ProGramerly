@@ -79,7 +79,8 @@ async function run() {
   check(bootHidden, 'the DOME boot cleared on its milestones');
 
   const version = await page.textContent('#appVersion');
-  check(version === 'v3.6.0', 'the top bar carries the version', version);
+  const want = 'v' + require('../package.json').version;
+  check(version === want, 'the top bar carries the version', version);
 
   // ---- the surface is registered: tile, dock, suggest chip ----------------
   const tiles = await page.$$eval('#modules .tile', (els) => els.map((e) => e.dataset.app));

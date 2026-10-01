@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-20T16:42:32.228Z",
+  "at": "2026-10-01T00:47:23.640Z",
   "platform": "linux",
   "results": [
     {
@@ -56,7 +56,7 @@
     {
       "pass": true,
       "name": "the Processes and services segment exists",
-      "detail": "81 processes · 1 unseen · computed"
+      "detail": "94 processes · 1 unseen · computed"
     },
     {
       "pass": true,
@@ -71,17 +71,17 @@
     {
       "pass": true,
       "name": "the Relations graph is built from this machine",
-      "detail": "62 nodes · 61 relations · 75 processes (1 unseen) · 6 listeners · 0/0 services"
+      "detail": "63 nodes · 62 relations · 81 processes (1 unseen) · 7 listeners · 0/0 services"
     },
     {
       "pass": true,
       "name": "the graph carries real processes",
-      "detail": "Processes39 · Unseen1 · Ports6 · Volumes3"
+      "detail": "Processes39 · Unseen1 · Ports7 · Volumes3"
     },
     {
       "pass": true,
       "name": "searching the hostname opens the machine node panel",
-      "detail": "vmmachine · Linux 6.18.44-fc-v37 · x64"
+      "detail": "vmmachine · Linux 6.18.44-fc-v50 · x64"
     },
     {
       "pass": true,
@@ -106,7 +106,7 @@
     {
       "pass": true,
       "name": "a real venv was created through the surface and listed",
-      "detail": "pg-check-mua1nvwa"
+      "detail": "pg-check-muotdr6v"
     },
     {
       "pass": true,
@@ -120,12 +120,12 @@
     {
       "pass": true,
       "name": "the Processes table lists this machine's processes",
-      "detail": "75 rows · 75 from ps -eo · 6:42:27 PM"
+      "detail": "81 rows · 81 from ps -eo · 2:47:15 AM"
     },
     {
       "pass": true,
       "name": "every process has an End action",
-      "detail": "75"
+      "detail": "81"
     },
     {
       "pass": true,
@@ -140,7 +140,7 @@
     {
       "pass": true,
       "name": "System · listeners read",
-      "detail": "6 row(s) · 2024tcp0.0.0.0—— Inspect"
+      "detail": "7 row(s) · 2024tcp0.0.0.0—— Inspect"
     },
     {
       "pass": true,
@@ -150,7 +150,7 @@
     {
       "pass": true,
       "name": "ticking AEDi adds Ollama + the starter model to the install",
-      "detail": "42 selected → 44 selected"
+      "detail": "48 selected → 50 selected"
     },
     {
       "pass": true,

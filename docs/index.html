@@ -154,6 +154,82 @@ footer a{color:var(--text-sub);text-decoration:none}
 footer a:hover{color:var(--accent)}
 footer ul{list-style:none}
 .rule{height:1px;background:var(--line-soft);margin:26px 0}
+
+/* ------------------------------------------------ 3.6.1: icons, 3D, tools */
+.pgi-defs{position:absolute;width:0;height:0;overflow:hidden}
+.pgi{width:22px;height:22px;overflow:visible;fill:none;stroke:none;transition:transform .35s cubic-bezier(.2,.8,.2,1),filter .35s}
+.pgi .b{fill:url(#pgi-body);stroke:none;opacity:.28;transition:opacity .35s;transform-origin:center;transform-box:fill-box}
+.pgi .l{fill:none;stroke:url(#pgi-line);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pgi .a{fill:url(#pgi-accent);stroke:url(#pgi-accent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:filter .35s}
+.pgi path.a[d*="h"],.pgi path.a[d*="M"]{fill:none}
+.pgi rect.a,.pgi circle.a,.pgi path.a[d$="z"]{fill:url(#pgi-accent)}
+.card,.tool{transform-style:preserve-3d;will-change:transform}
+.card{position:relative;overflow:hidden}
+.card::after,.tool::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%),rgba(0,200,240,.16),transparent 62%)}
+.card:hover::after,.tool:hover::after,.tool:focus-visible::after{opacity:1}
+.card .ico{width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,rgba(0,200,240,.16),rgba(51,102,255,.08));
+  border:1px solid rgba(0,200,240,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.card:hover .ico{transform:translateZ(26px) scale(1.08);box-shadow:0 10px 24px -10px rgba(0,200,240,.7),inset 0 1px 0 rgba(255,255,255,.12)}
+.card:hover .pgi .b,.tool:hover .pgi .b,.tool:focus-within .pgi .b{opacity:.6}
+.card:hover .pgi .a,.tool:hover .pgi .a,.tool:focus-within .pgi .a{filter:drop-shadow(0 0 5px rgba(255,122,0,.95))}
+.card:hover .pgi,.tool:hover .pgi{transform:rotate(-6deg) scale(1.06)}
+
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:16px;align-items:start}
+.tool{--hue:#00c8f0;position:relative;background:linear-gradient(160deg,var(--surface),var(--surface-2));border:1px solid var(--line-soft);
+  border-radius:18px;padding:20px 20px 18px;outline:none;cursor:default;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s}
+.tool::before{content:"";position:absolute;left:18px;right:18px;top:0;height:2px;border-radius:2px;background:var(--hue);opacity:.55;transition:opacity .3s,left .3s,right .3s}
+.tool:hover,.tool:focus-visible,.tool.tilt{border-color:color-mix(in srgb,var(--hue) 55%,transparent);
+  box-shadow:0 22px 44px -22px color-mix(in srgb,var(--hue) 60%,transparent),0 2px 0 rgba(255,255,255,.04) inset}
+.tool:hover::before,.tool:focus-visible::before{opacity:1;left:0;right:0}
+.tool-ico{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;margin-bottom:14px;
+  background:radial-gradient(120% 120% at 30% 20%,color-mix(in srgb,var(--hue) 30%,transparent),transparent 70%),rgba(255,255,255,.03);
+  border:1px solid color-mix(in srgb,var(--hue) 35%,transparent);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.tool-ico .pgi{width:28px;height:28px}
+.tool:hover .tool-ico,.tool:focus-visible .tool-ico{transform:translateZ(34px) translateY(-3px);box-shadow:0 14px 26px -12px color-mix(in srgb,var(--hue) 85%,transparent)}
+.tool h3{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+.tool-line{font-size:14px;line-height:1.55;color:var(--text-sub)}
+.tool-more{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .4s cubic-bezier(.2,.8,.2,1),opacity .3s,margin .3s}
+.tool-more > *{overflow:hidden}
+.tool-more{margin-top:0}
+.tool:hover .tool-more,.tool:focus-within .tool-more,.tool.open .tool-more{grid-template-rows:1fr;opacity:1;margin-top:12px}
+.tool-more p{font-size:13.2px;line-height:1.6;color:var(--text-sub)}
+.tool-more em{color:var(--text);font-style:normal;font-weight:600}
+.tool-more code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.chips{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chips li{font-size:11px;font-weight:600;letter-spacing:.02em;padding:3px 9px;border-radius:999px;
+  background:color-mix(in srgb,var(--hue) 14%,transparent);color:var(--text);border:1px solid color-mix(in srgb,var(--hue) 30%,transparent)}
+@media (hover:none){.tool-more{grid-template-rows:1fr;opacity:1;margin-top:12px}}
+
+.hero-dome{position:relative;width:min(760px,100%);margin:34px auto 0}
+.hero-dome canvas{display:block;width:100%;height:clamp(230px,34vw,330px);cursor:grab;touch-action:pan-y}
+.hero-dome canvas:active{cursor:grabbing}
+.hero-dome-note{font-size:12px;color:var(--text-faint);margin-top:4px}
+.hero-dome-note b{color:var(--text-sub)}
+.hero-dome-note span{opacity:.8}
+.dome3d-tip{position:absolute;z-index:5;pointer-events:none;display:flex;flex-direction:column;gap:2px;text-align:left;
+  padding:7px 10px;border-radius:10px;border:1px solid rgba(0,200,240,.35);background:rgba(6,12,18,.92);color:#e8f2f7;
+  box-shadow:0 10px 26px -10px rgba(0,0,0,.8),0 0 18px -6px rgba(0,200,240,.45);font-size:11.5px;max-width:230px}
+.dome3d-tip b{font-weight:700}
+.dome3d-tip span{color:#00c8f0;font-size:10.5px;letter-spacing:.04em}
+.dome3d-tip em{font-style:normal;color:#8a98a6;font-size:10px}
+.dome3d-tip[hidden]{display:none}
+
+.film-frame{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#05090d;
+  box-shadow:0 30px 70px -30px rgba(0,200,240,.45);aspect-ratio:16/9}
+.film-frame video{display:block;width:100%;height:100%;object-fit:cover}
+.film-frame::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),inset 0 -80px 90px -60px rgba(0,0,0,.7)}
+.film-sound{position:absolute;right:14px;bottom:14px;z-index:2;font:600 12.5px/1 inherit;font-family:inherit;padding:9px 14px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.2);background:rgba(8,14,20,.68);color:#fff;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .2s,transform .2s}
+.film-sound:hover{border-color:#00c8f0;transform:translateY(-1px)}
+
+.corner-mark{position:fixed;right:16px;bottom:14px;z-index:40;display:block;width:clamp(72px,7vw,96px);opacity:.82;
+  filter:drop-shadow(0 2px 10px rgba(0,0,0,.45));transition:opacity .25s,transform .25s}
+.corner-mark img{display:block;width:100%;height:auto}
+.corner-mark:hover{opacity:1;transform:translateY(-1px)}
+[data-theme] .corner-mark{filter:drop-shadow(0 2px 10px rgba(0,0,0,.6)) drop-shadow(0 0 8px rgba(0,200,240,.25))}
+@media (max-width:520px){.corner-mark{width:64px;right:10px;bottom:10px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -179,7 +255,7 @@ footer ul{list-style:none}
   </div>
 
   <main class="hero">
-    <div class="badge"><span class="dot"></span> Ionity (Pty) Ltd · AEDI · Free forever · v3.6.0</div>
+    <div class="badge"><span class="dot"></span> Ionity (Pty) Ltd · AEDI · Free forever · v3.6.1</div>
     <h1>Your whole workstation, <span class="grad">seen and unseen</span></h1>
     <p class="sub">
       Tick what you need, press Install, walk away. ProGramerly builds your whole dev machine,
@@ -201,6 +277,10 @@ footer ul{list-style:none}
       </a>
     </div>
     <p class="relmeta" id="relmeta">Checking for the latest release…</p>
+    <div class="hero-dome" id="heroDome">
+      <canvas id="heroDomeCanvas" aria-label="The Ionity DOME in 3D - drag to turn it, hover a node for its segment"></canvas>
+      <p class="hero-dome-note"><b>The DOME</b> &middot; drag to turn &middot; hover a node &middot; <span>illustration &mdash; the app draws yours from your own machine</span></p>
+    </div>
   </main>
 
   <section class="sheet">
@@ -209,37 +289,37 @@ footer ul{list-style:none}
       <p class="lede">No wizards to babysit, no half-finished PATH. Pick a profile, press go, walk away.</p>
       <div class="grid">
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+          <div class="ico" data-icon="catalogue"></div>
           <h3>A real catalogue</h3>
           <p>Over a hundred curated packages across runtimes, IDEs, shells, databases, embedded, ML and MCP tooling — resolved to winget, Chocolatey or Homebrew per machine.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg></div>
+          <div class="ico" data-icon="updates"></div>
           <h3>Stays current</h3>
           <p>Checks GitHub Releases on its own schedule, verifies each download against the published SHA-256, and updates itself in place.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+          <div class="ico" data-icon="monitor"></div>
           <h3>Watches the machine</h3>
           <p>A tray monitor for CPU, memory, disk and network, with live probing so you find out something broke before your build does.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <div class="ico" data-icon="maintenance"></div>
           <h3>Repairs itself</h3>
           <p>Registry repair, PATH reconstruction and a dry-run mode that shows exactly what would change before a single byte moves.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2 15 9l7 3-7 3-3 7-3-7-7-3 7-3 3-7z"/></svg></div>
+          <div class="ico" data-icon="ai"></div>
           <h3>AEDi, on first run</h3>
           <p>Tick <em>AEDi local core</em> in Software and Ollama plus a starter model are installed with everything else. The chip in the top bar always says which model is answering — or that none is yet. Nothing leaves the machine.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div>
+          <div class="ico" data-icon="shield"></div>
           <h3>Zero runtime dependencies</h3>
           <p>Node standard library only. Nothing to audit but the code you can already read, under Policy 986 AED.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 18v3"/><path d="m7 9 3 2-3 2"/><path d="M12 13h4"/></svg></div>
+          <div class="ico" data-icon="dome"></div>
           <h3>The Ai-OS shell and the DOME</h3>
           <p>ProGramerly opens in the IONITY Ai-OS operator layout: one ask box wired to AEDi, the workstation DOME — five strata, 26 segments, drillable — stats, tiles and a dock. Every percentage on the dome says whether it is <em>measured</em>, <em>computed</em>, an <em>assessment</em> or <em>state</em>; nothing is scored from a constant.</p>
         </div>
@@ -247,38 +327,49 @@ footer ul{list-style:none}
     </div>
   </section>
 
+  <section class="sheet film-sheet" id="film">
+    <div class="wrap">
+      <h2>Ionity, in motion</h2>
+      <p class="lede">Native AI on the edge, the AEDi stack, and the workstation that runs it &mdash; twenty seconds from the Ionity brand film.</p>
+      <div class="film-frame" id="filmFrame">
+        <video id="filmVideo" src="media/ionity-film.mp4" poster="media/ionity-film-poster.jpg" muted loop playsinline preload="metadata"></video>
+        <button class="film-sound" id="filmSound" type="button" aria-pressed="false">Sound on</button>
+      </div>
+    </div>
+  </section>
+
   <section class="sheet" id="new">
     <div class="wrap">
-      <h2>New in 3.6.0 — the forecast, and the catalog people actually live in</h2>
+      <h2>New in 3.6 — the forecast, and the catalog people actually live in</h2>
       <p class="lede">AEDi Predict tells you how the run will go on this machine before you press Install — and learns from every run. Twenty-seven new items, three new groups, and still not one account linked.</p>
       <div class="grid">
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 3v18M5 7l7 4 7-4"/></svg></div>
+          <div class="ico" data-icon="predict"></div>
           <h3>AEDi Predict</h3>
           <p>Likelihood per item, expected clean installs, minutes with a range, download against free disk and an 8&nbsp;GB reserve, and a risk list — built from what is read at that moment: engines on PATH, package hosts that answer, free space, elevation. Every figure carries its class: <em>measured</em>, <em>learned</em>, <em>computed</em>, <em>assumed</em>.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
+          <div class="ico" data-icon="learn"></div>
           <h3>It learns this machine</h3>
           <p>Every run teaches its outcomes and timings back in. The likelihood is a shrunk posterior — three real outcomes outweigh the shipped prior — minutes switch to the learned median, and a speed factor scales the priors to your line. One sample every five minutes gives each disk a GB/day trend and a days-to-full. Nothing leaves the machine; <em>Forget the history</em> is one click.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.6L3 21l1.4-5.6A8.5 8.5 0 1 1 21 12z"/></svg></div>
+          <div class="ico" data-icon="chat"></div>
           <h3>Communication</h3>
           <p>WhatsApp Desktop, Microsoft Teams, Zoom, Slack, Discord, Telegram, Signal — installed and left signed out. You link your own phone and accounts; ProGramerly never touches one.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 18a4 4 0 0 1-.6-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1 0 9z"/></svg></div>
+          <div class="ico" data-icon="cloud"></div>
           <h3>Cloud drives and sync</h3>
           <p>Google Drive for desktop, Microsoft OneDrive, Dropbox, and rclone for scripting any of them from the terminal. Same rule: installed, not signed in.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2 2 0 0 1-2.8-2.8l9.4-9.4z"/><path d="M15 3a6 6 0 0 1 6 6"/></svg></div>
+          <div class="ico" data-icon="terminals"></div>
           <h3>The agent bench and the maker bench</h3>
           <p>Gemini CLI, Codex CLI, GitHub Copilot CLI and <em>Claude Code ⇄ GitHub relations</em> (git, gh, the official claude-code-action template — no token). Firebase CLI with its local emulators. Bun, Deno and a Node toolbelt. Unity Hub, Godot. Blender, FreeCAD, KiCad, PrusaSlicer, Cura. GitKraken, lazygit, PowerToys, LibreOffice, Bruno, Twilio CLI, n8n. archify from the public Ionity fork, installed as an agent skill.</p>
         </div>
         <div class="card">
-          <div class="ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18"/></svg></div>
+          <div class="ico" data-icon="verified"></div>
           <h3>Verified on the real application</h3>
           <p>The engine has 14 checks with injected facts; the running app has 39 more — the forecast line in Software, the four stat tiles, a likelihood bar per item under a strict CSP, ten hosts probed, a suggestion added to the selection, an honest answer when no model runs. The 3.5.0 check still drives Relations, Environments and System.</p>
         </div>
@@ -331,50 +422,80 @@ footer ul{list-style:none}
   <section class="sheet" id="suite">
     <div class="wrap">
       <h2>One suite, not a folder of tools</h2>
-      <p class="lede">
-        ProGramerly is the combined workstation: the Ionity tools below are built into it as
-        capabilities of the Command Center, not shipped as separate downloads. They arrive with the
-        Windows release, are pinned by size and SHA-256 inside the app, and are verified every time
-        before they run.
-      </p>
-      <div class="suite-grid">
-        <div class="suite">
-          <div class="glyph">FAN</div>
+      <p class="lede">Every workspace is a capability of the same Command Center. Hover a tool to open it up.</p>
+      <div class="tool-grid">
+        <article class="tool" tabindex="0" data-hue="#00c8f0">
+          <div class="tool-ico" data-icon="dome"></div>
+          <h3>The DOME</h3>
+          <p class="tool-line">Your machine as five strata and 26 segments, in 3D.</p>
+          <div class="tool-more"><p>Hardware, System, Storage, Toolchain, Intelligence &mdash; each segment bound to a real data set and scored live. Every figure says whether it is <em>measured</em>, <em>computed</em>, an <em>assessment</em> or <em>state</em>. Drag it, drill in, ask AEDi about any part of it.</p>
+            <ul class="chips"><li>26 segments</li><li>34 data sets</li><li>14 presets</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#f0a03c">
+          <div class="tool-ico" data-icon="predict"></div>
+          <h3>AEDi Predict</h3>
+          <p class="tool-line">Knows how the install will go before you press Install.</p>
+          <div class="tool-more"><p>Likelihood per item, minutes with a range, disk against an 8&nbsp;GB reserve, and the risks &mdash; read from the engines on PATH and the package hosts that answer. Learns from every run on this machine.</p>
+            <ul class="chips"><li>measured</li><li>learned</li><li>computed</li><li>assumed</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#2f7ff0">
+          <div class="tool-ico" data-icon="relations"></div>
+          <h3>Relations</h3>
+          <p class="tool-line">Everything running, seen and unseen, as one graph.</p>
+          <div class="tool-more"><p>Processes &mdash; including the ones a task list hides &mdash; ports, services, volumes, models, environments and repositories, joined by the relations that exist right now. Click a node: its facts, its actions, and Ask AEDi.</p>
+            <ul class="chips"><li>spawned</li><li>listens</li><li>runs-as</li><li>stored-on</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#8b7cf5">
+          <div class="tool-ico" data-icon="envs"></div>
+          <h3>Environments</h3>
+          <p class="tool-line">Describe it in a sentence. Get a real environment.</p>
+          <div class="tool-more"><p>Python venv, uv, conda, a Node project or a Docker compose stack. AEDi drafts the recipe, you press Create, the real commands stream back. Nothing is called created until its marker file exists.</p>
+            <ul class="chips"><li>venv</li><li>uv</li><li>conda</li><li>node</li><li>compose</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#a9762d">
+          <div class="tool-ico" data-icon="system"></div>
+          <h3>System</h3>
+          <p class="tool-line">Processes, services, startup and ports &mdash; one action per row.</p>
+          <div class="tool-more"><p>End a process, restart a service, disable a startup entry. Anything disabled is backed up first and comes back with one click.</p>
+            <ul class="chips"><li>End</li><li>Restart</li><li>Disable</li><li>Inspect</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#00c8f0">
+          <div class="tool-ico" data-icon="ai"></div>
+          <h3>AEDi &middot; local AI</h3>
+          <p class="tool-line">An assistant that runs on your hardware, not someone's cloud.</p>
+          <div class="tool-more"><p>Answers through Ollama with a small default model (<code>llama3.2:1b</code>, ~1.3&nbsp;GB, runs on CPU). Gemma is first class. Every curated model says what it is for &mdash; chat, code, reasoning, vision or embeddings.</p>
+            <ul class="chips"><li>offline</li><li>Ollama</li><li>Gemma</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#8b7cf5">
+          <div class="tool-ico" data-icon="ocr"></div>
+          <h3>Reading</h3>
+          <p class="tool-line">Page, screenshot or PDF to text, on this machine.</p>
+          <div class="tool-more"><p>OCR engines (Tesseract, RapidOCR, EasyOCR) for characters; tiny vision models (moondream, granite3.2-vision) for layout and handwriting. The answer always names its reader. Nothing is uploaded.</p>
+            <ul class="chips"><li>OCR</li><li>vision</li><li>PDF</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#00c8f0">
+          <div class="tool-ico" data-icon="fans"></div>
           <h3>Fan control</h3>
-          <p>Every fan channel with live RPM and duty, every temperature source, and a curve editor that shows what a curve would command beside what the fan is actually doing. Curves are designed and stored here; the driver-level apply belongs to the Ionity FanControl build (<em>Fanzi</em>).</p>
-        </div>
-        <div class="suite">
-          <div class="glyph">AiOS</div>
-          <h3>AiOS operator layout</h3>
-          <p>ProGramerly <em>is</em> the IONITY Ai-OS shell: top bar, ask box, workstation dome, stats, tiles and dock — with every workspace opening as an app window over the deck.</p>
-        </div>
-        <div class="suite">
-          <div class="glyph">CiC</div>
+          <p class="tool-line">Every channel, its curve, and what it is doing now.</p>
+          <div class="tool-more"><p>Live RPM and duty for every fan, every temperature source, and a curve editor that shows the command beside the reality. The driver-level apply belongs to Ionity FanControl (<em>Fanzi</em>, Windows).</p>
+            <ul class="chips"><li>RPM</li><li>curves</li><li>Windows</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#0e9ab8">
+          <div class="tool-ico" data-icon="cic"></div>
           <h3>CiC</h3>
-          <p>The IONITY CiC workstation utility, one tile away in the Command Center.</p>
-        </div>
-        <div class="suite">
-          <div class="glyph">DOME</div>
-          <h3>The DOME, and what it can see</h3>
-          <p>The machine as navigable structure: Hardware, System, Storage, Toolchain, Intelligence — 26 segments, each bound to a real data set, scored live. 34 sets are registered as readable by AEDi, each tagged <em>measured</em>, <em>catalogue</em>, <em>manifest</em>, <em>state</em> or <em>computed</em>, so every figure it quotes can be traced. Fourteen standing presets — including <em>what is running, seen and unseen</em> and <em>what starts by itself</em>.</p>
-        </div>
-        <div class="suite">
-          <div class="glyph">AI</div>
-          <h3>AEDi — local AI, ready on first run</h3>
-          <p>AEDi answers through Ollama with a small default model (<code>llama3.2:1b</code>, about 1.3&nbsp;GB, runs on CPU) so the copilot answers on a laptop without sending anything anywhere. Gemma is first class — <code>gemma4:e2b</code> for everyday work, <code>gemma3:1b</code> for quick triage, <code>gemma4:e4b</code> where the memory is there — and every curated model declares what it is for: chat, code, reasoning, vision or embeddings.</p>
-        </div>
-        <div class="suite">
-          <div class="glyph">OCR</div>
-          <h3>Reading — OCR and local vision</h3>
-          <p>A workspace that turns a page, a screenshot or a PDF into text on this machine. Two kinds of reader, side by side, and the answer names which one produced it: an OCR engine (Tesseract, RapidOCR, EasyOCR) returns the characters it found; a tiny vision model (moondream, granite3.2-vision) reads layout and handwriting and can be asked a question about the page instead of transcribing it. PDFs are rendered at 200&nbsp;dpi and read page by page. Nothing is uploaded to be read.</p>
-        </div>
-        <div class="suite">
-          <div class="glyph">READ</div>
-          <h3>The machine reads itself, on launch</h3>
-          <p>As soon as the shell is up, the local model reads the registered sets and reports on the deck — which model answered, how many sets it read, and the figures it took from each. Every workspace carries its own Ask control scoped to what that workspace covers, every preset is one click from the dock orb, and the whole dome can be written out as a Markdown report.</p>
-        </div>
+          <p class="tool-line">Central Ionity Control, one tile away.</p>
+          <div class="tool-more"><p>The IONITY CiC workstation utility ships inside the Windows release, pinned by size and SHA-256 and verified every time before it runs.</p>
+            <ul class="chips"><li>SHA-256 pinned</li><li>Windows</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#3d8f63">
+          <div class="tool-ico" data-icon="software"></div>
+          <h3>Software</h3>
+          <p class="tool-line">143 items, 22 groups, one elevated run.</p>
+          <div class="tool-more"><p>Runtimes, IDEs, AI CLIs, MCP servers, databases, comms, cloud drives, CAD and PCB &mdash; resolved to winget, Chocolatey or Homebrew. Everything is installed signed-out; no account is ever linked.</p>
+            <ul class="chips"><li>winget</li><li>Homebrew</li><li>npm</li><li>pip</li></ul></div>
+        </article>
       </div>
-      <p class="relmeta" style="text-align:left;margin-top:14px">Windows release. macOS and Linux builds carry every other workspace; the Windows-only tools show as “not in this build” there.</p>
+      <p class="relmeta" style="text-align:left;margin-top:18px">Fan control and CiC ship in the Windows release; macOS and Linux carry every other workspace.</p>
     </div>
   </section>
 
@@ -394,6 +515,7 @@ footer ul{list-style:none}
           <li><a href="https://www.ionity.fun">www.ionity.fun — this page</a></li>
           <li><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly">github.com/Ionity-Global-Pty-Ltd/ProGramerly</a></li>
           <li><a href="AI-AND-ML.md">The AI and ML structure</a></li>
+          <li><a href="RELEASE-3.6.1.md">Release notes 3.6.1</a></li>
           <li><a href="RELEASE-3.6.0.md">Release notes 3.6.0</a></li>
           <li><a href="RELEASE-3.5.0.md">Release notes 3.5.0</a></li>
           <li><a href="versions/">Older versions of this page</a></li>
@@ -404,6 +526,10 @@ footer ul{list-style:none}
   </footer>
 </div>
 
+<a class="corner-mark" href="https://www.ionity.co.za" title="Ionity (Pty) Ltd" aria-label="IONITY"><img src="assets/ionity-official.png" alt="IONITY" width="96" height="29"></a>
+
+<script src="assets/icons.js"></script>
+<script src="assets/dome3d.js"></script>
 <script>
 (function(){
   /* ------------------------------------------------------------- theme */
@@ -591,7 +717,13 @@ footer ul{list-style:none}
   primaryLabel.textContent='Download for '+osName;
 
   function mb(n){ return (n/1048576).toFixed(1)+' MB'; }
-  function pick(assets,re){ for(var i=0;i<assets.length;i++){ if(re.test(assets[i].name)) return assets[i]; } return null; }
+  /* re may be one pattern or a list tried in order - the first match wins.
+     Apple Silicon falls back to the arm64 .zip when a release has no .dmg. */
+  function pick(assets,re){
+    var list=Array.isArray(re)?re:[re];
+    for(var k=0;k<list.length;k++){ for(var i=0;i<assets.length;i++){ if(list[k].test(assets[i].name)) return assets[i]; } }
+    return null;
+  }
 
   fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
     .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
@@ -601,8 +733,8 @@ footer ul{list-style:none}
         ['Windows 10/11 (x64)',       /Setup-.*-x64\.exe$/],
         ['Windows (ARM64)',           /Setup-.*-arm64\.exe$/],
         ['Windows portable',          /Portable-.*\.exe$/],
-        ['macOS (Apple Silicon)',     /-arm64\.dmg$/],
-        ['macOS (Intel)',             /-x64\.dmg$/],
+        ['macOS (Apple Silicon)',     [/-arm64\.dmg$/, /-arm64-mac\.zip$/]],
+        ['macOS (Intel)',             [/-x64\.dmg$/, /\d-mac\.zip$/]],
         ['Linux (any distro)',        /\.AppImage$/],
         ['Debian / Ubuntu',           /\.deb$/],
         ['Fedora / RHEL / openSUSE',  /\.rpm$/],
@@ -621,7 +753,7 @@ footer ul{list-style:none}
       });
       if(found) body.innerHTML=html;
 
-      var best = isMac   ? (pick(a,/-arm64\.dmg$/)||pick(a,/-x64\.dmg$/))
+      var best = isMac   ? (pick(a,[/-arm64\.dmg$/,/-arm64-mac\.zip$/])||pick(a,/-x64\.dmg$/))
                : isLinux ? (pick(a,/\.AppImage$/)||pick(a,/\.deb$/)||pick(a,/\.rpm$/))
                :           (pick(a,/Setup-.*-x64\.exe$/)||pick(a,/Portable-.*\.exe$/));
       if(best){ primary.href=best.browser_download_url; primaryLabel.textContent='Download '+rel.tag_name+' · '+osName; }
@@ -633,6 +765,72 @@ footer ul{list-style:none}
     .catch(function(){
       meta.innerHTML='No published release yet — <a href="https://github.com/'+REPO+'">browse the source</a> in the meantime.';
     });
+
+
+  /* ---------------------------------------- 3.6.1: icons, tilt, DOME, film */
+  if(window.PGIcons){
+    PGIcons.ensureDefs();
+    document.querySelectorAll('[data-icon]').forEach(function(el){ el.innerHTML=PGIcons.svg(el.getAttribute('data-icon')); });
+  }
+  document.querySelectorAll('.tool[data-hue]').forEach(function(t){ t.style.setProperty('--hue',t.getAttribute('data-hue')); });
+  /* one wrapper per drawer, so the 0fr -> 1fr row animates the whole body */
+  document.querySelectorAll('.tool-more').forEach(function(m){ var w=document.createElement('div'); while(m.firstChild) w.appendChild(m.firstChild); m.appendChild(w); });
+
+  var fine=window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  function tilt(el,max){
+    el.addEventListener('pointermove',function(e){
+      var r=el.getBoundingClientRect(), x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+      el.style.setProperty('--mx',(x*100).toFixed(1)+'%'); el.style.setProperty('--my',(y*100).toFixed(1)+'%');
+      if(reduce||!fine) return;
+      el.classList.add('tilt');
+      el.style.transform='perspective(900px) rotateX('+((0.5-y)*max).toFixed(2)+'deg) rotateY('+((x-0.5)*max).toFixed(2)+'deg) translateY(-4px)';
+    });
+    el.addEventListener('pointerleave',function(){ el.classList.remove('tilt'); el.style.transform=''; });
+  }
+  document.querySelectorAll('.card').forEach(function(c){ tilt(c,7); });
+  document.querySelectorAll('.tool').forEach(function(t){
+    tilt(t,9);
+    /* touch: a tap opens the card, a second tap closes it */
+    t.addEventListener('click',function(){ if(!fine) t.classList.toggle('open'); });
+  });
+
+  /* hero DOME - an illustration with example readings; the app draws the real one */
+  var domeCv=document.getElementById('heroDomeCanvas');
+  if(domeCv && window.Dome3D){
+    var EX=[
+      ['hardware','Hardware','#f0a03c',78,['Thermal envelope','Fans and airflow','Power and voltage','Lighting devices','Physical memory']],
+      ['system','System','#8b7cf5',64,['Privilege and elevation','Registry fix set','Ports and listeners','Environment and PATH','Doctor findings','Processes and services']],
+      ['storage','Storage','#bdd631',52,['Volumes','Development root','Reclaimable space','Verified tool payload']],
+      ['toolchain','Toolchain','#2f7ff0',86,['The catalogue','Installed set','Package resolvers','MCP servers','Repositories']],
+      ['intelligence','Intelligence','#00c8f0',71,['Local models','Reading and OCR','Acceleration','Environments','Data sets in reach','Analysis presets']]
+    ];
+    var strata=EX.map(function(s,i){
+      return {id:s[0],label:s[1],hue:s[2],value:s[3],level:i===2?'warn':'ok',
+        segments:s[4].map(function(n,j){ return {id:s[0]+'-'+j,name:n,value:Math.max(18,Math.min(98,s[3]+((j*37)%29)-14)),label:'example reading'}; })};
+    });
+    var dome=Dome3D.create(domeCv,{strata:strata,autoRotate:reduce?0:0.18,interactive:true,tooltip:true,labels:true,
+      onPick:function(){ var s=document.getElementById('suite'); if(s) s.scrollIntoView({behavior:'smooth'}); }});
+    if(!reduce){
+      var t0=null;
+      (function grow(ts){ if(t0===null) t0=ts; var k=Math.min(1,(ts-t0)/2400); dome.setReveal(k*strata.length); if(k<1) requestAnimationFrame(grow); })(performance.now());
+    }
+  }
+
+  /* film: plays muted while on screen, sound only on request */
+  var film=document.getElementById('filmVideo'), snd=document.getElementById('filmSound');
+  if(film){
+    if('IntersectionObserver' in window && !reduce){
+      new IntersectionObserver(function(es){ es.forEach(function(e){
+        if(e.isIntersecting){ var p=film.play(); if(p&&p.catch) p.catch(function(){}); } else film.pause();
+      }); },{threshold:0.35}).observe(film);
+    }
+    snd.addEventListener('click',function(){
+      film.muted=!film.muted;
+      snd.textContent=film.muted?'Sound on':'Sound off';
+      snd.setAttribute('aria-pressed',String(!film.muted));
+      if(film.paused){ var p=film.play(); if(p&&p.catch) p.catch(function(){}); }
+    });
+  }
 
 })();
 </script>

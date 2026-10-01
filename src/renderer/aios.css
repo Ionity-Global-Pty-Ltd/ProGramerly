@@ -154,8 +154,11 @@ body.kiosk-shell #shell{grid-template-rows:56px minmax(0,1fr) 76px}
 .card-sub b{color:var(--sh-tx2);font-weight:600}
 
 /* the dome: five strata of this workstation, base first */
-#dome-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:10px;padding:8px 14px 14px 18px}
+#dome-card{width:100%;min-width:0}
+#dome-body{flex:1;min-height:0;width:100%;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:10px;padding:8px 14px 14px 18px}
 #dome-svg{width:100%;height:100%;min-height:180px}
+#dome-stage{position:relative;width:100%;height:100%;min-height:200px}
+#dome-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #dome-svg .band{fill:rgba(148,196,222,.05);stroke:rgba(148,190,214,.30);stroke-width:1;transition:fill .3s,stroke .3s;cursor:pointer}
 #dome-svg .band.hot{fill:rgba(0,200,240,.16);stroke:var(--sh-cyan)}
 #dome-svg .band.warn{fill:rgba(240,160,60,.14);stroke:var(--sh-amber)}
@@ -228,7 +231,7 @@ body.kiosk-shell #shell{grid-template-rows:56px minmax(0,1fr) 76px}
 .dock-sep{width:1px;height:26px;background:var(--sh-line);margin:0 4px}
 #dock-orb{width:52px;height:52px;margin:0 4px}
 #dock-orb .ai-orb{width:40px;height:40px;margin:auto}
-#build-chip{position:absolute;right:0;bottom:26px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--sh-tx3)}
+#build-chip{position:fixed;right:clamp(14px,1.4vw,24px);bottom:calc(clamp(10px,1.2vh,16px) + 34px);text-align:right;font-size:8.5px !important;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--sh-tx3)}
 #build-chip b{color:var(--sh-tx2);font-weight:600}
 
 /* --------------------------------------------------------- app windows */
@@ -515,11 +518,12 @@ body.aios .sheet{z-index:80}
 /* ------------------------------------------------------------- the mark */
 /* The official transparent IONITY GLOBAL wordmark. It sits under the shell,
    bottom left, quiet enough to read as a watermark and never in the way. */
-.shell-mark{position:fixed;left:clamp(20px,2.2vw,44px);bottom:clamp(14px,1.4vh,22px);z-index:1;
-  width:clamp(112px,11vw,168px);height:auto;opacity:.15;pointer-events:none;user-select:none;
-  filter:drop-shadow(0 0 22px rgba(0,200,240,.28));
-  transition:opacity .6s var(--sh-ease)}
-body.kiosk-shell .shell-mark{opacity:.1}
+.shell-mark{position:fixed;right:clamp(14px,1.4vw,24px);bottom:clamp(10px,1.2vh,16px);z-index:60;
+  width:clamp(74px,6.2vw,96px);height:auto;opacity:.9;pointer-events:auto;user-select:none;
+  filter:brightness(1.4) drop-shadow(0 0 10px rgba(26,110,230,.45));
+  transition:opacity .4s var(--sh-ease),filter .4s var(--sh-ease)}
+.shell-mark:hover{opacity:1;filter:brightness(1.6) drop-shadow(0 0 16px rgba(0,200,240,.6))}
+body.kiosk-shell .shell-mark{opacity:.55}
 .shell-mark[hidden]{display:none}
 
 /* ----------------------------------------------------------- the accent */
@@ -902,3 +906,64 @@ body.brief-on #chat{gap:9px}
 .linkbtn.forecast{text-decoration:none;color:var(--sh-tx2);border:1px solid var(--sh-line);border-radius:999px;padding:2px 9px;font-size:11px}
 .linkbtn.forecast:hover{color:var(--sh-cyan);border-color:rgba(0,200,240,.35)}
 .linkbtn.forecast.warn{color:var(--sh-amber);border-color:rgba(240,160,60,.35)}
+
+
+/* ===================== Ionity icon set =================================== */
+/* Three layers per icon: the body (gradient fill), the line (bright edge)
+   and the accent (orange). Each moves on its own on hover. */
+.pgi-defs{position:absolute;width:0;height:0;overflow:hidden}
+.pgi{width:20px;height:20px;overflow:visible;fill:none;stroke:none;transition:transform .35s var(--sh-ease),filter .35s var(--sh-ease)}
+.pgi .b{fill:url(#pgi-body);stroke:none;opacity:.26;transition:opacity .35s var(--sh-ease),transform .35s var(--sh-ease);transform-origin:center;transform-box:fill-box}
+.pgi .l{fill:none;stroke:url(#pgi-line);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pgi .a{fill:url(#pgi-accent);stroke:url(#pgi-accent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:filter .35s var(--sh-ease)}
+.pgi path.a[d*="h"],.pgi path.a[d*="M"]{fill:none}
+.pgi rect.a,.pgi circle.a,.pgi path.a[d$="z"]{fill:url(#pgi-accent)}
+.tile-glyph .pgi{width:22px;height:22px}
+.aw-title .tile-glyph .pgi{width:22px;height:22px}
+.dock-btn .pgi{width:22px;height:22px}
+.dock-btn .pgi .b{opacity:.18}
+.dock-btn:hover .pgi .b,.dock-btn.near .pgi .b,.dock-btn.active .pgi .b{opacity:.42}
+.dock-btn:hover .pgi .a,.dock-btn.active .pgi .a{filter:drop-shadow(0 0 4px rgba(255,122,0,.9))}
+.tb-icon .pgi{width:19px;height:19px}
+.tb-icon .pgi .b{opacity:.15}
+
+/* ===================== tiles with depth ================================== */
+#modules{perspective:900px}
+.tile{transform-style:preserve-3d;will-change:transform;transition:transform .45s var(--sh-ease),border-color .3s,box-shadow .45s var(--sh-ease)}
+.tile.tilt{transition:transform .08s linear,border-color .3s,box-shadow .3s;box-shadow:0 18px 40px -18px rgba(0,0,0,.75),0 0 0 1px rgba(0,200,240,.18),0 0 34px -10px var(--hue,rgba(0,200,240,.35))}
+.tile .tile-glyph{transform:translateZ(0);transition:transform .45s var(--sh-ease),box-shadow .45s var(--sh-ease),background .3s}
+.tile.tilt .tile-glyph,.tile:hover .tile-glyph{transform:translateZ(26px) scale(1.12);box-shadow:0 10px 22px -8px rgba(0,200,240,.55);background:rgba(0,200,240,.14)}
+.tile.tilt .tile-glyph .pgi .b,.tile:hover .tile-glyph .pgi .b{opacity:.55}
+.tile.tilt .tile-glyph .pgi .a,.tile:hover .tile-glyph .pgi .a{filter:drop-shadow(0 0 5px rgba(255,122,0,.95))}
+.tile.tilt b,.tile:hover b{transform:translateZ(14px)}
+.tile b{transition:transform .45s var(--sh-ease)}
+/* the light sheen that follows the pointer, brighter and sharper than before */
+.tile::after{background:radial-gradient(260px 180px at var(--mx,50%) var(--my,0%),rgba(140,220,255,.16),transparent 65%),
+  linear-gradient(115deg,transparent 30%,rgba(255,255,255,.05) 45%,transparent 60%)}
+
+/* ===================== dock as a shelf =================================== */
+.dock-btn{transition:color .25s,background .25s,transform .18s var(--sh-ease)}
+.dock-btn:hover{transform:none}
+.dock-btn.near{color:var(--sh-tx)}
+
+/* ===================== the 3D DOME ======================================= */
+.dome3d-tip{position:absolute;z-index:5;pointer-events:none;display:flex;flex-direction:column;gap:2px;
+  padding:7px 10px;border-radius:10px;border:1px solid rgba(0,200,240,.35);background:rgba(6,12,18,.92);
+  box-shadow:0 10px 26px -10px rgba(0,0,0,.8),0 0 18px -6px rgba(0,200,240,.45);font-size:11px;max-width:220px}
+.dome3d-tip b{font-weight:600;color:var(--sh-tx)}
+.dome3d-tip span{color:var(--sh-cyan);font-size:10.5px;letter-spacing:.04em}
+.dome3d-tip em{font-style:normal;color:var(--sh-tx3);font-size:10px}
+.dome3d-tip[hidden]{display:none}
+.dome-hero{position:relative;height:clamp(240px,34vh,340px);margin:4px 0 10px;border-radius:var(--sh-r-md);
+  border:1px solid var(--sh-line);background:radial-gradient(120% 90% at 50% 100%,rgba(0,200,240,.08),transparent 60%),rgba(4,10,16,.35);overflow:hidden}
+.dome-hero-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dome-hero-hint{position:absolute;left:14px;bottom:10px;margin:0;font-size:10px;letter-spacing:.08em;color:var(--sh-tx3);pointer-events:none}
+
+/* The dock leaves the bottom-right corner to the official mark. */
+#dockwrap{padding-right:clamp(96px,8vw,124px);padding-left:12px}
+#dock{max-width:100%;padding:8px 12px;gap:4px}
+#dock .dock-btn{width:42px;height:42px}
+#dock-orb{width:48px;height:48px}
+#dome-legend button{grid-template-columns:8px minmax(0,1fr) auto;min-width:0}
+#dome-legend button span{min-width:0}
+#dome-legend button small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

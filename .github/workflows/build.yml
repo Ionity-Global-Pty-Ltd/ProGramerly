@@ -231,29 +231,38 @@ jobs:
           else
             echo "::notice::Apple ID secrets absent - skipping notarisation"
           fi
-          # electron-builder writes every artifact, then unmounts the DMG volume.
-          # On the Apple-Silicon runners that final `hdiutil detach` intermittently
-          # returns 1 - or 3, "no such volume", because it was already unmounted -
-          # which fails the step even though the .dmg and .zip files are complete
-          # and valid. So the exit code is captured and then judged against what
-          # actually landed in dist/. A real build failure produces no artifacts
-          # and still fails here.
+          # One architecture at a time, each retried. electron-builder writes the
+          # artifacts and then unmounts the DMG volume; on the Apple-Silicon
+          # runners that `hdiutil detach` intermittently returns 1 or 3 - and in
+          # 3.6.0 it took the arm64 .dmg down with it while the x64 one survived,
+          # so "any .dmg exists" let a release ship without Apple Silicon. Now
+          # every arch must produce BOTH its .dmg and its .zip, or the job fails.
           set +e
-          npx electron-builder --mac --publish never
-          rc=$?
-          set -e
-          dmgs=$(ls -1 dist/*.dmg 2>/dev/null | wc -l | tr -d " ")
-          zips=$(ls -1 dist/*.zip 2>/dev/null | wc -l | tr -d " ")
-          echo "electron-builder exit=$rc  dmg=$dmgs  zip=$zips"
+          ver=$(node -p "require('./package.json').version")
+          build_arch() {
+            arch=$1; dmg=$2; zip=$3
+            for attempt in 1 2 3; do
+              hdiutil info | awk '/\/Volumes\/ProGramerly/ {print $1}' | xargs -I{} hdiutil detach -force {} 2>/dev/null
+              npx electron-builder --mac dmg zip --$arch --publish never
+              rc=$?
+              if [ -f "dist/$dmg" ] && [ -f "dist/$zip" ]; then
+                [ "$rc" -ne 0 ] && echo "::warning::$arch: electron-builder exited $rc after writing $dmg and $zip (hdiutil detach flake) - artifacts verified present"
+                return 0
+              fi
+              echo "::warning::$arch attempt $attempt: exit $rc, dmg=$( [ -f dist/$dmg ] && echo yes || echo no ) zip=$( [ -f dist/$zip ] && echo yes || echo no ) - retrying"
+              sleep 10
+            done
+            return 1
+          }
+          ok=0
+          build_arch arm64 "ProGramerly-$ver-arm64.dmg" "ProGramerly-$ver-arm64-mac.zip" || ok=1
+          build_arch x64   "ProGramerly-$ver-x64.dmg"   "ProGramerly-$ver-mac.zip"       || ok=1
           ls -la dist/ || true
-          if [ "$dmgs" -ge 1 ] && [ "$zips" -ge 1 ]; then
-            if [ "$rc" -ne 0 ]; then
-              echo "::warning::electron-builder exited $rc after writing every artifact (hdiutil detach flake on the arm64 runner) - artifacts verified present, treating as success"
-            fi
-            exit 0
+          if [ "$ok" -ne 0 ]; then
+            echo "::error::a macOS architecture is missing its .dmg or .zip after three attempts"
+            exit 1
           fi
-          echo "::error::macOS build produced no usable artifacts (electron-builder exit $rc)"
-          exit 1
+          exit 0
       - uses: actions/upload-artifact@v4
         with:
           name: ProGramerly-macos

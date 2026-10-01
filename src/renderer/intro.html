@@ -10,6 +10,9 @@
 <body>
   <div class="stage" id="stage">
     <canvas id="stars"></canvas>
+    <!-- The Ionity node burst - the brand's own intro film, cut before it turns
+         white and cropped square so the generator mark falls outside. -->
+    <video class="burst" id="burst" src="assets/media/ionity-intro.mp4" muted playsinline preload="auto"></video>
 
     <div class="beamlane" id="beamlane">
       <div class="beam" id="beam">
@@ -24,20 +27,10 @@
     <div class="subtitle" id="subtitle"></div>
     <div class="strap" id="strap">AEDi · Native-AI workstation · ProGramerly</div>
 
-    <!-- The DOME assembles: one arc per stratum, drawn as its facts are read. -->
+    <!-- The DOME assembles in 3D: one band per stratum, base first, each drawn
+         as its facts are read off this machine. -->
     <section class="domewrap" id="domewrap" aria-hidden="true">
-      <svg class="dome" id="dome" viewBox="0 0 520 250" preserveAspectRatio="xMidYMax meet">
-        <defs>
-          <linearGradient id="domeGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stop-color="#1a6ee6"/><stop offset=".5" stop-color="#00c8f0"/><stop offset="1" stop-color="#ff7a00"/>
-          </linearGradient>
-          <radialGradient id="apexGrad"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#ff7a00"/><stop offset="1" stop-color="rgba(255,122,0,0)"/></radialGradient>
-        </defs>
-        <g id="arcs"></g>
-        <g id="segdots"></g>
-        <line class="ground" x1="24" y1="232" x2="496" y2="232" />
-        <circle class="apex" id="apex" cx="260" cy="156" r="0" />
-      </svg>
+      <div class="dome3d-host"><canvas class="dome3d" id="dome3d"></canvas></div>
       <ul class="strata" id="strata"></ul>
     </section>
 
@@ -49,10 +42,11 @@
       <span class="dim" id="colo-meta">Policy 986 AED · © 2018–2026 Antwerp Designs | Ionity (Pty) Ltd · TM</span>
     </div>
 
-    <div class="aedi" id="watermark" aria-hidden="true"><img src="assets/logo.png" alt="" draggable="false" /><span>AEDi<small>Ionity intelligence fabric</small></span></div>
+    <img class="corner-mark" id="watermark" src="assets/ionity-official.png" alt="IONITY" draggable="false" />
     <button class="skip" id="skip" type="button">Skip</button>
   </div>
   <div class="flash" id="flash" aria-hidden="true"></div>
+  <script src="dome3d.js"></script>
   <script src="intro.js"></script>
 </body>
 </html>

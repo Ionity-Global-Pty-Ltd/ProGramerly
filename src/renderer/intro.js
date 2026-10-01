@@ -195,8 +195,31 @@ async function impact() {
   }
 }
 
+/* The Ionity node burst. The film is the brand's own intro, cut to its first
+   4.5 s (before it turns white) - the wordmark arrives as the nodes settle,
+   so the logo is revealed over the last of it rather than after it. A missing
+   or unplayable file simply skips the step. */
+async function playBurst() {
+  const v = $('burst');
+  if (!v) return;
+  try {
+    v.currentTime = 0;
+    await v.play();
+  } catch { return; }
+  v.classList.add('on');
+  await new Promise((resolve) => {
+    let done = false;
+    const end = () => { if (!done) { done = true; resolve(); } };
+    const tick = () => { if (finished || v.ended || v.currentTime >= 3.55) end(); else setTimeout(tick, 40); };
+    tick();
+    setTimeout(end, 5200);
+  });
+}
+
 async function revealLogo() {
   $('logo').classList.add('on');
+  const v = $('burst');
+  if (v) { v.classList.add('out'); setTimeout(() => { try { v.pause(); } catch { /* gone */ } }, 900); }
   await wait(420);
 }
 
@@ -216,103 +239,61 @@ async function typeSubtitle() {
 
 /* ------------------------------------------------------- the DOME, drawn -- */
 
-const CX = 260;
-const CY = 232;
-
-function arcPath(r) {
-  return `M${CX - r},${CY} A${r},${r} 0 0 1 ${CX + r},${CY}`;
-}
-
 /**
- * Draw the dome one stratum at a time, base first, narrating each with a fact
- * read off this machine. Each arc is stroked in by animating its dash offset
- * through the CSSOM - a parsed style attribute would be dropped by the CSP.
+ * The DOME assembles in three dimensions, base first: each stratum's band
+ * sweeps around the hemisphere while its fact - read off this machine - is
+ * narrated beside it. The intro knows the structure (strata and their segment
+ * counts), not the scores, so every band is glass and every node neutral: it
+ * shows what will be measured, never a measurement it has not taken.
  */
+let dome = null;
 async function assembleDome() {
-  // The strata come from the main process (dome.FRAMEWORK). If that read did
-  // not arrive there is nothing real to draw, so the dome is skipped rather
-  // than sketched from a stand-in.
   const strata = Array.isArray(CFG.strata) && CFG.strata.length ? CFG.strata : [];
   if (!strata.length) return;
 
   const wrap = $('domewrap');
-  const arcs = $('arcs');
   const list = $('strata');
-  const outer = 196;
-  const step = Math.floor((outer - 42) / strata.length);
-
-  arcs.innerHTML = '';
   list.innerHTML = '';
-  strata.forEach((st, i) => {
-    const r = outer - i * step;
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', arcPath(r));
-    path.setAttribute('class', i === 0 ? 'arc outer' : 'arc');
-    path.dataset.stratum = st.id;
-    arcs.appendChild(path);
-
+  strata.forEach((st) => {
     const li = document.createElement('li');
     li.dataset.stratum = st.id;
     li.innerHTML = `<i></i><b>${st.label}</b><span>${st.strap}</span><em></em>`;
     li.querySelector('i').style.background = STRATUM_HUE[st.id] || '#00c8f0';
+    li.querySelector('i').style.color = STRATUM_HUE[st.id] || '#00c8f0';
     list.appendChild(li);
   });
 
   wrap.classList.add('on');
   wrap.style.opacity = '1'; wrap.style.transform = 'none';
-  await wait(140);
 
-  /* Each arc is stroked in by a timer-driven tween rather than a CSS
-     transition: a window that is not being composited (a headless check, a
-     driver hiccup, a VM without a compositor) does not advance CSS
-     transitions, and the dome must still end up drawn. */
+  if (window.Dome3D) {
+    dome = window.Dome3D.create($('dome3d'), {
+      strata: strata.map((st) => ({ id: st.id, label: st.label, hue: STRATUM_HUE[st.id], value: null, level: 'idle', segments: st.segments })),
+      autoRotate: 0.55, interactive: false, labels: false, tooltip: false, glow: 1.15, yaw: -1.2,
+    });
+    dome.setReveal(0);
+  }
+  await wait(120);
+
+  /* Timer-driven, not CSS: a window that is not being composited must still
+     end up with the whole dome drawn. */
   for (let i = 0; i < strata.length; i += 1) {
     if (finished) break;
     const st = strata[i];
-    const path = arcs.children[i];
     const li = list.children[i];
-    const len = path.getTotalLength();
-    path.style.strokeDasharray = `${len}`;
-    path.style.strokeDashoffset = `${len}`;
-    path.style.opacity = '0.96';
-    path.classList.add('on');
     li.classList.add('on');
     li.style.opacity = '1'; li.style.transform = 'none';
     li.querySelector('em').textContent = factFor(st);
     $('status').textContent = `${st.label.toUpperCase()} · ${st.segments} segments · ${factFor(st)}`;
     beep(420 + i * 130, 42, 0.03);
-    tween(560, (t) => { path.style.strokeDashoffset = `${len * (1 - t)}`; });
+    if (dome) tween(520, (t) => dome.setReveal(i + t));
     // eslint-disable-next-line no-await-in-loop
-    await wait(380);
+    await wait(400);
   }
-
-  // The segment ring: one dot per segment, sweeping the apex arc.
   if (!finished) {
-    const dots = $('segdots');
-    const total = strata.reduce((a, st) => a + st.segments, 0);
-    dots.innerHTML = '';
-    for (let i = 0; i < total; i += 1) {
-      const a = Math.PI - (i / (total - 1)) * Math.PI;
-      const r = outer + 14;
-      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      c.setAttribute('cx', (CX + Math.cos(a) * r).toFixed(1));
-      c.setAttribute('cy', (CY - Math.sin(a) * r).toFixed(1));
-      c.setAttribute('r', '2.2');
-      c.setAttribute('class', 'segdot');
-      dots.appendChild(c);
-      // eslint-disable-next-line no-await-in-loop
-      if (i % 3 === 0) await wait(16);
-      c.classList.add('on');
-      c.style.opacity = '0.9';
-    }
+    if (dome) dome.setReveal(Infinity);
     beep(2600, 60, 0.035);
-    // The apex sits on the innermost arc, not at a guessed height.
-    const apex = $('apex');
-    apex.setAttribute('cx', String(CX));
-    apex.setAttribute('cy', String(CY - (outer - (strata.length - 1) * step)));
-    apex.setAttribute('r', '7');
-    apex.classList.add('on');
-    apex.style.opacity = '1';
+    const total = strata.reduce((a, st) => a + st.segments, 0);
     $('status').textContent = `${total} SEGMENTS BOUND · ${CFG.datasets || 0} DATA SETS IN REACH`;
   }
 }
@@ -346,6 +327,7 @@ async function play() {
 
   await chargingBeam();
   if (!finished) await impact();
+  if (!finished) await playBurst();
   if (!finished) await revealLogo();
   if (!finished) await typeSubtitle();
   if (!finished) await assembleDome();
@@ -359,7 +341,7 @@ function done() {
   finished = true;
   document.body.style.transition = 'opacity .35s ease';
   document.body.style.opacity = '0';
-  setTimeout(() => api.introDone(), 340);
+  setTimeout(() => { if (dome) dome.destroy(); api.introDone(); }, 340);
 }
 
 $('skip').addEventListener('click', done);

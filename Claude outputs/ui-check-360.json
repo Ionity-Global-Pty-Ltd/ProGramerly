@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-29T07:20:18.617Z",
+  "at": "2026-10-01T00:47:47.519Z",
   "platform": "linux",
   "results": [
     {
@@ -14,7 +14,7 @@
     {
       "pass": true,
       "name": "the top bar carries the version",
-      "detail": "v3.6.0"
+      "detail": "v3.6.1"
     },
     {
       "pass": true,
@@ -112,7 +112,7 @@
     {
       "pass": true,
       "name": "the forecast for the selection was read",
-      "detail": "31 selected · online · 09:20 AM"
+      "detail": "31 selected · online · 02:47 AM"
     },
     {
       "pass": true,
@@ -142,12 +142,12 @@
     {
       "pass": true,
       "name": "package hosts were probed with a TCP connect",
-      "detail": "winget CDN 143ms · Chocolatey 143ms · Homebrew 143ms · npm registry 143ms · GitHub 143ms"
+      "detail": "winget CDN 312ms · Chocolatey 307ms · Homebrew 302ms · npm registry 296ms · GitHub 297ms"
     },
     {
       "pass": true,
       "name": "the machine card reads memory and disks",
-      "detail": "Machine forecast 5 samples · 0 h Trend lines need at least six samples over two hours of use; ProGramerly keeps one every five minutes while"
+      "detail": "Machine forecast 8 samples · 41.5 h /31.0 GB free measured filling at 0.02 GB/day → full in ~1475 days computed/opt/claude-code0.0 GB free m"
     },
     {
       "pass": true,

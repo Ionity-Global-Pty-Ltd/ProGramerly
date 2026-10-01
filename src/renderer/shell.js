@@ -39,6 +39,11 @@
     system: SVG('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 9h4M7 12h7"/>'),
     predict: SVG('<path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 3v18M5 7l7 4 7-4"/>'),
   };
+  /* The Ionity icon set (icons.js) replaces the line glyphs wherever it loaded:
+     tiles, dock and window heads all draw from the same three-layer icons. */
+  if (window.PGIcons) {
+    for (const k of new Set([...Object.keys(GLYPH), 'predict'])) GLYPH[k] = window.PGIcons.svg(k);
+  }
   /* Segment icons live with the DOME surface so both use the same set. */
   const SEG = () => (window.PGApps && window.PGApps.GLYPHS) || {};
 
@@ -293,12 +298,24 @@
       b.addEventListener('click', () => openApp(id));
       host.appendChild(b);
     });
+    /* The tile follows the pointer: it tilts toward it, the light sheen
+       tracks it and the icon lifts off the face. Transforms go through the
+       CSSOM, which the CSP allows. */
+    let tilted = null;
+    const untilt = (t) => { if (!t) return; t.style.transform = ''; t.classList.remove('tilt'); };
     host.addEventListener('pointermove', (e) => {
-      const t = e.target.closest('.tile'); if (!t) return;
+      const t = e.target.closest('.tile');
+      if (tilted && tilted !== t) { untilt(tilted); tilted = null; }
+      if (!t) return;
       const r = t.getBoundingClientRect();
-      t.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
-      t.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
+      const nx = (e.clientX - r.left) / r.width; const ny = (e.clientY - r.top) / r.height;
+      t.style.setProperty('--mx', `${nx * 100}%`);
+      t.style.setProperty('--my', `${ny * 100}%`);
+      t.style.transform = `perspective(720px) rotateX(${((0.5 - ny) * 9).toFixed(2)}deg) rotateY(${((nx - 0.5) * 11).toFixed(2)}deg) translateY(-4px)`;
+      t.classList.add('tilt');
+      tilted = t;
     });
+    host.addEventListener('pointerleave', () => { untilt(tilted); tilted = null; });
   }
   const hueFill = (hex, a) => hexToRgba(hex, a);
 
@@ -326,37 +343,27 @@
   let domeData = null;
   let domeBusy = false;
 
-  const W = 360;
-  const H = 200;
-  const CX = 180;
-  const CY = 190;
-
-  function ringPath(ro, ri) {
-    return `M${CX - ro},${CY} A${ro},${ro} 0 0 1 ${CX + ro},${CY} L${CX + ri},${CY} A${ri},${ri} 0 0 0 ${CX - ri},${CY} Z`;
+  /* The deck DOME is drawn in 3D by dome3d.js from the same overview the
+     DOME surface uses: each stratum a band filled to its score, each segment
+     a node in its own level's colour. Drag to turn it, hover for a reading,
+     click a node to open that stratum. */
+  let dome3d = null;
+  function dome3dStrata(strata) {
+    return strata.map((st) => ({
+      id: st.id, label: st.label, hue: STRATUM_HUE[st.id], value: st.value, level: st.level,
+      segments: (st.segments || []).map((g) => ({ id: g.id, name: g.name, value: g.value, level: g.level, label: g.label })),
+    }));
   }
 
   function buildDome(strata) {
-    const svg = $('dome-svg');
-    const outer = 168;
-    const step = Math.floor((outer - 18) / strata.length);
-    let html = '<line class="base" x1="6" y1="190" x2="354" y2="190"/>';
-    strata.forEach((st, i) => {
-      const ro = outer - i * step;
-      const ri = ro - step + 4;
-      html += `<path class="band" data-stratum="${safe(st.id)}" d="${ringPath(ro, ri)}"><title>${safe(st.label)} — ${safe(st.strap)}</title></path>`;
-      html += `<text class="lbl" x="${CX}" y="${CY - (ro + ri) / 2 + 3}" text-anchor="middle">${safe(st.label.toUpperCase())}</text>`;
-    });
-    html += `<circle class="apex" cx="${CX}" cy="${CY - (outer - (strata.length - 1) * step) + 6}" r="3"/>`;
-    svg.innerHTML = html;
-    // Each band is stroked in its stratum's colour through the CSSOM.
-    svg.querySelectorAll('.band').forEach((b) => {
-      const hue = STRATUM_HUE[b.dataset.stratum];
-      if (hue) { b.style.stroke = hue; b.style.fill = hueFill(hue, 0.1); }
-    });
-    svg.querySelectorAll('.band').forEach((b) => b.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openApp('dome', { focus: b.dataset.stratum });
-    }));
+    const cv = $('dome3d');
+    if (cv && window.Dome3D && !dome3d) {
+      dome3d = window.Dome3D.create(cv, {
+        strata: dome3dStrata(strata),
+        autoRotate: 0.16,
+        onPick: (hit) => openApp('dome', hit && hit.stratum ? { focus: hit.stratum.id } : {}),
+      });
+    }
 
     const legend = $('dome-legend');
     legend.innerHTML = strata.map((st) => `
@@ -377,21 +384,9 @@
 
   function paintDome(data) {
     if (!data) return;
-    if (!$('dome-svg').querySelector('.band')) buildDome(data.strata);
+    if (!$('dome-legend').querySelector('button')) buildDome(data.strata);
+    if (dome3d) dome3d.setStrata(dome3dStrata(data.strata));
     data.strata.forEach((st) => {
-      const band = document.querySelector(`#dome-svg .band[data-stratum="${st.id}"]`);
-      if (band) {
-        band.classList.remove('warn', 'err');
-        const hue = STRATUM_HUE[st.id] || '#00c8f0';
-        if (st.level === 'warn' || st.level === 'err') {
-          band.classList.add(st.level);
-          band.style.stroke = st.level === 'err' ? '#f0686a' : '#f0a03c';
-          band.style.fill = hueFill(st.level === 'err' ? '#f0686a' : '#f0a03c', 0.13);
-        } else {
-          band.style.stroke = hue;
-          band.style.fill = hueFill(hue, st.value != null && st.value >= 70 ? 0.16 : 0.08);
-        }
-      }
       const row = document.querySelector(`#dome-legend button[data-stratum="${st.id}"]`);
       if (row) {
         row.classList.remove('warn', 'err');
@@ -923,7 +918,37 @@
     finally { kioskBusy = false; }
   }
 
+  /* The dock wears the Ionity icon set, and magnifies under the pointer:
+     each button grows with its nearness to the cursor, so the row reads like
+     a physical shelf rather than a strip of links. */
+  function dressDock() {
+    if (window.PGIcons) {
+      window.PGIcons.ensureDefs();
+      document.querySelectorAll('#dock .dock-btn[data-app]').forEach((b) => {
+        if (b.id === 'dock-orb') return;
+        const old = b.querySelector('svg');
+        if (old) old.outerHTML = window.PGIcons.svg(b.dataset.app, 'dock');
+      });
+      const tb = { 'alert-ic': 'updates', 'kiosk-ic': 'monitor' };
+      for (const [id, icon] of Object.entries(tb)) { const el = $(id); const o = el && el.querySelector('svg'); if (o) o.outerHTML = window.PGIcons.svg(icon, 'top'); }
+    }
+    const dock = $('dock'); if (!dock) return;
+    const btns = [...dock.querySelectorAll('.dock-btn')];
+    dock.addEventListener('pointermove', (e) => {
+      for (const b of btns) {
+        const r = b.getBoundingClientRect();
+        const d = Math.abs(e.clientX - (r.left + r.width / 2));
+        const k = Math.max(0, 1 - d / 120);
+        const sc = 1 + 0.42 * k * k;
+        b.style.transform = k > 0 ? `translateY(${(-(sc - 1) * 16).toFixed(1)}px) scale(${sc.toFixed(3)})` : '';
+        b.classList.toggle('near', k > 0.55);
+      }
+    });
+    dock.addEventListener('pointerleave', () => { for (const b of btns) { b.style.transform = ''; b.classList.remove('near'); } });
+  }
+
   function bind() {
+    dressDock();
     document.querySelectorAll('[data-app]').forEach((b) => {
       if (b.id === 'dock-orb') return;   // the orb opens the preset menu, below
       b.addEventListener('click', () => openApp(b.dataset.app));

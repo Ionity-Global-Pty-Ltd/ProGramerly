@@ -1195,6 +1195,18 @@ installed and left signed out, and the Firebase web config stays a placeholder.
 
 ---
 
+### The DOME in 3D, the icon set, Apple Silicon — 3.6.1
+
+The DOME is a shaded 3D glass hemisphere (`src/renderer/dome3d.js`, no
+dependencies). Its five strata are lit bands, and each segment is a node you can
+hover. Drag it to turn it and click it to drill in. It is used on the deck, in
+the DOME workspace and in the intro. The intro now opens with the Ionity
+implosion film and then the official wordmark. `src/renderer/icons.js` adds 29
+layered custom icons for the tiles, dock and top bar. The official IONITY logo
+is fixed small in the bottom-right corner of the app and the site. CI now builds
+the macOS arm64 and x64 images separately and fails if either `.dmg` is
+missing. See `docs/RELEASE-3.6.1.md`.
+
 ## The download page
 
 `docs/index.html` is the public landing page, served by GitHub Pages from the

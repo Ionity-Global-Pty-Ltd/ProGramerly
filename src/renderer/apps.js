@@ -100,6 +100,7 @@
       let view = { level: 'overview', id: null };
       let data = null;
       let answerAbort = 0;
+      let hero3d = null;          // the 3D DOME on the overview, rebuilt with it
 
       host.innerHTML = '<div class="dome-app"><div class="dome-loading">Reading this machine…</div></div>';
       const root = host.querySelector('.dome-app');
@@ -134,6 +135,8 @@
               <button class="btn primary" data-act="ask" data-scope="all">${GLYPHS.spark}Ask AEDi</button>
             </div>
           </header>
+          <div class="dome-hero"><canvas class="dome-hero-canvas" aria-label="The DOME in 3D - drag to turn, click a node to open its stratum"></canvas>
+            <p class="dome-hero-hint">Drag to turn · hover a node for its reading · click to open the stratum</p></div>
           <p class="dome-note">${esc(s.sourceNote)}</p>
           <div class="dome-strata">
             ${s.strata.map((st) => `
@@ -162,10 +165,24 @@
           const card = cards[i];
           if (card && STRATUM_HUE[st.id]) card.style.setProperty('--seg-hue', STRATUM_HUE[st.id]);
         });
+        // The same 3D DOME as the deck, larger, with every segment pickable.
+        if (hero3d) { hero3d.destroy(); hero3d = null; }
+        const cv = root.querySelector('.dome-hero-canvas');
+        if (cv && window.Dome3D) {
+          hero3d = window.Dome3D.create(cv, {
+            strata: s.strata.map((st) => ({
+              id: st.id, label: st.label, hue: STRATUM_HUE[st.id], value: st.value, level: st.level,
+              segments: st.segments.map((g) => ({ id: g.id, name: g.name, value: g.value, level: g.level, label: g.label })),
+            })),
+            autoRotate: 0.1,
+            onPick: (hit) => { if (hit && hit.stratum) { hero3d.destroy(); hero3d = null; stratum(hit.stratum.id); } },
+          });
+        }
         wire();
       }
 
       async function stratum(id) {
+        if (hero3d) { hero3d.destroy(); hero3d = null; }
         root.innerHTML = '<div class="dome-loading">Reading the stratum…</div>';
         const st = await api.dome.stratum(id);
         root.innerHTML = `
@@ -357,11 +374,13 @@
         } catch { /* the quick pass stays on screen */ }
       }
 
-      if (h.focus === 'datasets') { await datasets(); return; }
+      const teardown = () => { if (hero3d) { hero3d.destroy(); hero3d = null; } };
+      if (h.focus === 'datasets') { await datasets(); return teardown; }
       if (h.focus) {
-        try { await stratum(h.focus); return; } catch { /* fall through to the overview */ }
+        try { await stratum(h.focus); return teardown; } catch { /* fall through to the overview */ }
       }
       await load();
+      return teardown;
     },
   };
 

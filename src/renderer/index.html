@@ -11,7 +11,7 @@
 <body class="aios">
   <div id="field" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
   <div id="grain" aria-hidden="true"></div>
-  <img class="shell-mark" id="shellMark" src="assets/ionity-mark.png" alt="" aria-hidden="true" />
+  <img class="shell-mark" id="shellMark" src="assets/ionity-official.png" alt="IONITY" title="IONITY · Ionity (Pty) Ltd" draggable="false" />
 
   <!-- ===================== DOME BOOT =====================================
        The startup of the official IONITY Ai-OS DOME build, carried over: the
@@ -32,7 +32,7 @@
   <div id="shell">
     <header id="topbar">
       <div class="tb-side">
-        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.6.0</span></span>
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.6.1</span></span>
         <span class="tb-divider"></span>
         <span id="clock">--:--</span>
         <span id="date">Local time</span>
@@ -93,7 +93,7 @@
           </div>
           <div class="card-sub"><b id="dome-read">Five strata</b> · <span id="dome-note">hardware to projects, read live</span></div>
           <div id="dome-body">
-            <svg id="dome-svg" viewBox="0 0 360 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+            <div id="dome-stage"><canvas id="dome3d" aria-label="The workstation DOME in 3D - drag to turn, hover a node for its reading"></canvas></div>
             <div id="dome-legend"></div>
           </div>
         </button>
@@ -753,6 +753,8 @@
   </main>
   </div>
 
+  <script src="icons.js"></script>
+  <script src="dome3d.js"></script>
   <script src="renderer.js"></script>
 </body>
 </html>
