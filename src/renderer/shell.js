@@ -947,8 +947,34 @@
     dock.addEventListener('pointerleave', () => { for (const b of btns) { b.style.transform = ''; b.classList.remove('near'); } });
   }
 
+  /* The pulse flow under the ask box: Pick -> Predict -> Install -> Watch.
+     Each caption is read from what the app already shows - the selection
+     count, the forecast line, the run counter, the CPU tile - never made up.
+     The pulse runs faster while an install is live. */
+  function flow() {
+    const nav = $('pflow'); if (!nav) return;
+    if (window.PGIcons) nav.querySelectorAll('[data-pgi]').forEach((el) => { el.innerHTML = window.PGIcons.svg(el.dataset.pgi); });
+    const txt = (id) => { const el = $(id); return el ? el.textContent.trim() : ''; };
+    const set = (id, v) => { const el = $(id); if (el && el.textContent !== v) el.textContent = v; };
+    const tick = () => {
+      const sel = txt('selCount');
+      set('pf-pick', /^0\b/.test(sel) || !sel ? 'nothing yet' : sel);
+      const fc = txt('selForecast');
+      const m = fc.match(/≈\s*\d+\s*\/\s*\d+\s*clean/) || fc.match(/~\s*\d+\s*min/);
+      set('pf-predict', m ? m[0] : 'before it runs');
+      const live = document.body.classList.contains('pg-installing');
+      set('pf-install', live ? (txt('runCounter') || 'running') : 'idle');
+      const cpu = txt('st-cpu-k');
+      set('pf-watch', cpu && cpu !== '—' ? `CPU ${cpu}` : 'reading…');
+      nav.classList.toggle('busy', live);
+    };
+    tick();
+    setInterval(tick, 1500);
+  }
+
   function bind() {
     dressDock();
+    flow();
     document.querySelectorAll('[data-app]').forEach((b) => {
       if (b.id === 'dock-orb') return;   // the orb opens the preset menu, below
       b.addEventListener('click', () => openApp(b.dataset.app));

@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-01T00:47:23.640Z",
+  "at": "2026-10-02T03:42:18.680Z",
   "platform": "linux",
   "results": [
     {
@@ -56,7 +56,7 @@
     {
       "pass": true,
       "name": "the Processes and services segment exists",
-      "detail": "94 processes · 1 unseen · computed"
+      "detail": "96 processes · 1 unseen · computed"
     },
     {
       "pass": true,
@@ -71,7 +71,7 @@
     {
       "pass": true,
       "name": "the Relations graph is built from this machine",
-      "detail": "63 nodes · 62 relations · 81 processes (1 unseen) · 7 listeners · 0/0 services"
+      "detail": "63 nodes · 62 relations · 78 processes (1 unseen) · 7 listeners · 0/0 services"
     },
     {
       "pass": true,
@@ -81,7 +81,7 @@
     {
       "pass": true,
       "name": "searching the hostname opens the machine node panel",
-      "detail": "vmmachine · Linux 6.18.44-fc-v50 · x64"
+      "detail": "vmmachine · Linux 6.18.44-fc-v51 · x64"
     },
     {
       "pass": true,
@@ -106,7 +106,7 @@
     {
       "pass": true,
       "name": "a real venv was created through the surface and listed",
-      "detail": "pg-check-muotdr6v"
+      "detail": "pg-check-muqf2osd"
     },
     {
       "pass": true,
@@ -120,12 +120,12 @@
     {
       "pass": true,
       "name": "the Processes table lists this machine's processes",
-      "detail": "81 rows · 81 from ps -eo · 2:47:15 AM"
+      "detail": "78 rows · 78 from ps -eo · 5:42:13 AM"
     },
     {
       "pass": true,
       "name": "every process has an End action",
-      "detail": "81"
+      "detail": "78"
     },
     {
       "pass": true,

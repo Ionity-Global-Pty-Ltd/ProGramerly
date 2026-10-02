@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-01T00:47:47.519Z",
+  "at": "2026-10-02T03:42:35.606Z",
   "platform": "linux",
   "results": [
     {
@@ -14,7 +14,7 @@
     {
       "pass": true,
       "name": "the top bar carries the version",
-      "detail": "v3.6.1"
+      "detail": "v3.6.2"
     },
     {
       "pass": true,
@@ -107,12 +107,12 @@
     {
       "pass": true,
       "name": "the forecast line names the class of its figures",
-      "detail": "81–211 min (assumed) · 20.7 GB (assumed) · 31 GB free (measured) · open AEDi Predict for the item-by-item view"
+      "detail": "81–211 min (assumed) · 20.7 GB (assumed) · 30.9 GB free (measured) · open AEDi Predict for the item-by-item view"
     },
     {
       "pass": true,
       "name": "the forecast for the selection was read",
-      "detail": "31 selected · online · 02:47 AM"
+      "detail": "31 selected · online · 05:42 AM"
     },
     {
       "pass": true,
@@ -142,12 +142,12 @@
     {
       "pass": true,
       "name": "package hosts were probed with a TCP connect",
-      "detail": "winget CDN 312ms · Chocolatey 307ms · Homebrew 302ms · npm registry 296ms · GitHub 297ms"
+      "detail": "winget CDN 85ms · Chocolatey 84ms · Homebrew 84ms · npm registry 84ms · GitHub 84ms"
     },
     {
       "pass": true,
       "name": "the machine card reads memory and disks",
-      "detail": "Machine forecast 8 samples · 41.5 h /31.0 GB free measured filling at 0.02 GB/day → full in ~1475 days computed/opt/claude-code0.0 GB free m"
+      "detail": "Machine forecast 9 samples · 68.4 h /30.9 GB free measured filling at 0.03 GB/day → full in ~1076 days computed/opt/claude-code0.0 GB free m"
     },
     {
       "pass": true,

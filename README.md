@@ -1207,6 +1207,14 @@ is fixed small in the bottom-right corner of the app and the site. CI now builds
 the macOS arm64 and x64 images separately and fails if either `.dmg` is
 missing. See `docs/RELEASE-3.6.1.md`.
 
+### Pulse flow, every OS — 3.6.2
+
+The Command Center shows the run as four steps: Pick → Predict → Install →
+Watch. A pulse travels between them, and each caption is a live reading the app
+already shows. The flow speeds up during an install. The download page is down to
+about 240 words, and its Windows, macOS and Linux tiles link straight to each
+build. See `docs/RELEASE-3.6.2.md`.
+
 ## The download page
 
 `docs/index.html` is the public landing page, served by GitHub Pages from the

@@ -175,7 +175,7 @@ footer ul{list-style:none}
 .card:hover .pgi .a,.tool:hover .pgi .a,.tool:focus-within .pgi .a{filter:drop-shadow(0 0 5px rgba(255,122,0,.95))}
 .card:hover .pgi,.tool:hover .pgi{transform:rotate(-6deg) scale(1.06)}
 
-.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));gap:16px;align-items:start}
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:16px;align-items:start}
 .tool{--hue:#00c8f0;position:relative;background:linear-gradient(160deg,var(--surface),var(--surface-2));border:1px solid var(--line-soft);
   border-radius:18px;padding:20px 20px 18px;outline:none;cursor:default;
   transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s}
@@ -230,80 +230,6 @@ footer ul{list-style:none}
 .corner-mark:hover{opacity:1;transform:translateY(-1px)}
 [data-theme] .corner-mark{filter:drop-shadow(0 2px 10px rgba(0,0,0,.6)) drop-shadow(0 0 8px rgba(0,200,240,.25))}
 @media (max-width:520px){.corner-mark{width:64px;right:10px;bottom:10px}}
-
-/* ------------------------------------------------ 3.6.2: pulsing flow */
-.pflow{--T:4.4s;--c:#00c8f0;display:flex;align-items:flex-start;justify-content:center;width:min(760px,100%);margin:44px auto 0}
-.pf-node{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--text);flex:0 0 auto;width:104px}
-.pf-node b{font-size:15px;font-weight:700;letter-spacing:-.01em}
-.pf-node small{font-size:12px;color:var(--text-faint)}
-.pf-ico{position:relative;width:60px;height:60px;border-radius:50%;display:grid;place-items:center;
-  background:radial-gradient(circle at 35% 30%,rgba(0,200,240,.22),rgba(51,102,255,.08) 60%,transparent 72%),var(--surface);
-  border:1px solid rgba(0,200,240,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
-  animation:pf-glow var(--T) linear infinite;animation-delay:calc(var(--i,0) * var(--T) / 4);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
-.pf-ico .pgi{width:28px;height:28px}
-.pf-ico::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--c);opacity:0;
-  animation:pf-ring var(--T) linear infinite;animation-delay:inherit}
-.pf-node:hover .pf-ico{transform:translateY(-4px) scale(1.06)}
-.pf-node:hover .pgi .b{opacity:.6}
-.pf-link{position:relative;flex:1 1 auto;height:2px;margin-top:29px;min-width:24px;border-radius:2px;
-  background:linear-gradient(90deg,rgba(0,200,240,.18),rgba(51,102,255,.28),rgba(0,200,240,.18))}
-.pf-link::after{content:"";position:absolute;top:-3px;left:0;width:38px;height:8px;border-radius:8px;opacity:0;
-  background:linear-gradient(90deg,transparent,#7fe8ff 70%,#fff);box-shadow:0 0 14px 2px rgba(0,200,240,.85);
-  animation:pf-travel var(--T) cubic-bezier(.45,0,.55,1) infinite;animation-delay:calc(var(--i,0) * var(--T) / 4)}
-.pflow > :nth-child(1){--i:0}.pflow > :nth-child(2){--i:0}
-.pflow > :nth-child(3){--i:1}.pflow > :nth-child(4){--i:1}
-.pflow > :nth-child(5){--i:2}.pflow > :nth-child(6){--i:2}
-.pflow > :nth-child(7){--i:3}
-@keyframes pf-travel{0%{left:0;opacity:0}3%{opacity:1}22%{opacity:1}25%{left:calc(100% - 38px);opacity:0}100%{left:calc(100% - 38px);opacity:0}}
-@keyframes pf-ring{0%{transform:scale(1);opacity:.95}20%{transform:scale(1.45);opacity:0}100%{opacity:0}}
-@keyframes pf-glow{0%{box-shadow:0 0 0 0 rgba(0,200,240,.0),0 0 26px 4px rgba(0,200,240,.55)}22%{box-shadow:0 0 0 0 rgba(0,200,240,0),0 0 0 0 rgba(0,200,240,0)}100%{box-shadow:none}}
-@media (max-width:560px){
-  .pflow{margin-top:34px}
-  .pf-node{width:66px;gap:4px}
-  .pf-node b{font-size:12.5px}
-  .pf-node small{display:none}
-  .pf-ico{width:46px;height:46px}
-  .pf-ico .pgi{width:22px;height:22px}
-  .pf-link{margin-top:22px;min-width:10px}
-  .pf-link::after{width:22px}
-  @keyframes pf-travel{0%{left:0;opacity:0}3%{opacity:1}22%{opacity:1}25%{left:calc(100% - 22px);opacity:0}100%{left:calc(100% - 22px);opacity:0}}
-}
-
-.center{text-align:center}
-.center .lede{margin-left:auto;margin-right:auto}
-.lede{margin-bottom:32px}
-.os-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.os{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--surface),var(--surface-2));border:1px solid var(--line-soft);
-  border-radius:20px;padding:24px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s}
-.os::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;
-  background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(0,200,240,.14),transparent 62%)}
-.os:hover::after{opacity:1}
-.os:hover{border-color:rgba(0,200,240,.45);box-shadow:0 22px 44px -24px rgba(0,200,240,.55)}
-.os.mine{border-color:rgba(0,200,240,.55);box-shadow:0 0 0 1px rgba(0,200,240,.25),0 22px 44px -26px rgba(0,200,240,.6)}
-.os.mine::before{content:"Your OS";position:absolute;top:16px;right:16px;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:999px;background:rgba(0,200,240,.16);color:#7fe8ff}
-.os-ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;margin-bottom:10px;background:rgba(0,200,240,.08);border:1px solid rgba(0,200,240,.25)}
-.os-ico svg{width:30px;height:30px;overflow:visible}
-.os-ico .b{fill:url(#pgi-body);opacity:.28}
-.os-ico .l{fill:none;stroke:url(#pgi-line);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.os-ico .a{fill:none;stroke:url(#pgi-accent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.os-ico rect.a{fill:url(#pgi-accent)}
-.os h3{font-size:19px;font-weight:700;letter-spacing:-.02em}
-.os-sub{font-size:13px;color:var(--text-faint);margin-bottom:14px}
-.os-btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto}
-.os-btns a{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:999px;font-size:13.5px;font-weight:600;text-decoration:none;
-  color:var(--text);background:var(--bg);border:1px solid var(--line);transition:border-color .2s,transform .2s,background-color .2s}
-.os-btns a:hover{border-color:#00c8f0;transform:translateY(-1px)}
-.os-btns a.go:first-child{background:var(--btn-bg);color:var(--btn-fg);border-color:transparent}
-.os-btns a.missing{opacity:.45}
-.os-btns a small{font-size:11px;opacity:.7;font-weight:500}
-.fine{margin-top:20px;font-size:12.5px;color:var(--text-faint)}
-.fine a{color:var(--accent);text-decoration:none;font-weight:600}
-.fine em{font-style:normal;color:var(--text-sub)}
-.film-sheet .wrap{padding-top:clamp(36px,6vw,70px);padding-bottom:clamp(36px,6vw,70px)}
-.foot-row{align-items:center}
-.foot-tag{color:var(--text-sub)}
-.foot-links a{color:var(--text-sub)}
-@media (prefers-reduced-motion:reduce){.pf-ico,.pf-ico::after,.pf-link::after{animation:none!important}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -329,9 +255,13 @@ footer ul{list-style:none}
   </div>
 
   <main class="hero">
-    <div class="badge"><span class="dot"></span> Free · Every OS · v3.6.2</div>
+    <div class="badge"><span class="dot"></span> Ionity (Pty) Ltd · AEDI · Free forever · v3.6.1</div>
     <h1>Your whole workstation, <span class="grad">seen and unseen</span></h1>
-    <p class="sub">Tick it. Install it. Walk away. <b>AEDi</b> watches on your machine &mdash; not a cloud.</p>
+    <p class="sub">
+      Tick what you need, press Install, walk away. ProGramerly builds your whole dev machine,
+      tells you how the run will go before it starts, and keeps watch after &mdash; with <b>AEDi</b>,
+      Ionity&rsquo;s AI that runs on your hardware, not someone&rsquo;s cloud.
+    </p>
     <div class="actions">
       <a class="btn btn-primary" id="dlPrimary" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -339,109 +269,267 @@ footer ul{list-style:none}
         </svg>
         <span id="dlPrimaryLabel">Download for Windows</span>
       </a>
-      <a class="btn btn-ghost" href="#downloads">Every OS</a>
+      <a class="btn btn-ghost" href="#downloads">All platforms</a>
+      <a class="btn btn-ghost" href="#suite">What is inside</a>
+      <a class="btn btn-ghost" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.49-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.81.06 1.23.83 1.23.83.72 1.23 1.89.87 2.35.67.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.96 0-.87.31-1.59.83-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.52.56.83 1.28.83 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        Source
+      </a>
     </div>
     <p class="relmeta" id="relmeta">Checking for the latest release…</p>
-
-    <nav class="pflow" id="pflow" aria-label="How ProGramerly works">
-      <a class="pf-node" href="#suite"><span class="pf-ico" data-icon="catalogue"></span><b>Pick</b><small>143 tools</small></a>
-      <i class="pf-link" aria-hidden="true"></i>
-      <a class="pf-node" href="#suite"><span class="pf-ico" data-icon="predict"></span><b>Predict</b><small>before it runs</small></a>
-      <i class="pf-link" aria-hidden="true"></i>
-      <a class="pf-node" href="#downloads"><span class="pf-ico" data-icon="launch"></span><b>Install</b><small>one click</small></a>
-      <i class="pf-link" aria-hidden="true"></i>
-      <a class="pf-node" href="#dome"><span class="pf-ico" data-icon="monitor"></span><b>Watch</b><small>AEDi on guard</small></a>
-    </nav>
+    <div class="hero-dome" id="heroDome">
+      <canvas id="heroDomeCanvas" aria-label="The Ionity DOME in 3D - drag to turn it, hover a node for its segment"></canvas>
+      <p class="hero-dome-note"><b>The DOME</b> &middot; drag to turn &middot; hover a node &middot; <span>illustration &mdash; the app draws yours from your own machine</span></p>
+    </div>
   </main>
 
-  <section class="sheet" id="dome">
-    <div class="wrap center">
-      <h2>The DOME</h2>
-      <p class="lede">Your machine, in 3D. Drag it.</p>
-      <div class="hero-dome" id="heroDome">
-        <canvas id="heroDomeCanvas" aria-label="The Ionity DOME in 3D - drag to turn it, hover a node for its segment"></canvas>
-        <p class="hero-dome-note">illustration &middot; the app reads yours</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="sheet" id="suite">
+  <section class="sheet">
     <div class="wrap">
-      <h2>One suite</h2>
-      <p class="lede">Hover or tap a tool.</p>
-      <div class="tool-grid">
-        <article class="tool" tabindex="0" data-hue="#00c8f0"><div class="tool-ico" data-icon="dome"></div><h3>DOME</h3><p class="tool-line">Your machine in 3D.</p>
-          <div class="tool-more"><ul class="chips"><li>5 strata</li><li>26 segments</li><li>live</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#f0a03c"><div class="tool-ico" data-icon="predict"></div><h3>Predict</h3><p class="tool-line">Knows the run first.</p>
-          <div class="tool-more"><ul class="chips"><li>likelihood</li><li>minutes</li><li>disk</li><li>learns</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#2f7ff0"><div class="tool-ico" data-icon="relations"></div><h3>Relations</h3><p class="tool-line">All of it, as a graph.</p>
-          <div class="tool-more"><ul class="chips"><li>processes</li><li>ports</li><li>services</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#8b7cf5"><div class="tool-ico" data-icon="envs"></div><h3>Environments</h3><p class="tool-line">Say it, get it.</p>
-          <div class="tool-more"><ul class="chips"><li>venv</li><li>uv</li><li>conda</li><li>node</li><li>compose</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#00c8f0"><div class="tool-ico" data-icon="ai"></div><h3>AEDi</h3><p class="tool-line">Local AI. Offline.</p>
-          <div class="tool-more"><ul class="chips"><li>Ollama</li><li>Gemma</li><li>CPU-ready</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#a9762d"><div class="tool-ico" data-icon="system"></div><h3>System</h3><p class="tool-line">One action per row.</p>
-          <div class="tool-more"><ul class="chips"><li>end</li><li>restart</li><li>disable</li><li>restore</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#8b7cf5"><div class="tool-ico" data-icon="ocr"></div><h3>Reading</h3><p class="tool-line">Page to text.</p>
-          <div class="tool-more"><ul class="chips"><li>OCR</li><li>vision</li><li>PDF</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#3d8f63"><div class="tool-ico" data-icon="software"></div><h3>Software</h3><p class="tool-line">143 tools, 22 groups.</p>
-          <div class="tool-more"><ul class="chips"><li>winget</li><li>Homebrew</li><li>npm</li><li>signed-out</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#00c8f0"><div class="tool-ico" data-icon="fans"></div><h3>Fans</h3><p class="tool-line">Every curve, live.</p>
-          <div class="tool-more"><ul class="chips"><li>RPM</li><li>curves</li><li>Windows</li></ul></div></article>
-        <article class="tool" tabindex="0" data-hue="#0e9ab8"><div class="tool-ico" data-icon="cic"></div><h3>CiC</h3><p class="tool-line">Ionity control.</p>
-          <div class="tool-more"><ul class="chips"><li>SHA-256 pinned</li><li>Windows</li></ul></div></article>
+      <h2>What it actually does</h2>
+      <p class="lede">No wizards to babysit, no half-finished PATH. Pick a profile, press go, walk away.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="ico" data-icon="catalogue"></div>
+          <h3>A real catalogue</h3>
+          <p>Over a hundred curated packages across runtimes, IDEs, shells, databases, embedded, ML and MCP tooling — resolved to winget, Chocolatey or Homebrew per machine.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="updates"></div>
+          <h3>Stays current</h3>
+          <p>Checks GitHub Releases on its own schedule, verifies each download against the published SHA-256, and updates itself in place.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="monitor"></div>
+          <h3>Watches the machine</h3>
+          <p>A tray monitor for CPU, memory, disk and network, with live probing so you find out something broke before your build does.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="maintenance"></div>
+          <h3>Repairs itself</h3>
+          <p>Registry repair, PATH reconstruction and a dry-run mode that shows exactly what would change before a single byte moves.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="ai"></div>
+          <h3>AEDi, on first run</h3>
+          <p>Tick <em>AEDi local core</em> in Software and Ollama plus a starter model are installed with everything else. The chip in the top bar always says which model is answering — or that none is yet. Nothing leaves the machine.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="shield"></div>
+          <h3>Zero runtime dependencies</h3>
+          <p>Node standard library only. Nothing to audit but the code you can already read, under Policy 986 AED.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="dome"></div>
+          <h3>The Ai-OS shell and the DOME</h3>
+          <p>ProGramerly opens in the IONITY Ai-OS operator layout: one ask box wired to AEDi, the workstation DOME — five strata, 26 segments, drillable — stats, tiles and a dock. Every percentage on the dome says whether it is <em>measured</em>, <em>computed</em>, an <em>assessment</em> or <em>state</em>; nothing is scored from a constant.</p>
+        </div>
       </div>
     </div>
   </section>
 
   <section class="sheet film-sheet" id="film">
     <div class="wrap">
+      <h2>Ionity, in motion</h2>
+      <p class="lede">Native AI on the edge, the AEDi stack, and the workstation that runs it &mdash; twenty seconds from the Ionity brand film.</p>
       <div class="film-frame" id="filmFrame">
-        <video id="filmVideo" src="media/ionity-film.mp4" poster="media/ionity-film-poster.jpg" muted loop playsinline preload="metadata"></video>
+        <video id="filmVideo" src="../../media/ionity-film.mp4" poster="../../media/ionity-film-poster.jpg" muted loop playsinline preload="metadata"></video>
         <button class="film-sound" id="filmSound" type="button" aria-pressed="false">Sound on</button>
       </div>
     </div>
   </section>
 
-  <section class="sheet" id="downloads">
+  <section class="sheet" id="new">
     <div class="wrap">
-      <h2>Every OS</h2>
-      <p class="lede">Built on GitHub's runners. Checksums included.</p>
-      <div class="os-grid">
-        <div class="os" data-os="windows">
-          <div class="os-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><rect class="b" x="4" y="5" width="24" height="22" rx="3"/><rect class="l" x="4" y="5" width="24" height="22" rx="3"/><path class="l" d="M16 5v22M4 16h24"/><rect class="a" x="18.5" y="7.5" width="7" height="6" rx="1.2"/></svg></div>
-          <h3>Windows</h3><p class="os-sub">10 · 11</p>
-          <div class="os-btns"><a data-asset="win-x64">x64</a><a data-asset="win-arm64">ARM64</a><a data-asset="win-portable">Portable</a></div>
+      <h2>New in 3.6 — the forecast, and the catalog people actually live in</h2>
+      <p class="lede">AEDi Predict tells you how the run will go on this machine before you press Install — and learns from every run. Twenty-seven new items, three new groups, and still not one account linked.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="ico" data-icon="predict"></div>
+          <h3>AEDi Predict</h3>
+          <p>Likelihood per item, expected clean installs, minutes with a range, download against free disk and an 8&nbsp;GB reserve, and a risk list — built from what is read at that moment: engines on PATH, package hosts that answer, free space, elevation. Every figure carries its class: <em>measured</em>, <em>learned</em>, <em>computed</em>, <em>assumed</em>.</p>
         </div>
-        <div class="os" data-os="macos">
-          <div class="os-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><rect class="b" x="4" y="6" width="24" height="16" rx="2.5"/><rect class="l" x="4" y="6" width="24" height="16" rx="2.5"/><path class="l" d="M2 26h28M12 26l1-4h6l1 4"/><path class="a" d="M13 12.5a1.8 1.8 0 1 1 1.8-1.8v6.6a1.8 1.8 0 1 1-1.8-1.8h6.6a1.8 1.8 0 1 1-1.8 1.8v-6.6a1.8 1.8 0 1 1 1.8 1.8z"/></svg></div>
-          <h3>macOS</h3><p class="os-sub">Apple Silicon · Intel</p>
-          <div class="os-btns"><a data-asset="mac-arm64">Apple Silicon</a><a data-asset="mac-x64">Intel</a></div>
+        <div class="card">
+          <div class="ico" data-icon="learn"></div>
+          <h3>It learns this machine</h3>
+          <p>Every run teaches its outcomes and timings back in. The likelihood is a shrunk posterior — three real outcomes outweigh the shipped prior — minutes switch to the learned median, and a speed factor scales the priors to your line. One sample every five minutes gives each disk a GB/day trend and a days-to-full. Nothing leaves the machine; <em>Forget the history</em> is one click.</p>
         </div>
-        <div class="os" data-os="linux">
-          <div class="os-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><rect class="b" x="3" y="5" width="26" height="22" rx="3"/><rect class="l" x="3" y="5" width="26" height="22" rx="3"/><path class="l" d="M3 10h26"/><path class="a" d="M8 15l4 3-4 3M14 22h8"/></svg></div>
-          <h3>Linux</h3><p class="os-sub">any distro</p>
-          <div class="os-btns"><a data-asset="linux-appimage">AppImage</a><a data-asset="linux-deb">.deb</a><a data-asset="linux-rpm">.rpm</a></div>
+        <div class="card">
+          <div class="ico" data-icon="chat"></div>
+          <h3>Communication</h3>
+          <p>WhatsApp Desktop, Microsoft Teams, Zoom, Slack, Discord, Telegram, Signal — installed and left signed out. You link your own phone and accounts; ProGramerly never touches one.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="cloud"></div>
+          <h3>Cloud drives and sync</h3>
+          <p>Google Drive for desktop, Microsoft OneDrive, Dropbox, and rclone for scripting any of them from the terminal. Same rule: installed, not signed in.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="terminals"></div>
+          <h3>The agent bench and the maker bench</h3>
+          <p>Gemini CLI, Codex CLI, GitHub Copilot CLI and <em>Claude Code ⇄ GitHub relations</em> (git, gh, the official claude-code-action template — no token). Firebase CLI with its local emulators. Bun, Deno and a Node toolbelt. Unity Hub, Godot. Blender, FreeCAD, KiCad, PrusaSlicer, Cura. GitKraken, lazygit, PowerToys, LibreOffice, Bruno, Twilio CLI, n8n. archify from the public Ionity fork, installed as an agent skill.</p>
+        </div>
+        <div class="card">
+          <div class="ico" data-icon="verified"></div>
+          <h3>Verified on the real application</h3>
+          <p>The engine has 14 checks with injected facts; the running app has 39 more — the forecast line in Software, the four stat tiles, a likelihood bar per item under a strict CSP, ten hosts probed, a suggestion added to the selection, an honest answer when no model runs. The 3.5.0 check still drives Relations, Environments and System.</p>
         </div>
       </div>
-      <p class="fine">Unsigned for now &mdash; Windows: <em>More info → Run anyway</em> · macOS: <em>right-click → Open</em> · <a data-asset="sha" href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">SHA256.txt</a></p>
+      <div class="shots">
+        <a href="../../screenshots/3.6.0/ui-360-predict.png"><img src="../../screenshots/3.6.0/ui-360-predict.png" alt="AEDi Predict - the forecast for a selection" loading="lazy"></a>
+        <a href="../../screenshots/3.6.0/ui-360-software.png"><img src="../../screenshots/3.6.0/ui-360-software.png" alt="Software with the forecast line in the footer" loading="lazy"></a>
+        <a href="../../screenshots/3.5.0/ui-350-relations.png"><img src="../../screenshots/3.5.0/ui-350-relations.png" alt="Relations - the machine as a graph" loading="lazy"></a>
+        <a href="../../screenshots/3.5.0/intro-dome.png"><img src="../../screenshots/3.5.0/intro-dome.png" alt="The Ionity DOME intro" loading="lazy"></a>
+      </div>
+      <p class="relmeta" style="text-align:left;margin-top:14px"><a href="../">Older versions of this page</a> · <a href="../../RELEASE-3.6.0.md">Release notes 3.6.0</a> · <a href="../../RELEASE-3.5.0.md">3.5.0</a> · <a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases">Every release</a></p>
+    </div>
+  </section>
+
+  <section class="sheet" id="downloads">
+    <div class="wrap">
+      <h2>Downloads</h2>
+      <p class="lede">
+        Every build is produced on GitHub's own runners — Windows on <code>windows-latest</code>,
+        macOS on Apple's toolchain, Linux on <code>ubuntu-latest</code> — and published with a
+        <code>SHA256.txt</code> you can check before you run anything.
+      </p>
+      <div class="scroller">
+        <table class="dl-table" id="dlTable">
+          <thead><tr><th>Platform</th><th>File</th><th>Get it</th></tr></thead>
+          <tbody id="dlBody">
+            <tr><td>Windows 10/11 (x64)</td><td><code>ProGramerly-Setup-*-x64.exe</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Windows (ARM64)</td><td><code>ProGramerly-Setup-*-arm64.exe</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Windows portable</td><td><code>ProGramerly-Portable-*.exe</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>macOS (Apple Silicon)</td><td><code>ProGramerly-*-arm64.dmg</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>macOS (Intel)</td><td><code>ProGramerly-*-x64.dmg</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Linux (any distro)</td><td><code>ProGramerly-*.AppImage</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Debian / Ubuntu</td><td><code>programerly_*_amd64.deb</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Fedora / RHEL / openSUSE</td><td><code>programerly-*.x86_64.rpm</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+            <tr><td>Checksums</td><td><code>SHA256.txt</code></td><td><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest">Latest release</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rule"></div>
+      <p class="lede" style="margin-bottom:0">
+        Builds are currently unsigned: Windows shows <em>“Windows protected your PC” → More info → Run anyway</em>,
+        and macOS asks for right-click → Open the first time. On Linux nothing gets in your way — mark the
+        AppImage executable with <code>chmod +x</code> and run it, or install the package with
+        <code>sudo apt install ./programerly_*_amd64.deb</code> / <code>sudo dnf install ./programerly-*.rpm</code>.
+        Signing turns on automatically the moment the certificates are added to the repository secrets.
+      </p>
+    </div>
+  </section>
+
+  <section class="sheet" id="suite">
+    <div class="wrap">
+      <h2>One suite, not a folder of tools</h2>
+      <p class="lede">Every workspace is a capability of the same Command Center. Hover a tool to open it up.</p>
+      <div class="tool-grid">
+        <article class="tool" tabindex="0" data-hue="#00c8f0">
+          <div class="tool-ico" data-icon="dome"></div>
+          <h3>The DOME</h3>
+          <p class="tool-line">Your machine as five strata and 26 segments, in 3D.</p>
+          <div class="tool-more"><p>Hardware, System, Storage, Toolchain, Intelligence &mdash; each segment bound to a real data set and scored live. Every figure says whether it is <em>measured</em>, <em>computed</em>, an <em>assessment</em> or <em>state</em>. Drag it, drill in, ask AEDi about any part of it.</p>
+            <ul class="chips"><li>26 segments</li><li>34 data sets</li><li>14 presets</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#f0a03c">
+          <div class="tool-ico" data-icon="predict"></div>
+          <h3>AEDi Predict</h3>
+          <p class="tool-line">Knows how the install will go before you press Install.</p>
+          <div class="tool-more"><p>Likelihood per item, minutes with a range, disk against an 8&nbsp;GB reserve, and the risks &mdash; read from the engines on PATH and the package hosts that answer. Learns from every run on this machine.</p>
+            <ul class="chips"><li>measured</li><li>learned</li><li>computed</li><li>assumed</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#2f7ff0">
+          <div class="tool-ico" data-icon="relations"></div>
+          <h3>Relations</h3>
+          <p class="tool-line">Everything running, seen and unseen, as one graph.</p>
+          <div class="tool-more"><p>Processes &mdash; including the ones a task list hides &mdash; ports, services, volumes, models, environments and repositories, joined by the relations that exist right now. Click a node: its facts, its actions, and Ask AEDi.</p>
+            <ul class="chips"><li>spawned</li><li>listens</li><li>runs-as</li><li>stored-on</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#8b7cf5">
+          <div class="tool-ico" data-icon="envs"></div>
+          <h3>Environments</h3>
+          <p class="tool-line">Describe it in a sentence. Get a real environment.</p>
+          <div class="tool-more"><p>Python venv, uv, conda, a Node project or a Docker compose stack. AEDi drafts the recipe, you press Create, the real commands stream back. Nothing is called created until its marker file exists.</p>
+            <ul class="chips"><li>venv</li><li>uv</li><li>conda</li><li>node</li><li>compose</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#a9762d">
+          <div class="tool-ico" data-icon="system"></div>
+          <h3>System</h3>
+          <p class="tool-line">Processes, services, startup and ports &mdash; one action per row.</p>
+          <div class="tool-more"><p>End a process, restart a service, disable a startup entry. Anything disabled is backed up first and comes back with one click.</p>
+            <ul class="chips"><li>End</li><li>Restart</li><li>Disable</li><li>Inspect</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#00c8f0">
+          <div class="tool-ico" data-icon="ai"></div>
+          <h3>AEDi &middot; local AI</h3>
+          <p class="tool-line">An assistant that runs on your hardware, not someone's cloud.</p>
+          <div class="tool-more"><p>Answers through Ollama with a small default model (<code>llama3.2:1b</code>, ~1.3&nbsp;GB, runs on CPU). Gemma is first class. Every curated model says what it is for &mdash; chat, code, reasoning, vision or embeddings.</p>
+            <ul class="chips"><li>offline</li><li>Ollama</li><li>Gemma</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#8b7cf5">
+          <div class="tool-ico" data-icon="ocr"></div>
+          <h3>Reading</h3>
+          <p class="tool-line">Page, screenshot or PDF to text, on this machine.</p>
+          <div class="tool-more"><p>OCR engines (Tesseract, RapidOCR, EasyOCR) for characters; tiny vision models (moondream, granite3.2-vision) for layout and handwriting. The answer always names its reader. Nothing is uploaded.</p>
+            <ul class="chips"><li>OCR</li><li>vision</li><li>PDF</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#00c8f0">
+          <div class="tool-ico" data-icon="fans"></div>
+          <h3>Fan control</h3>
+          <p class="tool-line">Every channel, its curve, and what it is doing now.</p>
+          <div class="tool-more"><p>Live RPM and duty for every fan, every temperature source, and a curve editor that shows the command beside the reality. The driver-level apply belongs to Ionity FanControl (<em>Fanzi</em>, Windows).</p>
+            <ul class="chips"><li>RPM</li><li>curves</li><li>Windows</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#0e9ab8">
+          <div class="tool-ico" data-icon="cic"></div>
+          <h3>CiC</h3>
+          <p class="tool-line">Central Ionity Control, one tile away.</p>
+          <div class="tool-more"><p>The IONITY CiC workstation utility ships inside the Windows release, pinned by size and SHA-256 and verified every time before it runs.</p>
+            <ul class="chips"><li>SHA-256 pinned</li><li>Windows</li></ul></div>
+        </article>
+        <article class="tool" tabindex="0" data-hue="#3d8f63">
+          <div class="tool-ico" data-icon="software"></div>
+          <h3>Software</h3>
+          <p class="tool-line">143 items, 22 groups, one elevated run.</p>
+          <div class="tool-more"><p>Runtimes, IDEs, AI CLIs, MCP servers, databases, comms, cloud drives, CAD and PCB &mdash; resolved to winget, Chocolatey or Homebrew. Everything is installed signed-out; no account is ever linked.</p>
+            <ul class="chips"><li>winget</li><li>Homebrew</li><li>npm</li><li>pip</li></ul></div>
+        </article>
+      </div>
+      <p class="relmeta" style="text-align:left;margin-top:18px">Fan control and CiC ship in the Windows release; macOS and Linux carry every other workspace.</p>
     </div>
   </section>
 
   <footer>
     <div class="wrap">
       <div class="foot-row">
-        <p><b class="foot-tag">Building Tomorrow, Today.</b><br>© 2018–2026 Antwerp Designs | Ionity (Pty) Ltd · TM · Policy 986 AED</p>
-        <p class="foot-links"><a href="https://www.ionity.co.za">ionity.co.za</a> · <a href="https://www.ionity.today">ionity.today</a> · <a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly">GitHub</a> · <a href="RELEASE-3.6.2.md">Release notes</a> · <a href="versions/">Older pages</a></p>
+        <div>
+          <p style="color:var(--text-sub);font-weight:700;margin-bottom:6px">Building Tomorrow, Today.</p>
+          <p>© 2018–2026 Antwerp Designs | Ionity (Pty) Ltd — All rights reserved — TM<br>
+             Governance: Policy 986 AED · Licence: AED 900<br>
+             Author: Johan Wilhelm van Antwerp · ORCID 0009-0005-7181-0347</p>
+        </div>
+        <ul>
+          <li><a href="https://www.ionity.co.za">ionity.co.za — main</a></li>
+          <li><a href="https://www.ionity.today">ionity.today — ecosystem</a></li>
+          <li><a href="https://www.ionity.world">ionity.world — profile</a></li>
+          <li><a href="https://www.ionity.fun">www.ionity.fun — this page</a></li>
+          <li><a href="https://github.com/Ionity-Global-Pty-Ltd/ProGramerly">github.com/Ionity-Global-Pty-Ltd/ProGramerly</a></li>
+          <li><a href="../../AI-AND-ML.md">The AI and ML structure</a></li>
+          <li><a href="../../RELEASE-3.6.1.md">Release notes 3.6.1</a></li>
+          <li><a href="../../RELEASE-3.6.0.md">Release notes 3.6.0</a></li>
+          <li><a href="../../RELEASE-3.5.0.md">Release notes 3.5.0</a></li>
+          <li><a href="../">Older versions of this page</a></li>
+          <li><a href="#suite">What is inside</a></li>
+        </ul>
       </div>
     </div>
   </footer>
 </div>
 
-<a class="corner-mark" href="https://www.ionity.co.za" title="Ionity (Pty) Ltd" aria-label="IONITY"><img src="assets/ionity-official.png" alt="IONITY" width="96" height="29"></a>
+<a class="corner-mark" href="https://www.ionity.co.za" title="Ionity (Pty) Ltd" aria-label="IONITY"><img src="../../assets/ionity-official.png" alt="IONITY" width="96" height="29"></a>
 
-<script src="assets/icons.js"></script>
-<script src="assets/dome3d.js"></script>
+<script src="../../assets/icons.js"></script>
+<script src="../../assets/dome3d.js"></script>
 <script>
 (function(){
   /* ------------------------------------------------------------- theme */
@@ -616,6 +704,7 @@ footer ul{list-style:none}
   /* ------------------------------------------------- live release data */
   var REPO='Ionity-Global-Pty-Ltd/ProGramerly';
   var meta=document.getElementById('relmeta');
+  var body=document.getElementById('dlBody');
   var primary=document.getElementById('dlPrimary');
   var primaryLabel=document.getElementById('dlPrimaryLabel');
   var RELEASES='https://github.com/'+REPO+'/releases/latest';
@@ -626,51 +715,57 @@ footer ul{list-style:none}
   var isLinux=!isMac && /Linux|X11|CrOS/.test(plat+ua) && !/Android/.test(ua);
   var osName=isMac?'macOS':(isLinux?'Linux':'Windows');
   primaryLabel.textContent='Download for '+osName;
-  var mine=document.querySelector('.os[data-os="'+(isMac?'macos':isLinux?'linux':'windows')+'"]');
-  if(mine) mine.classList.add('mine');
 
-  function mb(n){ return (n/1048576).toFixed(0)+' MB'; }
-  /* re may be one pattern or a list tried in order - the first match wins. */
+  function mb(n){ return (n/1048576).toFixed(1)+' MB'; }
+  /* re may be one pattern or a list tried in order - the first match wins.
+     Apple Silicon falls back to the arm64 .zip when a release has no .dmg. */
   function pick(assets,re){
     var list=Array.isArray(re)?re:[re];
     for(var k=0;k<list.length;k++){ for(var i=0;i<assets.length;i++){ if(list[k].test(assets[i].name)) return assets[i]; } }
     return null;
   }
-  var MAP={
-    'win-x64':        [/Setup-.*-x64\.exe$/],
-    'win-arm64':      [/Setup-.*-arm64\.exe$/],
-    'win-portable':   [/Portable-.*\.exe$/],
-    'mac-arm64':      [/-arm64\.dmg$/, /-arm64-mac\.zip$/],
-    'mac-x64':        [/-x64\.dmg$/, /\d-mac\.zip$/],
-    'linux-appimage': [/\.AppImage$/],
-    'linux-deb':      [/\.deb$/],
-    'linux-rpm':      [/\.rpm$/],
-    'sha':            [/^SHA256\.txt$/]
-  };
-  var links=document.querySelectorAll('[data-asset]');
-  links.forEach(function(a){ a.href=RELEASES; });
 
   fetch('https://api.github.com/repos/'+REPO+'/releases/latest',{headers:{Accept:'application/vnd.github+json'}})
     .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(rel){
       var a=rel.assets||[];
-      links.forEach(function(el){
-        var asset=pick(a,MAP[el.getAttribute('data-asset')]||[]);
+      var rows=[
+        ['Windows 10/11 (x64)',       /Setup-.*-x64\.exe$/],
+        ['Windows (ARM64)',           /Setup-.*-arm64\.exe$/],
+        ['Windows portable',          /Portable-.*\.exe$/],
+        ['macOS (Apple Silicon)',     [/-arm64\.dmg$/, /-arm64-mac\.zip$/]],
+        ['macOS (Intel)',             [/-x64\.dmg$/, /\d-mac\.zip$/]],
+        ['Linux (any distro)',        /\.AppImage$/],
+        ['Debian / Ubuntu',           /\.deb$/],
+        ['Fedora / RHEL / openSUSE',  /\.rpm$/],
+        ['Checksums',                 /^SHA256\.txt$/]
+      ];
+      var html='', found=0;
+      rows.forEach(function(row){
+        var asset=pick(a,row[1]);
         if(asset){
-          el.href=asset.browser_download_url; el.classList.add('go');
-          el.title=asset.name+' · '+mb(asset.size);
-        } else { el.classList.add('missing'); el.title='Not in '+rel.tag_name; }
+          found++;
+          html+='<tr><td>'+row[0]+'</td><td><code>'+asset.name+'</code></td>'+
+                '<td><a href="../../'+asset.browser_download_url+'">Download · '+mb(asset.size)+'</a></td></tr>';
+        } else {
+          html+='<tr><td>'+row[0]+'</td><td><code>—</code></td><td><a href="../../'+RELEASES+'">Not in this release</a></td></tr>';
+        }
       });
-      var best = isMac   ? pick(a,MAP['mac-arm64'])||pick(a,MAP['mac-x64'])
-               : isLinux ? pick(a,MAP['linux-appimage'])||pick(a,MAP['linux-deb'])
-               :           pick(a,MAP['win-x64'])||pick(a,MAP['win-portable']);
+      if(found) body.innerHTML=html;
+
+      var best = isMac   ? (pick(a,[/-arm64\.dmg$/,/-arm64-mac\.zip$/])||pick(a,/-x64\.dmg$/))
+               : isLinux ? (pick(a,/\.AppImage$/)||pick(a,/\.deb$/)||pick(a,/\.rpm$/))
+               :           (pick(a,/Setup-.*-x64\.exe$/)||pick(a,/Portable-.*\.exe$/));
       if(best){ primary.href=best.browser_download_url; primaryLabel.textContent='Download '+rel.tag_name+' · '+osName; }
+
       var when=new Date(rel.published_at).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-      meta.innerHTML='<strong>'+rel.tag_name+'</strong> · '+when+' · <a href="'+rel.html_url+'">notes</a>';
+      meta.innerHTML='Latest release <strong>'+rel.tag_name+'</strong> · '+when+
+                     ' · <a href="../../'+rel.html_url+'">release notes</a>';
     })
     .catch(function(){
-      meta.innerHTML='<a href="'+RELEASES+'">Latest release on GitHub</a>';
+      meta.innerHTML='No published release yet — <a href="https://github.com/'+REPO+'">browse the source</a> in the meantime.';
     });
+
 
   /* ---------------------------------------- 3.6.1: icons, tilt, DOME, film */
   if(window.PGIcons){
@@ -692,7 +787,7 @@ footer ul{list-style:none}
     });
     el.addEventListener('pointerleave',function(){ el.classList.remove('tilt'); el.style.transform=''; });
   }
-  document.querySelectorAll('.card,.os').forEach(function(c){ tilt(c,6); });
+  document.querySelectorAll('.card').forEach(function(c){ tilt(c,7); });
   document.querySelectorAll('.tool').forEach(function(t){
     tilt(t,9);
     /* touch: a tap opens the card, a second tap closes it */

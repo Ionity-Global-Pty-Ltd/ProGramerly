@@ -967,3 +967,33 @@ body.brief-on #chat{gap:9px}
 #dome-legend button{grid-template-columns:8px minmax(0,1fr) auto;min-width:0}
 #dome-legend button span{min-width:0}
 #dome-legend button small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===================== pulse flow (3.6.2) ================================ */
+.pflow{--T:4.4s;display:flex;align-items:flex-start;justify-content:center;width:min(560px,100%);margin:6px auto 0}
+.pflow.busy{--T:1.8s}
+.pf-node{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;width:92px;flex:0 0 auto;background:none;border:0;padding:0;cursor:pointer;color:var(--sh-tx)}
+.pf-node b{font-size:12px;font-weight:600;letter-spacing:.02em}
+.pf-node small{font-size:10.5px;color:var(--sh-tx3);max-width:92px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-ico{position:relative;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,rgba(0,200,240,.2),rgba(47,127,240,.06) 60%,transparent 72%),rgba(148,196,222,.04);
+  border:1px solid rgba(0,200,240,.32);animation:pf-glow var(--T) linear infinite;animation-delay:calc(var(--i,0) * var(--T) / 4);
+  transition:transform .3s var(--sh-ease)}
+.pf-ico .pgi{width:22px;height:22px}
+.pf-ico::after{content:'';position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--sh-cyan);opacity:0;animation:pf-ring var(--T) linear infinite;animation-delay:inherit}
+.pf-node:hover .pf-ico{transform:translateY(-3px) scale(1.06)}
+.pf-node:hover .pgi .b{opacity:.6}
+.pf-node:hover .pgi .a{filter:drop-shadow(0 0 4px rgba(255,122,0,.9))}
+.pf-link{position:relative;flex:1 1 auto;height:2px;margin-top:21px;min-width:18px;border-radius:2px;
+  background:linear-gradient(90deg,rgba(0,200,240,.16),rgba(47,127,240,.3),rgba(0,200,240,.16))}
+.pf-link::after{content:'';position:absolute;top:-3px;left:0;width:28px;height:8px;border-radius:8px;opacity:0;
+  background:linear-gradient(90deg,transparent,#7fe8ff 70%,#fff);box-shadow:0 0 12px 2px rgba(0,200,240,.85);
+  animation:pf-travel var(--T) cubic-bezier(.45,0,.55,1) infinite;animation-delay:calc(var(--i,0) * var(--T) / 4)}
+.pflow > :nth-child(1),.pflow > :nth-child(2){--i:0}
+.pflow > :nth-child(3),.pflow > :nth-child(4){--i:1}
+.pflow > :nth-child(5),.pflow > :nth-child(6){--i:2}
+.pflow > :nth-child(7){--i:3}
+.pflow.busy .pf-link::after{background:linear-gradient(90deg,transparent,#ffc27a 70%,#fff);box-shadow:0 0 12px 2px rgba(255,140,40,.85)}
+@keyframes pf-travel{0%{left:0;opacity:0}3%{opacity:1}22%{opacity:1}25%{left:calc(100% - 28px);opacity:0}100%{left:calc(100% - 28px);opacity:0}}
+@keyframes pf-ring{0%{transform:scale(1);opacity:.95}20%{transform:scale(1.45);opacity:0}100%{opacity:0}}
+@keyframes pf-glow{0%{box-shadow:0 0 22px 3px rgba(0,200,240,.55)}22%{box-shadow:0 0 0 0 rgba(0,200,240,0)}100%{box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.pf-ico,.pf-ico::after,.pf-link::after{animation:none}}

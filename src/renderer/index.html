@@ -32,7 +32,7 @@
   <div id="shell">
     <header id="topbar">
       <div class="tb-side">
-        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.6.1</span></span>
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.6.2</span></span>
         <span class="tb-divider"></span>
         <span id="clock">--:--</span>
         <span id="date">Local time</span>
@@ -72,6 +72,15 @@
             <button class="setup" id="ai-setup-chip" hidden>Set up AEDi</button>
           </div>
         </div>
+        <nav class="pflow" id="pflow" aria-label="Pick, predict, install, watch">
+          <button class="pf-node" data-app="software" title="Pick what this machine needs"><span class="pf-ico" data-pgi="catalogue"></span><b>Pick</b><small id="pf-pick">—</small></button>
+          <i class="pf-link" aria-hidden="true"></i>
+          <button class="pf-node" data-app="predict" title="AEDi Predict - the run before it starts"><span class="pf-ico" data-pgi="predict"></span><b>Predict</b><small id="pf-predict">—</small></button>
+          <i class="pf-link" aria-hidden="true"></i>
+          <button class="pf-node" data-app="software" title="Install the selection"><span class="pf-ico" data-pgi="launch"></span><b>Install</b><small id="pf-install">idle</small></button>
+          <i class="pf-link" aria-hidden="true"></i>
+          <button class="pf-node" data-app="monitor" title="Watch the machine"><span class="pf-ico" data-pgi="monitor"></span><b>Watch</b><small id="pf-watch">—</small></button>
+        </nav>
       </section>
 
       <section id="brief" hidden>

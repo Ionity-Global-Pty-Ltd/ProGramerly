@@ -1646,6 +1646,7 @@ async function boot() {
 $('installBtn').addEventListener('click', async () => {
   const ids = [...selected];
   installing = true;
+  document.body.classList.add('pg-installing');   // the deck's pulse flow speeds up while a run is live
   tally = { ok: 0, partial: 0, failed: 0, skipped: 0 };
   paintTally();
   $('console').innerHTML = '';
@@ -1681,6 +1682,7 @@ $('summaryClose').addEventListener('click', () => {
   $('summarySheet').hidden = true;
   $('cancelBtn').disabled = false;
   installing = false;
+  document.body.classList.remove('pg-installing');
   showTab('software');
   $('installBtn').disabled = selected.size === 0;
 });
