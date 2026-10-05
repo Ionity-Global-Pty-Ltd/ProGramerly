@@ -19,8 +19,8 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pg-predict-'));
 predict.configure({ userData: tmp });
 
 const IS_WIN = process.platform === 'win32';
-const allOk = (v) => Object.fromEntries(['winget', 'choco', 'brew', 'npm', 'git', 'python', 'uv', 'code', 'ollama', 'java'].map((k) => [k, v]));
-const hostsOk = (ok) => Object.fromEntries(['winget', 'choco', 'brew', 'npm', 'github', 'pypi', 'ollama', 'vscode', 'firebase', 'node'].map((k) => [k, { ok, ms: ok ? 40 : 2500 }]));
+const allOk = (v) => Object.fromEntries(['winget', 'choco', 'brew', 'npm', 'git', 'python', 'uv', 'code', 'ollama', 'java', 'linuxpkg', 'flatpak', 'snap'].map((k) => [k, v]));
+const hostsOk = (ok) => Object.fromEntries(['winget', 'choco', 'brew', 'npm', 'github', 'pypi', 'ollama', 'vscode', 'firebase', 'node', 'linuxpkg', 'flathub', 'snap', 'wsl', 'kiro', 'arduino'].map((k) => [k, { ok, ms: ok ? 40 : 2500 }]));
 const facts = (engines, hostsUp) => ({ at: Date.now(), engines, hosts: hostsOk(hostsUp), online: hostsUp, class: 'measured' });
 const snapshot = (freeGb) => ({ at: Date.now(), mem: { usedPct: 55 }, cpu: { load: 12 }, disks: [{ name: IS_WIN ? 'C:' : '/', free: freeGb * 1e9, total: 500e9, usedPct: 50, removable: false }] });
 
@@ -59,15 +59,25 @@ const ok = (name, fn) => { fn(); passed += 1; console.log(`  ok  ${name}`); };
     assert(offline.items.every((i) => i.p <= healthy.items.find((x) => x.id === i.id).p), 'never better than online');
   });
 
-  const noNpm = await predict.forecast(catalog, ['firebase-cli'], { snapshot: snapshot(200), elevated: true, facts: facts({ ...allOk(true), npm: false }, true) });
+  // typescript has npm globals and no dependsOn, so nothing in its queue can
+  // provide npm for it (firebase-cli used to be the probe, but it depends on
+  // node-system, which applies on every OS since 3.7.0 and provides npm).
+  const healthyTs = await predict.forecast(catalog, ['typescript'], { snapshot: snapshot(200), elevated: true, facts: facts(allOk(true), true) });
+  const noNpm = await predict.forecast(catalog, ['typescript'], { snapshot: snapshot(200), elevated: true, facts: facts({ ...allOk(true), npm: false }, true) });
   ok('a missing engine is a stated risk unless the queue provides it', () => {
-    assert(noNpm.risks.some((r) => /needs npm/.test(r.text)), 'npm risk');
-    const fb = noNpm.items.find((i) => i.id === 'firebase-cli');
-    assert(fb.p < healthy.items.find((i) => i.id === 'firebase-cli').p, 'lower');
+    assert(noNpm.risks.some((r) => /needs npm/.test(r.text)), `npm risk: ${JSON.stringify(noNpm.risks)}`);
+    const ts = noNpm.items.find((i) => i.id === 'typescript');
+    assert(ts.p < healthyTs.items.find((i) => i.id === 'typescript').p, 'lower');
   });
-  const provided = await predict.forecast(catalog, ['node-system', 'firebase-cli'], { snapshot: snapshot(200), elevated: true, facts: facts({ ...allOk(true), npm: false }, true) });
+  const provided = await predict.forecast(catalog, ['node-system', 'typescript'], { snapshot: snapshot(200), elevated: true, facts: facts({ ...allOk(true), npm: false }, true) });
   ok('...and the queue providing node-system first removes that risk', () => {
-    assert(!provided.risks.some((r) => /firebase.*needs npm/i.test(r.text)), JSON.stringify(provided.risks));
+    assert(!provided.risks.some((r) => /typescript.*needs npm/i.test(r.text)), JSON.stringify(provided.risks));
+  });
+  const linuxQueue = await predict.forecast(catalog, ['git', 'vscode', 'kicad'], { snapshot: snapshot(200), elevated: true, facts: facts({ ...allOk(true), linuxpkg: false, flatpak: false, snap: false }, true) });
+  ok('Linux: a missing package manager is a stated risk that linux-pkg satisfies', () => {
+    if (process.platform !== 'linux') return;
+    assert(linuxQueue.risks.some((r) => /needs (linuxpkg|flatpak)/.test(r.text)), JSON.stringify(linuxQueue.risks));
+    assert(linuxQueue.risks.some((r) => /linux-pkg/.test(r.text)), 'names the provider');
   });
 
   const cramped = await predict.forecast(catalog, ['visual-studio', 'android-studio'], { snapshot: snapshot(20), elevated: true, facts: facts(allOk(true), true) });

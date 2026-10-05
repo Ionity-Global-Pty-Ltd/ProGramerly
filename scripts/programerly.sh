@@ -10,7 +10,7 @@
 #
 #  Usage:
 #    ./programerly.sh                     # full profile
-#    ./programerly.sh --profile ai        # ai | minimal | full
+#    ./programerly.sh --profile ai        # full | ai | minimal | embedded | custom
 #    ./programerly.sh --only git,node     # explicit item ids
 #    ./programerly.sh --list              # show the catalog
 #    ./programerly.sh --dry-run           # print commands, run nothing
@@ -19,7 +19,7 @@ set -uo pipefail
 
 C='\033[1;36m'; G='\033[1;32m'; Y='\033[1;33m'; R='\033[1;31m'; D='\033[0;90m'; N='\033[0m'
 PROFILE="full"; ONLY=""; DRY=0; LIST=0
-CATALOG_URL="https://raw.githubusercontent.com/Ionity-Global/ProGramerly/main/src/main/catalog/catalog.json"
+CATALOG_URL="https://raw.githubusercontent.com/Ionity-Global-Pty-Ltd/ProGramerly/main/src/main/catalog/catalog.json"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -62,6 +62,18 @@ fi
 PLAT="mac"; [[ "$(uname -s)" == "Linux" ]] && PLAT="linux"
 DEV_ROOT="${PROGRAMERLY_DEV_ROOT:-$HOME/Development}"
 export DEV_ROOT
+
+# Linux: the native manager on PATH, plus whether Flatpak / snap are around.
+# Exported so the per-item planner (python) can read them.
+NATIVE=""
+if [[ "$PLAT" == "linux" ]]; then
+  for m in apt-get dnf pacman zypper; do command -v "$m" >/dev/null 2>&1 && { NATIVE="$m"; break; }; done
+  HAVE_FLATPAK=0; command -v flatpak >/dev/null 2>&1 && HAVE_FLATPAK=1
+  HAVE_SNAP=0;    command -v snap    >/dev/null 2>&1 && HAVE_SNAP=1
+  SUDO=""; [[ $EUID -ne 0 ]] && SUDO="sudo"
+  export NATIVE HAVE_FLATPAK HAVE_SNAP SUDO
+  say "linux: native=${NATIVE:-none} flatpak=$HAVE_FLATPAK snap=$HAVE_SNAP"
+fi
 
 if [[ $LIST -eq 1 ]]; then
   python3 - "$CATALOG" "$PLAT" <<'PY'
@@ -134,28 +146,54 @@ cat=json.load(open(sys.argv[1])); plat, iid = sys.argv[2], sys.argv[3]
 item=next(i for i in cat["items"] if i["id"]==iid)
 spec=item.get(plat,{}) or {}
 out=[]
-brew=spec.get("brew")
-formulae = brew if isinstance(brew,list) else (brew or {}).get("formula",[])
-casks    = (brew or {}).get("cask",[]) if isinstance(brew,dict) else spec.get("brewCask",[])
-for f in formulae: out.append(("pkg", f"brew install {f}"))
-for c in casks:    out.append(("pkg", f"brew install --cask {c}"))
-npm = spec.get("npm") or item.get("npm")
-if npm: out.append(("pkg", "npm install -g " + " ".join(npm) + " --no-fund --no-audit"))
+def emit_packages():
+    brew=spec.get("brew")
+    formulae = brew if isinstance(brew,list) else (brew or {}).get("formula",[])
+    casks    = (brew or {}).get("cask",[]) if isinstance(brew,dict) else spec.get("brewCask",[])
+    if plat=="mac":
+        for f in formulae: out.append(("pkg", f"brew install {f}"))
+        for c in casks:    out.append(("pkg", f"brew install --cask {c}"))
+    else:
+        import os
+        native = os.environ.get("NATIVE","")
+        key = {"apt-get":"apt","dnf":"dnf","pacman":"pacman","zypper":"zypper"}.get(native,"")
+        sudo = os.environ.get("SUDO","")
+        inst = {"apt":"DEBIAN_FRONTEND=noninteractive apt-get install -y","dnf":"dnf install -y",
+                "pacman":"pacman -S --noconfirm --needed","zypper":"zypper --non-interactive install"}
+        pkgs = spec.get(key) if key else None
+        # Native first; Flatpak and snap are chained with || so they only run when
+        # the native install did not deliver (same rule as the desktop app).
+        chain=[]
+        if pkgs: chain.append(f"{sudo} {inst[key]} {' '.join(pkgs)}".strip())
+        if spec.get("flatpak") and os.environ.get("HAVE_FLATPAK")=="1":
+            chain.append(" && ".join(f"flatpak install -y --noninteractive --or-update flathub {r}" for r in spec["flatpak"]))
+        if spec.get("snap") and os.environ.get("HAVE_SNAP")=="1":
+            chain.append(" && ".join(f"{sudo} snap install {r}".strip() for r in spec["snap"]))
+        if chain: out.append(("pkg", " || ".join(f"( {c} )" for c in chain) if len(chain)>1 else chain[0]))
+        elif any(k in spec for k in ("apt","dnf","pacman","zypper","flatpak","snap")):
+            out.append(("soft", 'echo "no package manager on this box can install this item (needs apt/dnf/pacman/zypper, Flatpak or snap)"; false'))
+    npm = spec.get("npm") or item.get("npm")
+    if npm: out.append(("pkg", "npm install -g " + " ".join(npm) + " --no-fund --no-audit"))
 VENV = '"$DEV_ROOT/.venvs/ionity"'
-for s in (spec.get("pre",[]) + spec.get("steps",[]) + item.get("steps",[]) + spec.get("post",[])):
+# Order matters: pre-steps (repo keys, NodeSource) -> packages -> steps -> post.
+emitted_pkgs=False
+for s in (spec.get("pre",[]) + [{"type":"__pkgs__"}] + spec.get("steps",[]) + item.get("steps",[]) + spec.get("post",[])):
     t=s.get("type")
+    if t=="__pkgs__":
+        emit_packages(); emitted_pkgs=True; continue
     if t=="shell":
         c = s.get("macCmd") if plat=="mac" and s.get("macCmd") else s.get("cmd")
         if c: out.append(("soft" if s.get("allowFail") else "hard", c))
     elif t=="vscodeExt":
         for e in s.get("ids",[]): out.append(("soft", f"code --install-extension {e} --force"))
     elif t=="gitClone":
-        out.append(("soft", f'mkdir -p "$DEV_ROOT" && if [ -d "$DEV_ROOT/{s["dest"]}/.git" ]; then git -C "$DEV_ROOT/{s["dest"]}" pull --ff-only; else git clone --depth 1 {s["repo"]} "$DEV_ROOT/{s["dest"]}"; fi'))
+        flags = "--depth 1" + (f' --branch {s["branch"]}' if s.get("branch") else "") + (" --recursive --shallow-submodules" if s.get("recursive") else "")
+        out.append(("soft", f'mkdir -p "$DEV_ROOT/$(dirname {s["dest"]})" && if [ -d "$DEV_ROOT/{s["dest"]}/.git" ]; then git -C "$DEV_ROOT/{s["dest"]}" pull --ff-only; else git clone {flags} {s["repo"]} "$DEV_ROOT/{s["dest"]}"; fi'))
     elif t=="workspace":
         dirs=" ".join(f'"$DEV_ROOT/{d}"' for d in ["Projects","Clients","POC","Scripts","Assets","Hardware","Docs","Archive","Sandbox",".mcp"])
         out.append(("soft", f"mkdir -p {dirs}"))
     elif t=="mcpConfig":
-        out.append(("soft", "__MCP_CONFIG__"))
+        out.append(("soft", "__MCP_CONFIG__ " + s.get("target","claude")))
     elif t=="venv":
         out.append(("soft",
             f'mkdir -p "$DEV_ROOT/.venvs" && '
@@ -179,9 +217,10 @@ PY
   ANY=0; BAD=0
   while IFS=$'\t' read -r KIND CMD; do
     [[ -z "${CMD:-}" ]] && continue
-    if [[ "$CMD" == "__MCP_CONFIG__" ]]; then
-      if [[ $DRY -eq 1 ]]; then say "DRY> write claude_desktop_config.json"; ANY=1; continue; fi
-      "$HERE/write-mcp-config.sh" && ANY=1 || BAD=1
+    if [[ "$CMD" == __MCP_CONFIG__* ]]; then
+      TARGET="${CMD#__MCP_CONFIG__ }"
+      if [[ $DRY -eq 1 ]]; then say "DRY> write MCP config for $TARGET"; ANY=1; continue; fi
+      "$HERE/write-mcp-config.sh" "$TARGET" && ANY=1 || BAD=1
       continue
     fi
     if run_cmd "$CMD"; then ANY=1; good "${CMD:0:70}"

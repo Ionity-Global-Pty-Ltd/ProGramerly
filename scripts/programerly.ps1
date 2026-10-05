@@ -7,7 +7,7 @@
     Electron. winget first, Chocolatey as fallback.
 
 .PARAMETER Profile
-    full | ai | minimal | custom      (default: full)
+    full | ai | minimal | embedded | custom      (default: full)
 
 .PARAMETER Only
     Comma-separated catalog item ids. Overrides -Profile.
@@ -30,7 +30,7 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('full','ai','minimal','custom')]
+    [ValidateSet('full','ai','minimal','embedded','custom')]
     [string]$Profile = 'full',
     [string]$Only = '',
     [switch]$List,
@@ -176,10 +176,24 @@ foreach ($item in $queue) {
     $spec = $item.win
     $any = $false; $bad = $false
 
+    # Pre-steps first (repo keys, prerequisites), then the package managers.
+    foreach ($s in @($spec.pre)) {
+        if ($s.type -eq 'shell') {
+            $cmd = if ($s.winCmd) { $s.winCmd } else { $s.cmd }
+            if ($cmd) { $c = Invoke-Step $cmd; if ($c -ne 0 -and -not $s.allowFail) { $bad = $true } }
+        }
+    }
+
+    $altMiss = 0
     foreach ($id in @($spec.winget)) {
         if (-not $id) { continue }
-        if (Install-Winget $id $spec.wingetArgs) { $any = $true; Good $id } else { $bad = $true; Warn "winget: $id" }
+        if (Install-Winget $id $spec.wingetArgs) {
+            $any = $true; Good $id
+            if ($spec.stopOnFirstSuccess) { break }
+        } elseif ($spec.stopOnFirstSuccess) { $altMiss++; Say "     $id not available - trying the next candidate" 'DarkGray' }
+        else { $bad = $true; Warn "winget: $id" }
     }
+    if ($spec.stopOnFirstSuccess -and -not $any -and $altMiss -gt 0) { $bad = $true }
     if (-not $any -and $spec.choco) {
         foreach ($p in @($spec.choco)) {
             if (Install-Choco $p) { $any = $true; Good "choco: $p" } else { $bad = $true; Warn "choco: $p" }
@@ -195,7 +209,6 @@ foreach ($item in $queue) {
     }
 
     $steps = @()
-    if ($spec.pre)   { $steps += $spec.pre }
     if ($spec.steps) { $steps += $spec.steps }
     if ($item.steps) { $steps += $item.steps }
     if ($spec.post)  { $steps += $spec.post }
@@ -217,8 +230,12 @@ foreach ($item in $queue) {
                 $root = if ($env:PROGRAMERLY_DEV_ROOT) { $env:PROGRAMERLY_DEV_ROOT } else { Join-Path $HOME 'Development' }
                 New-Item -ItemType Directory -Force -Path $root | Out-Null
                 $dest = Join-Path $root $s.dest
+                New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
+                $flags = '--depth 1'
+                if ($s.branch)    { $flags += " --branch $($s.branch)" }
+                if ($s.recursive) { $flags += ' --recursive --shallow-submodules' }
                 if (Test-Path (Join-Path $dest '.git')) { Invoke-Step "git -C `"$dest`" pull --ff-only" | Out-Null }
-                else { Invoke-Step "git clone --depth 1 `"$($s.repo)`" `"$dest`"" | Out-Null }
+                else { Invoke-Step "git clone $flags `"$($s.repo)`" `"$dest`"" | Out-Null }
                 $any = $true
             }
             'workspace' {
@@ -230,7 +247,8 @@ foreach ($item in $queue) {
                 $any = $true
             }
             'mcpConfig' {
-                & (Join-Path $PSScriptRoot 'write-mcp-config.ps1') -WhatIf:$WhatIf
+                $t = if ($s.target) { $s.target } else { 'claude' }
+                & (Join-Path $PSScriptRoot 'write-mcp-config.ps1') -Target $t -WhatIf:$WhatIf
                 $any = $true
             }
             'venv' {
@@ -291,7 +309,8 @@ Write-Host '  ------------------------------------------------------------' -For
 Write-Host ("   ok {0}   partial {1}   failed {2}   skipped {3}" -f $stats.ok,$stats.partial,$stats.failed,$stats.skipped) -ForegroundColor White
 Write-Host '  ------------------------------------------------------------' -ForegroundColor Cyan
 Say 'Open a NEW terminal so the updated PATH takes effect.' 'Yellow'
-if ($queue.id -contains 'wsl') { Say 'WSL was installed - restart Windows to finish.' 'Yellow' }
+if ($queue.id -contains 'wsl') { Say 'WSL was installed - restart Windows, then run the "WSL: dev toolchain inside Ubuntu" item.' 'Yellow' }
+if ($queue.id -contains 'kiro-cli') { Say 'Kiro CLI: run `kiro-cli` once to sign in, `kiro-cli doctor` to check it.' 'Yellow' }
 Write-Host ''
 Say '(c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - Policy 986 AED' 'DarkGray'
 Say 'Anything is Possible with God.' 'DarkGray'

@@ -20,6 +20,10 @@ const STEP_TYPES = new Set([
   'chromeExt', 'venv', 'venvPip', 'scaffold',
 ]);
 const SCAFFOLDS = new Set(['mern']);
+const MCP_TARGETS = new Set(['claude', 'claude-code', 'kiro', 'cursor', 'windsurf']);
+const LINUX_KEYS = new Set(['pre', 'steps', 'post', 'apt', 'dnf', 'pacman', 'zypper', 'flatpak', 'snap', 'npm', 'allowPartial']);
+const WIN_KEYS = new Set(['pre', 'steps', 'post', 'winget', 'wingetArgs', 'choco', 'npm', 'allowPartial', 'stopOnFirstSuccess']);
+const MAC_KEYS = new Set(['pre', 'steps', 'post', 'brew', 'brewCask', 'npm', 'allowPartial']);
 
 for (const item of cat.items) {
   const at = `item "${item.id}"`;
@@ -41,7 +45,26 @@ for (const item of cat.items) {
     ...(item.steps || []),
     ...(item.win?.pre || []), ...(item.win?.steps || []), ...(item.win?.post || []),
     ...(item.mac?.pre || []), ...(item.mac?.steps || []), ...(item.mac?.post || []),
+    ...(item.linux?.pre || []), ...(item.linux?.steps || []), ...(item.linux?.post || []),
   ];
+  for (const [plat, keys] of [['win', WIN_KEYS], ['mac', MAC_KEYS], ['linux', LINUX_KEYS]]) {
+    for (const k of Object.keys(item[plat] || {})) {
+      if (!keys.has(k)) errors.push(`${at}: unknown key "${k}" in ${plat} spec`);
+    }
+  }
+  for (const k of ['apt', 'dnf', 'pacman', 'zypper', 'flatpak', 'snap']) {
+    const v = item.linux?.[k];
+    if (v !== undefined && (!Array.isArray(v) || !v.length || v.some((x) => typeof x !== 'string' || !x.trim()))) {
+      errors.push(`${at}: linux.${k} must be a non-empty list of package names`);
+    }
+  }
+  for (const ref of item.linux?.flatpak || []) {
+    if (!/^[A-Za-z0-9_]+(\.[A-Za-z0-9_-]+){2,}$/.test(ref)) errors.push(`${at}: "${ref}" is not a Flatpak application id`);
+  }
+  if (item.win?.stopOnFirstSuccess && !(item.win.winget || []).length) errors.push(`${at}: stopOnFirstSuccess without winget candidates`);
+  if (item.linux && !(item.linux.apt || item.linux.dnf || item.linux.pacman || item.linux.zypper || item.linux.flatpak || item.linux.snap || item.linux.steps || item.linux.post || item.linux.npm)) {
+    errors.push(`${at}: linux spec installs nothing`);
+  }
   for (const s of allSteps) {
     if (!STEP_TYPES.has(s.type)) errors.push(`${at}: unknown step type "${s.type}"`);
     if (s.type === 'shell' && !s.cmd && !s.winCmd && !s.macCmd) {
@@ -56,6 +79,8 @@ for (const item of cat.items) {
       }
     }
     if (s.type === 'scaffold' && !SCAFFOLDS.has(s.kind)) errors.push(`${at}: unknown scaffold "${s.kind}"`);
+    if (s.type === 'mcpConfig' && s.target && !MCP_TARGETS.has(s.target)) errors.push(`${at}: unknown mcpConfig target "${s.target}"`);
+    if (s.type === 'gitClone' && s.branch && !/^[\w.\/-]+$/.test(s.branch)) errors.push(`${at}: gitClone branch "${s.branch}" looks wrong`);
   }
 
   const hasWork = item.win || item.mac || item.linux || item.npm || item.steps;
@@ -84,6 +109,14 @@ const counts = {};
 for (const i of cat.items) counts[i.group] = (counts[i.group] || 0) + 1;
 console.log(`ProGramerly catalog v${cat.meta.version} - ${cat.items.length} items in ${cat.groups.length} groups`);
 for (const g of cat.groups) console.log(`  ${g.id.padEnd(11)} ${String(counts[g.id] || 0).padStart(2)}  ${g.label}`);
+const cover = { win: 0, mac: 0, linux: 0 };
+for (const i of cat.items) {
+  for (const p of Object.keys(cover)) {
+    const listed = Array.isArray(i.platforms) && i.platforms.length ? i.platforms.includes(p) : Boolean(i[p] || i.npm || i.steps);
+    if (listed) cover[p] += 1;
+  }
+}
+console.log(`  platforms   win ${cover.win}  mac ${cover.mac}  linux ${cover.linux}`);
 for (const p of Object.keys(cat.profiles)) {
   const n = cat.items.filter((i) => (i.profiles || []).includes(p)).length;
   console.log(`  profile ${p.padEnd(8)} ${String(n).padStart(2)} items`);

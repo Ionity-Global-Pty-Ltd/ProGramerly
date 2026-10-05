@@ -1,14 +1,31 @@
 <#
-    ProGramerly - write claude_desktop_config.json (Windows)
+    ProGramerly - write an MCP server config (Windows)
     Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
     Merges ProGramerly's MCP servers in without clobbering existing entries.
+
+    -Target claude       Claude Desktop   %APPDATA%\Claude\claude_desktop_config.json   (default)
+    -Target claude-code  Claude Code      ~\.claude.json (user scope)
+    -Target kiro         Kiro IDE         ~\.kiro\settings\mcp.json
+    -Target cursor       Cursor           ~\.cursor\mcp.json
+    -Target windsurf     Windsurf         ~\.codeium\windsurf\mcp_config.json
 #>
 [CmdletBinding()]
-param([switch]$WhatIf)
+param(
+    [ValidateSet('claude','claude-code','kiro','cursor','windsurf')]
+    [string]$Target = 'claude',
+    [switch]$WhatIf
+)
 
 $root = if ($env:PROGRAMERLY_DEV_ROOT) { $env:PROGRAMERLY_DEV_ROOT } else { Join-Path $HOME 'Development' }
-$cfgDir = Join-Path $env:APPDATA 'Claude'
-$cfg = Join-Path $cfgDir 'claude_desktop_config.json'
+$cfg = switch ($Target) {
+    'claude'      { Join-Path (Join-Path $env:APPDATA 'Claude') 'claude_desktop_config.json' }
+    'claude-code' { Join-Path $HOME '.claude.json' }
+    'kiro'        { Join-Path $HOME '.kiro\settings\mcp.json' }
+    'cursor'      { Join-Path $HOME '.cursor\mcp.json' }
+    'windsurf'    { Join-Path $HOME '.codeium\windsurf\mcp_config.json' }
+}
+$cfgDir = Split-Path $cfg
+Write-Host "     $Target -> $cfg" -ForegroundColor DarkGray
 
 $servers = [ordered]@{
     filesystem            = @{ command = 'npx.cmd'; args = @('-y','@modelcontextprotocol/server-filesystem', $root) }

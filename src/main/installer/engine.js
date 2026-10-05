@@ -5,7 +5,9 @@
  *
  * Turns a catalog item into an ordered list of attempts and runs them until
  * one succeeds. Windows: winget candidates -> Chocolatey fallback.
- * macOS: Homebrew formula/cask. Then npm globals, then custom steps.
+ * macOS: Homebrew formula/cask. Linux (3.7.0): the native manager that is
+ * present (apt / dnf / pacman / zypper) -> Flatpak -> snap. Then npm globals,
+ * then custom steps.
  */
 
 const { run, has } = require('./runner');
@@ -14,6 +16,55 @@ const mcp = require('./mcp-config');
 
 const IS_WIN = process.platform === 'win32';
 const PLATFORM = IS_WIN ? 'win' : (process.platform === 'darwin' ? 'mac' : 'linux');
+
+/* ----------------------------------------------------------------- Linux */
+// Native managers in the order we trust them; the first one on PATH wins.
+const LINUX_NATIVE = [
+  { key: 'apt', bin: 'apt-get', install: (pkgs) => `DEBIAN_FRONTEND=noninteractive apt-get install -y ${pkgs}` },
+  { key: 'dnf', bin: 'dnf', install: (pkgs) => `dnf install -y ${pkgs}` },
+  { key: 'pacman', bin: 'pacman', install: (pkgs) => `pacman -S --noconfirm --needed ${pkgs}` },
+  { key: 'zypper', bin: 'zypper', install: (pkgs) => `zypper --non-interactive install ${pkgs}` },
+];
+let linuxFacts = null; // { native: {key,bin,install}|null, flatpak: bool, snap: bool, sudo: string }
+
+/**
+ * How to become root on this box without a TTY. Root itself needs nothing;
+ * passwordless sudo is used when it works; otherwise pkexec, which raises the
+ * desktop's own authentication dialog - the right thing for a GUI installer.
+ */
+async function sudoPrefix() {
+  if (process.getuid && process.getuid() === 0) return '';
+  const { code } = await run('sudo -n true', { timeoutMs: 15000 });
+  if (code === 0) return 'sudo ';
+  if (await has('pkexec')) return 'pkexec ';
+  return 'sudo ';
+}
+
+async function readLinuxFacts() {
+  if (linuxFacts) return linuxFacts;
+  let native = null;
+  for (const m of LINUX_NATIVE) {
+    // eslint-disable-next-line no-await-in-loop
+    if (await has(m.bin)) { native = m; break; }
+  }
+  linuxFacts = {
+    native,
+    flatpak: await has('flatpak'),
+    snap: await has('snap'),
+    sudo: await sudoPrefix(),
+  };
+  return linuxFacts;
+}
+
+/**
+ * Catalog authors write `sudo` the way a human would. On a desktop with no
+ * passwordless sudo that would hang forever, so every leading `sudo ` in a
+ * Linux command is swapped for whatever actually works here.
+ */
+function sudoize(cmd, prefix) {
+  if (PLATFORM !== 'linux' || prefix === 'sudo ') return cmd;
+  return cmd.replace(/(^|[;&|(]\s*|\bthen\s+|\belse\s+|\bdo\s+)sudo\s+(-E\s+)?/g, (_m, lead) => `${lead}${prefix}`);
+}
 
 // winget exit codes that mean "nothing to do", not "failed".
 const WINGET_OK = new Set([
@@ -106,7 +157,11 @@ async function installItem(item, log) {
   }
 
   // ---- 1. Windows: winget candidates, then Chocolatey -------------------
+  // With `stopOnFirstSuccess` the list is a chain of alternatives (2026, then
+  // 2022) and the first hit ends it; without it every id is a wanted package
+  // (Python 3.13 and 3.12 both install).
   if (PLATFORM === 'win' && Array.isArray(spec.winget) && spec.winget.length) {
+    let altFailures = 0;
     for (const id of spec.winget) {
       log(`winget install ${id}`);
       const cmd = `winget install --id ${id} --exact --silent --disable-interactivity `
@@ -115,11 +170,16 @@ async function installItem(item, log) {
       if (wingetOk(code, output)) {
         anySuccess = true;
         log(`  ok: ${id}`);
+        if (spec.stopOnFirstSuccess) break;
+      } else if (spec.stopOnFirstSuccess) {
+        altFailures += 1;
+        log(`  ${id} not available here (exit ${code}) - trying the next candidate`);
       } else {
         anyFailure = true;
         log(`  winget failed for ${id} (exit ${code})`);
       }
     }
+    if (spec.stopOnFirstSuccess && !anySuccess && altFailures) anyFailure = true;
     if (!anySuccess && Array.isArray(spec.choco) && spec.choco.length) {
       log('falling back to Chocolatey');
       for (const pkg of spec.choco) {
@@ -148,6 +208,61 @@ async function installItem(item, log) {
       if (brewOk(code, output)) { anySuccess = true; log(`  ok: ${c}`); }
       else { anyFailure = true; log(`  brew cask failed for ${c} (exit ${code})`); }
     }
+  }
+
+  // ---- 2b. Linux: native manager, then Flatpak, then snap ----------------
+  // Native packages are the first choice. Flatpak and snap only run when the
+  // native list did not deliver (or there is none), so a distro package is
+  // never shadowed by a sandboxed copy of the same app.
+  if (PLATFORM === 'linux') {
+    const lf = await readLinuxFacts();
+    const nativeList = lf.native ? spec[lf.native.key] : null;
+    const wantsNative = Object.keys(spec).some((k) => LINUX_NATIVE.some((m) => m.key === k));
+    let linuxOk = false;      // something in this block delivered
+    let linuxTried = false;   // something in this block was attempted
+    if (lf.native && Array.isArray(nativeList) && nativeList.length) {
+      linuxTried = true;
+      const cmd = sudoize(`sudo ${lf.native.install(nativeList.join(' '))}`, lf.sudo);
+      log(`${lf.native.key}: ${nativeList.join(' ')}`);
+      const { code, output } = await run(cmd, { onLine: (l) => log(`  ${l}`) });
+      if (code === 0 || /already (the newest|installed)|is up to date|nothing to do/i.test(output || '')) {
+        linuxOk = true; log('  ok');
+      } else {
+        log(`  ${lf.native.key} failed (exit ${code})${(spec.flatpak || spec.snap) ? ' - trying Flatpak / snap' : ''}`);
+      }
+    } else if (!lf.native && wantsNative) {
+      log('no supported native package manager found (apt, dnf, pacman, zypper) - trying Flatpak / snap');
+    }
+    if (!linuxOk && Array.isArray(spec.flatpak) && spec.flatpak.length) {
+      linuxTried = true;
+      if (!lf.flatpak) {
+        log('flatpak is not installed - run "Linux package sources" first');
+      } else {
+        for (const ref of spec.flatpak) {
+          log(`flatpak install ${ref}`);
+          // eslint-disable-next-line no-await-in-loop
+          const { code, output } = await run(`flatpak install -y --noninteractive --or-update flathub ${ref}`, { onLine: (l) => log(`  ${l}`) });
+          if (code === 0 || /already installed/i.test(output || '')) { linuxOk = true; log(`  ok: ${ref}`); }
+          else log(`  flatpak failed for ${ref} (exit ${code})`);
+        }
+      }
+    }
+    if (!linuxOk && Array.isArray(spec.snap) && spec.snap.length) {
+      linuxTried = true;
+      if (!lf.snap) {
+        log('snap is not installed on this distro - skipped');
+      } else {
+        for (const entry of spec.snap) {
+          log(`snap install ${entry}`);
+          // eslint-disable-next-line no-await-in-loop
+          const { code, output } = await run(sudoize(`sudo snap install ${entry}`, lf.sudo), { onLine: (l) => log(`  ${l}`) });
+          if (code === 0 || /already installed/i.test(output || '')) { linuxOk = true; log(`  ok: ${entry}`); }
+          else log(`  snap failed for ${entry} (exit ${code})`);
+        }
+      }
+    }
+    if (linuxOk) anySuccess = true;
+    else if (linuxTried) anyFailure = true;
   }
 
   // ---- 3. npm globals (platform-specific list wins, else top level) ------
@@ -201,15 +316,16 @@ async function runStep(step, log) {
         : (PLATFORM === 'win' && step.winCmd) ? step.winCmd
         : step.cmd;
       if (!cmd) return 0;
-      log(`$ ${cmd}`);
-      const { code } = await run(cmd, { onLine: (l) => log(`  ${l}`) });
+      const real = PLATFORM === 'linux' ? sudoize(cmd, (await readLinuxFacts()).sudo) : cmd;
+      log(`$ ${real}`);
+      const { code } = await run(real, { onLine: (l) => log(`  ${l}`) });
       if (code !== 0) log(`  exit ${code}`);
       return code;
     }
     case 'vscodeExt':
       return tasks.vscodeExtensions(step.ids || [], log);
     case 'gitClone':
-      return tasks.gitClone(step.repo, step.dest, log);
+      return tasks.gitClone(step.repo, step.dest, log, { branch: step.branch, recursive: step.recursive });
     case 'workspace':
       return tasks.workspace(log);
     case 'chromeExt':
@@ -221,7 +337,7 @@ async function runStep(step, log) {
     case 'scaffold':
       return tasks.scaffold(step.kind, step.dest, log);
     case 'mcpConfig': {
-      const res = mcp.writeConfig(log);
+      const res = mcp.writeConfig(log, step.target || 'claude');
       if (!res.ok) log(`  failed: ${res.error}`);
       return res.ok ? 0 : 1;
     }
@@ -231,4 +347,4 @@ async function runStep(step, log) {
   }
 }
 
-module.exports = { installItem, itemsForProfile, orderSelection, applies, PLATFORM };
+module.exports = { installItem, itemsForProfile, orderSelection, applies, PLATFORM, LINUX_NATIVE, readLinuxFacts, sudoize };

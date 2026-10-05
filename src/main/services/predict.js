@@ -96,6 +96,11 @@ function needsOf(item) {
   if (PLATFORM === 'win' && Array.isArray(spec.winget) && spec.winget.length) { engines.add('winget'); hosts.add('winget'); }
   if (PLATFORM === 'win' && Array.isArray(spec.choco) && spec.choco.length) hosts.add('choco');
   if (PLATFORM === 'mac' && (spec.brew || spec.brewCask)) { engines.add('brew'); hosts.add('brew'); }
+  if (PLATFORM === 'linux') {
+    if (spec.apt || spec.dnf || spec.pacman || spec.zypper) { engines.add('linuxpkg'); hosts.add('linuxpkg'); }
+    if (spec.flatpak) { engines.add('flatpak'); hosts.add('flathub'); }
+    if (spec.snap) { engines.add('snap'); hosts.add('snap'); }
+  }
   if ((spec.npm || item.npm || []).length) { engines.add('npm'); hosts.add('npm'); }
   for (const s of steps) {
     const cmd = `${s.cmd || ''} ${s.winCmd || ''} ${s.macCmd || ''}`;
@@ -113,6 +118,12 @@ function needsOf(item) {
         if (/\bfirebase\b/.test(cmd)) hosts.add('firebase');
         if (/\bfnm\b/.test(cmd)) hosts.add('node');
         if (/\bbrew\b/.test(cmd)) { engines.add('brew'); hosts.add('brew'); }
+        if (/\b(apt-get|dnf|pacman|zypper)\b/.test(cmd)) { engines.add('linuxpkg'); hosts.add('linuxpkg'); }
+        if (/\bflatpak\b/.test(cmd)) { engines.add('flatpak'); hosts.add('flathub'); }
+        if (/\bsnap install\b/.test(cmd)) { engines.add('snap'); hosts.add('snap'); }
+        if (/\bwsl\b/.test(cmd)) hosts.add('wsl');
+        if (/kiro\.dev/.test(cmd)) hosts.add('kiro');
+        if (/\barduino-cli\b/.test(cmd)) hosts.add('arduino');
         break;
       default: break;
     }
@@ -124,13 +135,17 @@ function needsOf(item) {
 const ENGINE_PROVIDERS = {
   winget: ['winget'], brew: ['homebrew'], npm: ['node-system', 'node'], git: ['git'],
   python: ['python'], uv: ['python-tooling'], code: ['vscode'], ollama: ['ollama'],
-  java: ['java'],
+  java: ['java'], linuxpkg: ['linux-pkg'], flatpak: ['linux-pkg'], snap: ['linux-pkg'],
 };
+const IS_LINUX = process.platform === 'linux';
 const ENGINE_BINS = {
   winget: 'winget', brew: 'brew', npm: IS_WIN ? 'npm.cmd' : 'npm', git: 'git',
   python: IS_WIN ? 'py' : 'python3', uv: 'uvx', code: 'code', ollama: 'ollama', java: 'java',
   choco: 'choco',
+  // Linux only: whichever native manager is first on PATH counts as "linuxpkg".
+  linuxpkg: 'apt-get', flatpak: 'flatpak', snap: 'snap',
 };
+const LINUX_ONLY = new Set(['linuxpkg', 'flatpak', 'snap']);
 const HOSTS = {
   winget: { host: 'cdn.winget.microsoft.com', port: 443, label: 'winget CDN' },
   choco: { host: 'community.chocolatey.org', port: 443, label: 'Chocolatey' },
@@ -142,6 +157,12 @@ const HOSTS = {
   vscode: { host: 'marketplace.visualstudio.com', port: 443, label: 'VS Code Marketplace' },
   firebase: { host: 'firebase.googleapis.com', port: 443, label: 'Firebase' },
   node: { host: 'nodejs.org', port: 443, label: 'nodejs.org' },
+  linuxpkg: { host: 'deb.debian.org', port: 443, label: 'distro mirrors' },
+  flathub: { host: 'dl.flathub.org', port: 443, label: 'Flathub' },
+  snap: { host: 'api.snapcraft.io', port: 443, label: 'Snap Store' },
+  wsl: { host: 'aka.ms', port: 443, label: 'WSL distro feed' },
+  kiro: { host: 'prod.download.desktop.kiro.dev', port: 443, label: 'Kiro downloads' },
+  arduino: { host: 'downloads.arduino.cc', port: 443, label: 'Arduino package index' },
 };
 
 function tcpReach({ host, port }) {
@@ -161,9 +182,17 @@ async function readFacts(force = false) {
   if (!force && facts && Date.now() - facts.at < FACTS_TTL_MS) return facts;
   if (factsPromise) return factsPromise;
   factsPromise = (async () => {
-    const engineKeys = Object.keys(ENGINE_BINS).filter((k) => !(k === 'winget' && !IS_WIN) && !(k === 'choco' && !IS_WIN) && !(k === 'brew' && IS_WIN));
+    const engineKeys = Object.keys(ENGINE_BINS).filter((k) => !(k === 'winget' && !IS_WIN) && !(k === 'choco' && !IS_WIN) && !(k === 'brew' && IS_WIN) && !(LINUX_ONLY.has(k) && !IS_LINUX));
+    const probeEngine = async (k) => {
+      if (k !== 'linuxpkg') return has(ENGINE_BINS[k]);
+      for (const bin of ['apt-get', 'dnf', 'pacman', 'zypper']) {
+        // eslint-disable-next-line no-await-in-loop
+        if (await has(bin)) return true;
+      }
+      return false;
+    };
     const [engineResults, hostResults] = await Promise.all([
-      Promise.all(engineKeys.map((k) => has(ENGINE_BINS[k]).catch(() => false))),
+      Promise.all(engineKeys.map((k) => probeEngine(k).catch(() => false))),
       Promise.all(Object.entries(HOSTS).map(([k, h]) => tcpReach(h).then((r) => [k, r]))),
     ]);
     const engines = {};

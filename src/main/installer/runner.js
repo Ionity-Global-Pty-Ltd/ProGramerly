@@ -24,11 +24,18 @@ function shellFor(cmd) {
         '-NonInteractive',
         '-ExecutionPolicy', 'Bypass',
         '-Command',
-        `$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Continue'; ${cmd}`,
+        // Re-read PATH from the registry first: a package installed one step
+        // earlier (arduino-cli, gh, kiro-cli) is otherwise invisible until the
+        // user opens a new terminal, and every post-step that calls it fails.
+        "$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User'); "
+        + `$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Continue'; ${cmd}`,
       ],
     };
   }
-  return { file: '/bin/bash', args: ['-lc', cmd] };
+  // Same idea on macOS / Linux: user-level bins (arduino-cli, kiro-cli, rustup,
+  // uv) land in ~/.local/bin or ~/.cargo/bin before any rc file mentions them.
+  const extra = '$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/snap/bin:/var/lib/flatpak/exports/bin';
+  return { file: '/bin/bash', args: ['-lc', `export PATH="${extra}:$PATH"; ${cmd}`] };
 }
 
 /**

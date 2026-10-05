@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
-# ProGramerly - write claude_desktop_config.json (macOS)
+# ProGramerly - write an MCP server config (macOS / Linux)
 # Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+#
+#   write-mcp-config.sh [claude|claude-code|kiro|cursor|windsurf]   (default: claude)
+#
+# Every one of these clients reads the same {"mcpServers": {...}} shape, so the
+# same non-destructive merge serves them all.
 set -uo pipefail
 ROOT="${PROGRAMERLY_DEV_ROOT:-$HOME/Development}"
-CFG="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+TARGET="${1:-claude}"
+case "$TARGET" in
+  claude)
+    if [[ "$(uname -s)" == "Darwin" ]]; then CFG="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
+    else CFG="${XDG_CONFIG_HOME:-$HOME/.config}/Claude/claude_desktop_config.json"; fi ;;
+  claude-code) CFG="$HOME/.claude.json" ;;
+  kiro)        CFG="$HOME/.kiro/settings/mcp.json" ;;
+  cursor)      CFG="$HOME/.cursor/mcp.json" ;;
+  windsurf)    CFG="$HOME/.codeium/windsurf/mcp_config.json" ;;
+  *) echo "     unknown MCP target: $TARGET"; exit 2 ;;
+esac
+echo "     $TARGET -> $CFG"
 mkdir -p "$(dirname "$CFG")" "$ROOT"
 python3 - "$CFG" "$ROOT" <<'PY'
 import json, os, sys, datetime, shutil

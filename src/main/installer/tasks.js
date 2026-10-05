@@ -27,22 +27,29 @@ async function vscodeExtensions(ids, log) {
   return failed === 0 ? 0 : (ok > 0 ? 0 : 1);
 }
 
-/** Clone a repo into the dev root, or pull if it is already there. */
-async function gitClone(repo, dest, log) {
+/**
+ * Clone a repo into the dev root, or pull if it is already there.
+ * `branch` pins a tag or branch (ESP-IDF v5.x); `recursive` brings submodules.
+ */
+async function gitClone(repo, dest, log, opts = {}) {
   const root = devRoot();
   fs.mkdirSync(root, { recursive: true });
   const target = path.join(root, dest);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
 
   if (fs.existsSync(path.join(target, '.git'))) {
     log(`${dest} already cloned - pulling latest`);
-    const { code } = await run(`git -C "${target}" pull --ff-only`, { onLine: (l) => log(`  ${l}`) });
+    const { code } = await run(`git -C "${target}" pull --ff-only${opts.recursive ? ' --recurse-submodules' : ''}`, { onLine: (l) => log(`  ${l}`), timeoutMs: 20 * 60 * 1000 });
     return code;
   }
 
-  log(`cloning ${repo} -> ${target}`);
-  const { code, output } = await run(`git clone --depth 1 "${repo}" "${target}"`, {
+  const flags = ['--depth 1'];
+  if (opts.branch) flags.push(`--branch ${opts.branch}`);
+  if (opts.recursive) flags.push('--recursive --shallow-submodules');
+  log(`cloning ${repo}${opts.branch ? ` @ ${opts.branch}` : ''} -> ${target}`);
+  const { code, output } = await run(`git clone ${flags.join(' ')} "${repo}" "${target}"`, {
     onLine: (l) => log(`  ${l}`),
-    timeoutMs: 10 * 60 * 1000,
+    timeoutMs: (opts.recursive ? 40 : 10) * 60 * 1000,
   });
   if (code !== 0 && /Authentication|could not read Username|403|not found/i.test(output)) {
     log('  repo is private or needs auth - run `gh auth login`, then re-run this item');

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 /* ProGramerly - resolve a profile and print the exact plan without running it.
-   Usage: node scripts/dry-run.js [profile] [win|mac]
+   Usage: node scripts/dry-run.js [profile] [win|mac|linux]
    Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED */
 
 const fs = require('node:fs');
 const path = require('node:path');
 
 const profile = process.argv[2] || 'full';
-const plat = process.argv[3] || (process.platform === 'win32' ? 'win' : 'mac');
+const plat = process.argv[3] || (process.platform === 'win32' ? 'win' : (process.platform === 'darwin' ? 'mac' : 'linux'));
 const cat = JSON.parse(fs.readFileSync(
   path.join(__dirname, '..', 'src', 'main', 'catalog', 'catalog.json'), 'utf8'));
 
@@ -35,7 +35,12 @@ for (const item of queue) {
   n += 1;
   console.log(`[${String(n).padStart(2)}/${queue.length}] ${item.name}${item.elevate ? '   (needs admin)' : ''}`);
   const spec = item[plat] || {};
-  for (const id of spec.winget || []) console.log(`        winget install --id ${id} --exact --silent${spec.wingetArgs ? ' …' : ''}`);
+  for (const id of spec.winget || []) console.log(`        winget install --id ${id} --exact --silent${spec.wingetArgs ? ' …' : ''}${spec.stopOnFirstSuccess ? '   [first hit wins]' : ''}`);
+  if (plat === 'linux') {
+    for (const k of ['apt', 'dnf', 'pacman', 'zypper']) if (spec[k]) console.log(`        ${k}: ${spec[k].join(' ')}`);
+    if (spec.flatpak) console.log(`        flatpak install flathub ${spec.flatpak.join(' ')}   [if native did not deliver]`);
+    if (spec.snap) console.log(`        snap install ${spec.snap.join(', ')}   [if native did not deliver]`);
+  }
   const brew = spec.brew;
   for (const f of Array.isArray(brew) ? brew : (brew?.formula || [])) console.log(`        brew install ${f}`);
   for (const c of (brew && brew.cask) || spec.brewCask || []) console.log(`        brew install --cask ${c}`);
@@ -47,7 +52,8 @@ for (const item of queue) {
       : `<${s.type}>${s.repo ? ` ${s.repo}` : ''}`
         + `${s.ids ? ` ${s.ids.length} item(s)` : ''}`
         + `${s.packages ? ` pip: ${s.packages.join(' ')}` : ''}`
-        + `${s.kind ? ` ${s.kind} -> ${s.dest}` : ''}`;
+        + `${s.kind ? ` ${s.kind} -> ${s.dest}` : ''}`
+        + `${s.target ? ` -> ${s.target}` : ''}${s.branch ? ` @ ${s.branch}` : ''}`;
     console.log(`        ${String(cmd).slice(0, 120)}${s.allowFail ? '   [non-fatal]' : ''}`);
   }
 }

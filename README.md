@@ -31,6 +31,7 @@ mystery binary from a random URL.
 | --- | --- | --- |
 | Windows 10/11 | `winget` | Chocolatey (bootstrapped automatically) |
 | macOS 12+ | Homebrew (bootstrapped automatically) | — |
+| Linux (Debian/Ubuntu, Fedora, Arch, openSUSE) | `apt` / `dnf` / `pacman` / `zypper` — whichever is on PATH | Flatpak (Flathub), then snap — **3.7.0** |
 | Everywhere | `npm -g`, `pip`, `uvx` | — |
 
 Nothing is redistributed. ProGramerly asks the official package manager to
@@ -50,11 +51,12 @@ Then it stays. Four things run after the install is finished:
 
 ## Profiles
 
-| Profile | Items | Roughly | Good for |
+| Profile | Items (Windows) | Roughly | Good for |
 | --- | ---: | --- | --- |
-| **Full Stack** | 141 | 65–110 GB | A fresh machine you want finished — apps, comms, drives, CAD, every runtime |
-| **AI Dev** | 64 | 22–40 GB | Claude, Gemini, Codex, Copilot, MCP, Firebase, local models, PyTorch, Node, Python |
-| **Minimal** | 27 | 6–12 GB | Git, Node + toolbelt, Python, VS Code, Chrome, pwsh, WhatsApp, Drive, OneDrive |
+| **Full Stack** | 150 | 70–120 GB | A fresh machine you want finished — apps, comms, drives, CAD, every runtime, every IDE |
+| **AI Dev** | 68 | 22–40 GB | Claude, Kiro, Gemini, Codex, Copilot, MCP, Firebase, local models, PyTorch, Node, Python |
+| **Minimal** | 26 | 6–12 GB | Git, Node + toolbelt, Python, VS Code, Chrome, pwsh, WhatsApp, Drive, OneDrive |
+| **Maker & Embedded** — 3.7.0 | 31 | 8–14 GB | Arduino IDE 2 + every common core, PlatformIO, ESP-IDF, MicroPython, serial tools, KiCad, Pi Imager, VS Code with the embedded extension set, WSL |
 | **Custom** | — | — | Tick exactly what you want |
 
 Every item is individually toggleable regardless of profile, and dependencies
@@ -89,13 +91,33 @@ usually already there) · **Dropbox** · **rclone** for scripting any of them
 from the terminal (`rclone config` is yours to run).
 </details>
 
-<details>
-<summary><b>IDEs and editors</b></summary>
+<details open>
+<summary><b>IDEs and editors</b> — the IDE Lab, 3.7.0</summary>
 
-Visual Studio Community (ManagedDesktop, NetWeb, NativeDesktop, Node, Azure,
-NetCrossPlat workloads) · Visual Studio Build Tools · VS Code + a **58-extension
-critical pack** · **Google Antigravity** (IDE + CLI) · Cursor · Windsurf · Zed ·
-JetBrains Toolbox · Neovim · Android Studio · **Unity Hub** · **Godot**
+**Visual Studio Community 2026** (ManagedDesktop, NetWeb, NativeDesktop, Node,
+Azure, NetCrossPlat, **Python**, **ManagedGame** workloads; falls back to the
+2022 package) · Visual Studio Community 2022 side by side · Visual Studio Build
+Tools · VS Code + a **58-extension critical pack** · **VS Code Insiders** ·
+**Kiro** (AWS agentic IDE) · **Google Antigravity** (IDE + CLI) · Cursor ·
+Windsurf · Zed · JetBrains Toolbox · **IntelliJ IDEA Community** · **PyCharm
+Community** · **WebStorm** · **Rider** · **CLion** · **Eclipse** (Java + C/C++)
+· **Sublime Text 4** · **Notepad++** · **Helix + Lapce** · Neovim · Android
+Studio · Unity Hub · Godot. GitHub Desktop sits with the source-control items
+and now installs on Linux too (shiftkey build).
+</details>
+
+<details open>
+<summary><b>Embedded and IoT</b> — 3.7.0</summary>
+
+**Arduino IDE 2 + arduino-cli + cores** (AVR, SAMD, Mbed RP2040, ESP32, ESP8266,
+community RP2040, and a starter library set) · PlatformIO Core + IDE extension ·
+**ESP-IDF v5** (shallow clone + Espressif's installer for esp32/s3/c3/c6/h2) ·
+esptool, mpremote, rshell, Thonny · **VS Code embedded extension set** (Arduino,
+PlatformIO, ESP-IDF, Cortex-Debug, Serial Monitor, Wokwi, Pico) · **Serial
+terminals** (PuTTY, Tera Term 5 / minicom, picocom, screen) + pyocd · **Raspberry
+Pi Imager + balenaEtcher** · **STM32 & Cortex tooling** (Arm GNU toolchain,
+OpenOCD, stlink). On Linux the serial-port group and the PlatformIO udev rules
+are set, so a board shows up without sudo.
 </details>
 
 <details>
@@ -799,8 +821,10 @@ irm https://raw.githubusercontent.com/Ionity-Global-Pty-Ltd/ProGramerly/main/scr
 curl -fsSL https://raw.githubusercontent.com/Ionity-Global-Pty-Ltd/ProGramerly/main/scripts/programerly.sh | bash
 ```
 
-Both accept `--profile ai`, `--only git,node,claude-desktop`, `--list` and
-`--dry-run` (`-WhatIf` on PowerShell).
+Both accept `--profile ai|minimal|embedded|full`, `--only git,node,claude-desktop`,
+`--list` and `--dry-run` (`-WhatIf` on PowerShell). On Linux the bash script
+uses whichever of `apt-get`, `dnf`, `pacman` or `zypper` is on PATH, then
+Flatpak and snap for the apps that only ship that way.
 
 ---
 
@@ -821,6 +845,7 @@ appears in all three.
   "dependsOn": ["node-system"],
   "win": { "winget": ["Publisher.MyTool"], "choco": ["my-tool"] },
   "mac": { "brew": { "cask": ["my-tool"] } },
+  "linux": { "apt": ["my-tool"], "dnf": ["my-tool"], "pacman": ["my-tool"], "flatpak": ["org.example.MyTool"], "snap": ["my-tool --classic"] },
   "npm": ["my-tool-cli"],
   "steps": [
     { "type": "shell", "cmd": "my-tool --version", "allowFail": true }
@@ -830,7 +855,18 @@ appears in all three.
 
 `winget` takes an **array of candidate IDs** and tries each in turn — when a
 publisher renames a package, add the new ID next to the old one instead of
-replacing it, and the entry keeps working on machines with either.
+replacing it, and the entry keeps working on machines with either. Add
+`"stopOnFirstSuccess": true` to the `win` block when the IDs are alternatives
+(Visual Studio 2026, then 2022) rather than a set you want all of (Python 3.13
+*and* 3.12).
+
+`linux` takes a list per native manager — `apt`, `dnf`, `pacman`, `zypper` —
+and the engine uses the one that is on PATH. `flatpak` (Flathub application
+ids) and `snap` (name plus flags, e.g. `code --classic`) are tried only when the
+native list did not deliver, so a distro package is never shadowed by a
+sandboxed copy. `sudo` in a Linux shell step is rewritten to `pkexec` when the
+desktop has no passwordless sudo, so the system's own authentication dialog
+appears instead of a hang.
 
 Step types:
 
@@ -838,9 +874,9 @@ Step types:
 | --- | --- |
 | `shell` | Runs a command. `cmd`, plus optional `winCmd` / `macCmd` overrides, and `allowFail` |
 | `vscodeExt` | Installs VS Code extensions with `--force`, tolerating individual failures |
-| `gitClone` | Clones into the dev root, or pulls if it is already there |
+| `gitClone` | Clones into the dev root, or pulls if it is already there. `branch` pins a tag (ESP-IDF `v5.5`), `recursive` brings submodules |
 | `workspace` | Lays out the standard Ionity dev tree |
-| `mcpConfig` | Merges the MCP servers into `claude_desktop_config.json` |
+| `mcpConfig` | Merges the MCP servers into a client's config. `target`: `claude` (default), `claude-code`, `kiro`, `cursor`, `windsurf` |
 | `chromeExt` | Chrome extensions, by enterprise policy when elevated, by Web Store page when not |
 | `venv` | Creates the managed virtual environment at `Development/.venvs/ionity` |
 | `venvPip` | `pip install` into that environment — `packages`, plus optional `args` for a custom index |
@@ -853,7 +889,7 @@ Then check your work:
 
 ```bash
 node scripts/validate-catalog.js      # schema, groups, profiles, step types, dependency cycles
-node scripts/dry-run.js full win      # print the exact command plan, run nothing
+node scripts/dry-run.js full win      # print the exact command plan, run nothing (win | mac | linux)
 node scripts/syntax-check.js          # parse every shipped .js and .json
 ```
 
@@ -1214,6 +1250,23 @@ Watch. A pulse travels between them, and each caption is a live reading the app
 already shows. The flow speeds up during an install. The download page is down to
 about 240 words, and its Windows, macOS and Linux tiles link straight to each
 build. See `docs/RELEASE-3.6.2.md`.
+
+### IDE Lab, Maker & Embedded, Linux installs — 3.7.0
+
+The catalog goes from 143 to 166 items. **Kiro** (IDE + `kiro-cli`), **Visual
+Studio Community 2026** with the Python and Unity workloads, the five JetBrains
+IDEs outright, Eclipse, Sublime Text, Notepad++, VS Code Insiders, Helix + Lapce.
+A **Maker & Embedded** profile: Arduino IDE 2 with six board cores and a starter
+library set, ESP-IDF v5, the VS Code embedded extension set, serial terminals,
+Pi Imager + Etcher, the STM32/Cortex toolchain. **WSL** gets Ubuntu 24.04, a
+`.wslconfig`, a dev toolchain written inside the distro, and Debian + Kali as
+extras. **Linux is a first-class install target**: 129 items carry an `apt` /
+`dnf` / `pacman` / `zypper` list with Flatpak and snap fallbacks, the engine
+rewrites `sudo` to `pkexec` where the desktop needs it, and the bash script does
+the same with its own planner. The MCP writer now also fills Kiro, Cursor,
+Windsurf and Claude Code. The runner refreshes PATH before every step, so a
+tool installed one step earlier is callable in the next. See
+`docs/RELEASE-3.7.0.md`.
 
 ## The download page
 

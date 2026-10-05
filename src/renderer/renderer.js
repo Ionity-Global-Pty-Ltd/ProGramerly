@@ -30,6 +30,13 @@ const SIZE_GB = {
   whatsapp: 0.25, 'google-drive': 0.3, onedrive: 0.15, dropbox: 0.25, 'bun-deno': 0.2,
   'node-toolbelt': 0.35, 'firebase-cli': 0.6, n8n: 0.5, 'github-extras': 0.4, archify: 0.3,
   'claude-code-github': 0.05, bruno: 0.2, powertoys: 0.3,
+  // 3.7.0
+  kiro: 0.5, 'kiro-cli': 0.1, 'visual-studio-2022': 20, 'vscode-insiders': 0.4,
+  'intellij-idea': 1.1, pycharm: 0.9, webstorm: 0.8, rider: 1.4, clion: 1.3, eclipse: 0.9,
+  'sublime-text': 0.1, 'notepad-plus-plus': 0.02, 'helix-lapce': 0.2, 'esp-idf': 3.2,
+  'embedded-vscode': 0.4, 'serial-tools': 0.15, 'pi-imager': 0.3, 'stm32-tools': 1.2,
+  processing: 0.3, 'wsl-devtools': 1.4, 'wsl-distros': 1.2, 'mcp-config-ides': 0,
+  'linux-pkg': 0.1,
 };
 const DEFAULT_GB = 0.18;
 

@@ -14,12 +14,34 @@ const os = require('node:os');
 
 const IS_WIN = process.platform === 'win32';
 
-function configPath() {
-  if (IS_WIN) {
-    return path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'),
-      'Claude', 'claude_desktop_config.json');
-  }
-  return path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+/**
+ * Where each MCP client keeps its server list. Every one of them uses the
+ * same `mcpServers: { name: { command, args } }` shape, so one merge routine
+ * serves them all.
+ *
+ *   claude       Claude Desktop            claude_desktop_config.json
+ *   claude-code  Claude Code, user scope   ~/.claude.json
+ *   kiro         Kiro IDE, user level      ~/.kiro/settings/mcp.json
+ *   cursor       Cursor, global            ~/.cursor/mcp.json
+ *   windsurf     Windsurf (Cascade)        ~/.codeium/windsurf/mcp_config.json
+ */
+const TARGETS = {
+  claude: {
+    label: 'Claude Desktop',
+    path: () => (IS_WIN
+      ? path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'Claude', 'claude_desktop_config.json')
+      : (process.platform === 'darwin'
+        ? path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json')
+        : path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'Claude', 'claude_desktop_config.json'))),
+  },
+  'claude-code': { label: 'Claude Code (user scope)', path: () => path.join(os.homedir(), '.claude.json') },
+  kiro: { label: 'Kiro', path: () => path.join(os.homedir(), '.kiro', 'settings', 'mcp.json') },
+  cursor: { label: 'Cursor', path: () => path.join(os.homedir(), '.cursor', 'mcp.json') },
+  windsurf: { label: 'Windsurf', path: () => path.join(os.homedir(), '.codeium', 'windsurf', 'mcp_config.json') },
+};
+
+function configPath(target = 'claude') {
+  return (TARGETS[target] || TARGETS.claude).path();
 }
 
 /** Where we let filesystem MCP roam. Dev root only - not the whole disk. */
@@ -84,10 +106,12 @@ function serverDefs() {
  * @param {(msg:string)=>void} log
  * @returns {{ok:boolean, path:string, added:string[], kept:string[], backup?:string, error?:string}}
  */
-function writeConfig(log = () => {}) {
-  const target = configPath();
+function writeConfig(log = () => {}, which = 'claude') {
+  const t = TARGETS[which] || TARGETS.claude;
+  const target = t.path();
   const added = [];
   const kept = [];
+  log(`${t.label}: ${target}`);
 
   try {
     fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -131,4 +155,4 @@ function writeConfig(log = () => {}) {
   }
 }
 
-module.exports = { writeConfig, configPath, devRoot, serverDefs };
+module.exports = { writeConfig, configPath, devRoot, serverDefs, TARGETS };

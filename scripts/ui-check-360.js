@@ -106,7 +106,7 @@ async function run() {
     const it = cat.items.find((i) => i.id === id);
     check(Boolean(it) && (appliesHere(it) ? rows.includes(id) : !rows.includes(id)), `catalog item "${id}" ${it && appliesHere(it) ? 'is on the list' : `is in the catalog and rightly absent on ${plat}`}`);
   }
-  check(cat.items.length >= 143 && cat.meta.version === '1.3.0', 'catalog 1.3.0 with 143+ items', `${cat.items.length} items`);
+  check(cat.items.length >= 143 && /^1\.[3-9]\./.test(cat.meta.version), 'catalog 1.3+ with 143+ items', `${cat.meta.version} · ${cat.items.length} items`);
   // tick the AI Dev profile and watch the footer forecast line fill in
   await page.click('#profiles .profile[data-profile="ai"]');
   await wait(200);

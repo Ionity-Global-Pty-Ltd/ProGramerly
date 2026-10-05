@@ -2,13 +2,13 @@
   "$schema": "./catalog.schema.json",
   "meta": {
     "title": "ProGramerly - Basic Coding Software for All",
-    "documentId": "DOC-2026-09-002",
-    "version": "1.3.0",
+    "documentId": "DOC-2026-10-003",
+    "version": "1.4.0",
     "governance": "Policy 986 AED",
     "author": "Johan Wilhelm van Antwerp",
     "organisation": "Ionity (Pty) Ltd | Antwerp Designs | AEDI",
     "web": "https://www.ionity.today",
-    "updated": "2026-09-29"
+    "updated": "2026-10-05"
   },
   "profiles": {
     "full": {
@@ -26,6 +26,11 @@
       "desc": "Git, Node, Python, VS Code, Chrome, PowerShell. ~4-8 GB.",
       "recommended": false
     },
+    "embedded": {
+      "label": "Maker & Embedded",
+      "desc": "Arduino IDE 2 + cores, PlatformIO, ESP-IDF, MicroPython, serial tools, KiCad, Pi Imager, VS Code with the embedded extension set, Python, Git. ~8-14 GB.",
+      "recommended": false
+    },
     "custom": {
       "label": "Custom",
       "desc": "Nothing preselected. You pick.",
@@ -36,12 +41,12 @@
     {
       "id": "bootstrap",
       "label": "Package Managers",
-      "desc": "The engines everything else rides on."
+      "desc": "The engines everything else rides on - winget, Chocolatey, Homebrew, apt/dnf/pacman, Flatpak, snap."
     },
     {
       "id": "vcs",
       "label": "Source Control",
-      "desc": "Git, GitHub CLI, GitHub Desktop, GitKraken, lazygit."
+      "desc": "Git, GitHub CLI, GitHub Desktop, GitKraken, lazygit - on Windows, macOS and Linux."
     },
     {
       "id": "shells",
@@ -56,7 +61,7 @@
     {
       "id": "ide",
       "label": "IDEs & Editors",
-      "desc": "Visual Studio, VS Code, Android Studio, Unity Hub, Godot."
+      "desc": "Visual Studio 2026, VS Code, Kiro, Cursor, Windsurf, Zed, JetBrains, Eclipse, Sublime, Android Studio, Unity, Godot."
     },
     {
       "id": "apps",
@@ -111,7 +116,7 @@
     {
       "id": "embedded",
       "label": "Embedded & IoT",
-      "desc": "Arduino IDE, arduino-cli, PlatformIO, ESP-IDF, MicroPython."
+      "desc": "Arduino IDE 2 + cores, arduino-cli, PlatformIO, ESP-IDF, MicroPython, Thonny, serial terminals, Pi Imager."
     },
     {
       "id": "maker",
@@ -136,7 +141,7 @@
     {
       "id": "wsl",
       "label": "WSL (Windows only)",
-      "desc": "Windows Subsystem for Linux + Ubuntu."
+      "desc": "Windows Subsystem for Linux: WSL 2, Ubuntu, Debian, and a ready dev toolchain inside it."
     },
     {
       "id": "ionity",
@@ -153,7 +158,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "platforms": [
         "win"
@@ -182,7 +188,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "platforms": [
         "win"
@@ -205,7 +212,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "platforms": [
         "mac"
@@ -232,7 +240,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "platforms": [
         "mac"
@@ -248,6 +257,46 @@
       }
     },
     {
+      "id": "linux-pkg",
+      "name": "Linux package sources (apt/dnf/pacman + Flatpak + snap)",
+      "group": "bootstrap",
+      "desc": "Refreshes the native package index, installs Flatpak with the Flathub remote and snapd where the distro allows it. Every Linux item rides on this.",
+      "profiles": [
+        "full",
+        "ai",
+        "minimal",
+        "embedded"
+      ],
+      "platforms": [
+        "linux"
+      ],
+      "elevate": true,
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then sudo apt-get update; elif command -v dnf >/dev/null; then sudo dnf makecache; elif command -v pacman >/dev/null; then sudo pacman -Sy --noconfirm; elif command -v zypper >/dev/null; then sudo zypper refresh; fi'",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then sudo apt-get install -y flatpak curl wget ca-certificates gnupg; elif command -v dnf >/dev/null; then sudo dnf install -y flatpak curl wget; elif command -v pacman >/dev/null; then sudo pacman -S --noconfirm --needed flatpak curl wget; fi'",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null && ! command -v snap >/dev/null; then sudo apt-get install -y snapd; fi'",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
       "id": "git",
       "name": "Git",
       "group": "vcs",
@@ -255,7 +304,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -269,6 +319,17 @@
         "brew": [
           "git"
         ]
+      },
+      "linux": {
+        "apt": [
+          "git"
+        ],
+        "dnf": [
+          "git"
+        ],
+        "pacman": [
+          "git"
+        ]
       }
     },
     {
@@ -279,7 +340,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -293,17 +355,30 @@
         "brew": [
           "gh"
         ]
+      },
+      "linux": {
+        "apt": [
+          "gh"
+        ],
+        "dnf": [
+          "gh"
+        ],
+        "pacman": [
+          "github-cli"
+        ],
+        "allowPartial": true
       }
     },
     {
       "id": "github-desktop",
       "name": "GitHub Desktop",
       "group": "vcs",
-      "desc": "Graphical Git client.",
+      "desc": "GitHub Desktop - the graphical Git client. Windows and macOS from GitHub; Linux from the shiftkey community build (apt/rpm repo, Flatpak fallback).",
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -319,6 +394,25 @@
             "github"
           ]
         }
+      },
+      "linux": {
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then wget -qO- https://apt.packages.shiftkey.dev/gpg.key | gpg --dearmor | sudo tee /usr/share/keyrings/shiftkey-packages.gpg >/dev/null && echo \"deb [arch=amd64 signed-by=/usr/share/keyrings/shiftkey-packages.gpg] https://apt.packages.shiftkey.dev/ubuntu/ any main\" | sudo tee /etc/apt/sources.list.d/shiftkey-packages.list >/dev/null && sudo apt-get update; elif command -v dnf >/dev/null; then sudo rpm --import https://rpm.packages.shiftkey.dev/gpg.key && printf \"[shiftkey-packages]\\nname=GitHub Desktop\\nbaseurl=https://rpm.packages.shiftkey.dev/rpm/\\nenabled=1\\ngpgcheck=1\\nrepo_gpgcheck=1\\ngpgkey=https://rpm.packages.shiftkey.dev/gpg.key\\n\" | sudo tee /etc/yum.repos.d/shiftkey-packages.repo >/dev/null; fi'",
+            "allowFail": true
+          }
+        ],
+        "apt": [
+          "github-desktop"
+        ],
+        "dnf": [
+          "github-desktop"
+        ],
+        "flatpak": [
+          "io.github.shiftey.Desktop"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -339,6 +433,17 @@
       },
       "mac": {
         "brew": [
+          "git-lfs"
+        ]
+      },
+      "linux": {
+        "apt": [
+          "git-lfs"
+        ],
+        "dnf": [
+          "git-lfs"
+        ],
+        "pacman": [
           "git-lfs"
         ]
       }
@@ -375,6 +480,26 @@
           ]
         },
         "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "lazygit"
+        ],
+        "dnf": [
+          "lazygit"
+        ],
+        "pacman": [
+          "lazygit",
+          "gitkraken"
+        ],
+        "flatpak": [
+          "com.axosoft.GitKraken"
+        ],
+        "snap": [
+          "gitkraken --classic",
+          "lazygit-gm"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -385,7 +510,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -401,6 +527,11 @@
             "powershell"
           ]
         }
+      },
+      "linux": {
+        "snap": [
+          "powershell --classic"
+        ]
       }
     },
     {
@@ -411,7 +542,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "platforms": [
         "win"
@@ -479,6 +611,14 @@
         "brew": [
           "nushell"
         ]
+      },
+      "linux": {
+        "pacman": [
+          "nushell"
+        ],
+        "snap": [
+          "nushell --classic"
+        ]
       }
     },
     {
@@ -522,6 +662,14 @@
       "mac": {
         "brew": [
           "starship"
+        ]
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl -sS https://starship.rs/install.sh | sh -s -- -y"
+          }
         ]
       }
     },
@@ -609,7 +757,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -622,6 +771,26 @@
       "mac": {
         "brew": [
           "node"
+        ]
+      },
+      "linux": {
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -; fi'",
+            "allowFail": true
+          }
+        ],
+        "apt": [
+          "nodejs"
+        ],
+        "dnf": [
+          "nodejs",
+          "npm"
+        ],
+        "pacman": [
+          "nodejs",
+          "npm"
         ]
       }
     },
@@ -740,7 +909,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -770,6 +940,23 @@
             "cmd": "python3 -m pip install --upgrade --break-system-packages pip setuptools wheel",
             "allowFail": true
           }
+        ]
+      },
+      "linux": {
+        "apt": [
+          "python3",
+          "python3-pip",
+          "python3-venv",
+          "python3-dev"
+        ],
+        "dnf": [
+          "python3",
+          "python3-pip",
+          "python3-devel"
+        ],
+        "pacman": [
+          "python",
+          "python-pip"
         ]
       }
     },
@@ -832,6 +1019,21 @@
             "dotnet-sdk"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "dotnet-sdk-8.0"
+        ],
+        "dnf": [
+          "dotnet-sdk-8.0"
+        ],
+        "pacman": [
+          "dotnet-sdk"
+        ],
+        "snap": [
+          "dotnet-sdk --classic"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -852,7 +1054,7 @@
         "choco": [
           "netfx-4.8-devpack"
         ],
-        "allowFail": true
+        "allowPartial": true
       }
     },
     {
@@ -880,6 +1082,21 @@
             "temurin@17"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "openjdk-21-jdk",
+          "openjdk-17-jdk"
+        ],
+        "dnf": [
+          "java-21-openjdk-devel",
+          "java-17-openjdk-devel"
+        ],
+        "pacman": [
+          "jdk21-openjdk",
+          "jdk17-openjdk"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -901,6 +1118,20 @@
       "mac": {
         "brew": [
           "go"
+        ]
+      },
+      "linux": {
+        "apt": [
+          "golang-go"
+        ],
+        "dnf": [
+          "golang"
+        ],
+        "pacman": [
+          "go"
+        ],
+        "snap": [
+          "go --classic"
         ]
       }
     },
@@ -938,6 +1169,19 @@
             "allowFail": true
           }
         ]
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path"
+          },
+          {
+            "type": "shell",
+            "cmd": "$HOME/.cargo/bin/rustup default stable",
+            "allowFail": true
+          }
+        ]
       }
     },
     {
@@ -946,7 +1190,8 @@
       "group": "runtimes",
       "desc": "Clang/LLVM, CMake and Ninja. MSVC comes with Visual Studio.",
       "profiles": [
-        "full"
+        "full",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -967,6 +1212,34 @@
           "cmake",
           "ninja"
         ]
+      },
+      "linux": {
+        "apt": [
+          "build-essential",
+          "clang",
+          "lldb",
+          "cmake",
+          "ninja-build",
+          "gdb"
+        ],
+        "dnf": [
+          "gcc",
+          "gcc-c++",
+          "clang",
+          "lldb",
+          "cmake",
+          "ninja-build",
+          "gdb"
+        ],
+        "pacman": [
+          "base-devel",
+          "clang",
+          "lldb",
+          "cmake",
+          "ninja",
+          "gdb"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -993,6 +1266,27 @@
           "ruby",
           "php"
         ]
+      },
+      "linux": {
+        "apt": [
+          "ruby-full",
+          "php-cli",
+          "php-mbstring",
+          "php-xml",
+          "php-curl",
+          "composer"
+        ],
+        "dnf": [
+          "ruby",
+          "php-cli",
+          "composer"
+        ],
+        "pacman": [
+          "ruby",
+          "php",
+          "composer"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1003,7 +1297,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -1019,6 +1314,54 @@
             "visual-studio-code"
           ]
         }
+      },
+      "linux": {
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/microsoft.gpg >/dev/null && echo \"deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main\" | sudo tee /etc/apt/sources.list.d/vscode.list >/dev/null && sudo apt-get update; elif command -v dnf >/dev/null; then sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc && printf \"[code]\\nname=Visual Studio Code\\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\\nenabled=1\\ngpgcheck=1\\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc\\n\" | sudo tee /etc/yum.repos.d/vscode.repo >/dev/null; fi'",
+            "allowFail": true
+          }
+        ],
+        "apt": [
+          "code"
+        ],
+        "dnf": [
+          "code"
+        ],
+        "flatpak": [
+          "com.visualstudio.code"
+        ],
+        "snap": [
+          "code --classic"
+        ]
+      }
+    },
+    {
+      "id": "vscode-insiders",
+      "name": "Visual Studio Code Insiders",
+      "group": "ide",
+      "desc": "The nightly VS Code build, installed beside stable as `code-insiders`. Same settings sync, separate extensions.",
+      "profiles": [],
+      "win": {
+        "winget": [
+          "Microsoft.VisualStudioCode.Insiders"
+        ],
+        "choco": [
+          "vscode-insiders"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "visual-studio-code@insiders"
+          ]
+        }
+      },
+      "linux": {
+        "snap": [
+          "code-insiders --classic"
+        ]
       }
     },
     {
@@ -1106,12 +1449,36 @@
     },
     {
       "id": "visual-studio",
-      "name": "Visual Studio Community",
+      "name": "Visual Studio Community 2026",
       "group": "ide",
-      "desc": "Full IDE with .NET desktop, ASP.NET, C++ desktop, Node.js and Azure workloads. Large download (~15-30 GB).",
+      "desc": "The full Microsoft IDE, current release. Workloads: .NET desktop, ASP.NET & web, C++ desktop, Node.js, Azure, .NET MAUI, Python, Unity game dev, plus the recommended components. Large download (~15-30 GB). Falls back to the 2022 package if the 2026 manifest is not reachable.",
       "profiles": [
         "full"
       ],
+      "platforms": [
+        "win"
+      ],
+      "elevate": true,
+      "win": {
+        "winget": [
+          "Microsoft.VisualStudio.Community",
+          "Microsoft.VisualStudio.2022.Community"
+        ],
+        "wingetArgs": "--override \"--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NetWeb --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.Node --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Workload.NetCrossPlat --add Microsoft.VisualStudio.Workload.Python --add Microsoft.VisualStudio.Workload.ManagedGame --add Microsoft.VisualStudio.Component.Git --includeRecommended\"",
+        "choco": [
+          "visualstudio2026community",
+          "visualstudio2022community"
+        ],
+        "allowPartial": true,
+        "stopOnFirstSuccess": true
+      }
+    },
+    {
+      "id": "visual-studio-2022",
+      "name": "Visual Studio Community 2022 (side by side)",
+      "group": "ide",
+      "desc": "The previous major release, for solutions and extensions that still pin 2022. Installs beside 2026 with the same workload set. Pick this only if you need it - it is another ~15-25 GB.",
+      "profiles": [],
       "platforms": [
         "win"
       ],
@@ -1130,10 +1497,11 @@
       "id": "vs-buildtools",
       "name": "Visual Studio Build Tools",
       "group": "ide",
-      "desc": "MSVC compiler + Windows SDK without the full IDE. Needed by node-gyp and native npm modules.",
+      "desc": "MSVC compiler, Windows SDK and CMake without the full IDE. Needed by node-gyp, native npm modules, Rust MSVC targets and PlatformIO on Windows. 2022 Build Tools are what node-gyp expects; the 2026 package is tried first and 2022 is kept as the fallback.",
       "profiles": [
         "full",
-        "ai"
+        "ai",
+        "embedded"
       ],
       "platforms": [
         "win"
@@ -1143,7 +1511,7 @@
         "winget": [
           "Microsoft.VisualStudio.2022.BuildTools"
         ],
-        "wingetArgs": "--override \"--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended\"",
+        "wingetArgs": "--override \"--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.CMake.Project --includeRecommended\"",
         "choco": [
           "visualstudio2022buildtools"
         ]
@@ -1171,6 +1539,14 @@
             "android-studio"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "com.google.AndroidStudio"
+        ],
+        "snap": [
+          "android-studio --classic"
+        ]
       }
     },
     {
@@ -1181,7 +1557,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -1207,7 +1584,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -1223,6 +1601,19 @@
             "google-chrome"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "com.google.Chrome"
+        ],
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then wget -qO /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo apt-get install -y /tmp/chrome.deb; elif command -v dnf >/dev/null; then sudo dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm; else exit 3; fi'",
+            "allowFail": true
+          }
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1247,6 +1638,21 @@
             "obs"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "obs-studio"
+        ],
+        "dnf": [
+          "obs-studio"
+        ],
+        "pacman": [
+          "obs-studio"
+        ],
+        "flatpak": [
+          "com.obsproject.Studio"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1296,6 +1702,14 @@
             "obsidian"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "md.obsidian.Obsidian"
+        ],
+        "snap": [
+          "obsidian --classic"
+        ]
       }
     },
     {
@@ -1320,6 +1734,12 @@
             "notion"
           ]
         }
+      },
+      "linux": {
+        "snap": [
+          "notion-snap-reborn"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1370,6 +1790,35 @@
             "docker"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "docker.io",
+          "docker-compose-v2",
+          "docker-buildx"
+        ],
+        "dnf": [
+          "moby-engine",
+          "docker-compose"
+        ],
+        "pacman": [
+          "docker",
+          "docker-compose",
+          "docker-buildx"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "sudo systemctl enable --now docker",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "sudo usermod -aG docker $USER",
+            "allowFail": true
+          }
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1395,6 +1844,20 @@
             "keka"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "7zip",
+          "p7zip-full"
+        ],
+        "dnf": [
+          "p7zip",
+          "p7zip-plugins"
+        ],
+        "pacman": [
+          "p7zip"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1440,6 +1903,20 @@
             "libreoffice"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "libreoffice"
+        ],
+        "dnf": [
+          "libreoffice"
+        ],
+        "pacman": [
+          "libreoffice-fresh"
+        ],
+        "flatpak": [
+          "org.libreoffice.LibreOffice"
+        ]
       }
     },
     {
@@ -1450,7 +1927,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -1470,6 +1948,15 @@
           "@anthropic-ai/claude-code"
         ],
         "allowPartial": true
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl -fsSL https://claude.ai/install.sh | bash",
+            "allowFail": true
+          }
+        ]
       }
     },
     {
@@ -1525,6 +2012,55 @@
       "mac": {
         "npm": [
           "@openai/codex"
+        ]
+      }
+    },
+    {
+      "id": "kiro-cli",
+      "name": "Kiro CLI (kiro-cli)",
+      "group": "ai",
+      "desc": "Amazon's terminal agent, installed with Kiro's own script: Windows `irm https://cli.kiro.dev/install.ps1 | iex`, macOS/Linux `curl -fsSL https://cli.kiro.dev/install | bash`. Binary is `kiro-cli`; run `kiro-cli` once to sign in, `kiro-cli doctor` to check it.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "irm 'https://cli.kiro.dev/install.ps1' | iex"
+          },
+          {
+            "type": "shell",
+            "cmd": "$p = @(\"$env:LOCALAPPDATA\\Programs\\kiro-cli\\kiro-cli.exe\", \"$env:USERPROFILE\\.kiro\\bin\\kiro-cli.exe\", \"$env:LOCALAPPDATA\\kiro-cli\\kiro-cli.exe\") | Where-Object { Test-Path $_ } | Select-Object -First 1; if ($p) { & $p --version } else { kiro-cli --version }",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl -fsSL https://cli.kiro.dev/install | bash"
+          },
+          {
+            "type": "shell",
+            "cmd": "~/.local/bin/kiro-cli --version || kiro-cli --version",
+            "allowFail": true
+          }
+        ]
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl -fsSL https://cli.kiro.dev/install | bash"
+          },
+          {
+            "type": "shell",
+            "cmd": "~/.local/bin/kiro-cli --version || kiro-cli --version",
+            "allowFail": true
+          }
         ]
       }
     },
@@ -1607,6 +2143,14 @@
             "ollama"
           ]
         }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl -fsSL https://ollama.com/install.sh | sh"
+          }
+        ]
       }
     },
     {
@@ -1689,6 +2233,15 @@
             "lm-studio"
           ]
         }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'mkdir -p $HOME/.local/bin && curl -fsSL -o $HOME/.local/bin/LM-Studio.AppImage \"https://installers.lmstudio.ai/linux/x64/latest/LM-Studio-latest-x64.AppImage\" && chmod +x $HOME/.local/bin/LM-Studio.AppImage'",
+            "allowFail": true
+          }
+        ]
       }
     },
     {
@@ -1777,6 +2330,37 @@
       "steps": [
         {
           "type": "mcpConfig"
+        }
+      ]
+    },
+    {
+      "id": "mcp-config-ides",
+      "name": "Write MCP config for Kiro, Cursor, Windsurf and Claude Code",
+      "group": "mcp",
+      "desc": "Merges the same MCP server set into each IDE's own config - ~/.kiro/settings/mcp.json, ~/.cursor/mcp.json, ~/.codeium/windsurf/mcp_config.json and the user scope of ~/.claude.json. Existing entries are kept; a .bak is written first. Nothing is signed in.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "dependsOn": [
+        "mcp-servers"
+      ],
+      "steps": [
+        {
+          "type": "mcpConfig",
+          "target": "kiro"
+        },
+        {
+          "type": "mcpConfig",
+          "target": "cursor"
+        },
+        {
+          "type": "mcpConfig",
+          "target": "windsurf"
+        },
+        {
+          "type": "mcpConfig",
+          "target": "claude-code"
         }
       ]
     },
@@ -1879,7 +2463,7 @@
         "choco": [
           "windows-sdk-10-version-2004-all"
         ],
-        "allowFail": true
+        "allowPartial": true
       }
     },
     {
@@ -1889,7 +2473,8 @@
       "desc": "The utilities every other script assumes you have.",
       "profiles": [
         "full",
-        "ai"
+        "ai",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -1925,6 +2510,48 @@
           "bat",
           "git-delta"
         ]
+      },
+      "linux": {
+        "apt": [
+          "jq",
+          "ripgrep",
+          "fzf",
+          "curl",
+          "wget",
+          "fd-find",
+          "bat",
+          "git-delta",
+          "htop",
+          "tmux",
+          "unzip"
+        ],
+        "dnf": [
+          "jq",
+          "ripgrep",
+          "fzf",
+          "curl",
+          "wget",
+          "fd-find",
+          "bat",
+          "git-delta",
+          "htop",
+          "tmux",
+          "unzip"
+        ],
+        "pacman": [
+          "jq",
+          "ripgrep",
+          "fzf",
+          "curl",
+          "wget",
+          "fd",
+          "bat",
+          "git-delta",
+          "htop",
+          "tmux",
+          "unzip"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1953,6 +2580,36 @@
           "libffi",
           "protobuf"
         ]
+      },
+      "linux": {
+        "apt": [
+          "pkg-config",
+          "libssl-dev",
+          "libffi-dev",
+          "zlib1g-dev",
+          "libsqlite3-dev",
+          "libbz2-dev",
+          "libreadline-dev"
+        ],
+        "dnf": [
+          "pkgconf-pkg-config",
+          "openssl-devel",
+          "libffi-devel",
+          "zlib-devel",
+          "sqlite-devel",
+          "bzip2-devel",
+          "readline-devel"
+        ],
+        "pacman": [
+          "pkgconf",
+          "openssl",
+          "libffi",
+          "zlib",
+          "sqlite",
+          "bzip2",
+          "readline"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -1981,16 +2638,26 @@
             "font-jetbrains-mono-nerd-font"
           ]
         }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'set -e; d=$HOME/.local/share/fonts; mkdir -p $d; for f in CascadiaCode JetBrainsMono; do curl -fsSL -o /tmp/$f.tar.xz https://github.com/ryanoasis/nerd-fonts/releases/latest/download/$f.tar.xz && tar -xJf /tmp/$f.tar.xz -C $d; done; fc-cache -f'",
+            "allowFail": true
+          }
+        ]
       }
     },
     {
       "id": "wsl",
-      "name": "WSL 2 + Ubuntu",
+      "name": "WSL 2 + Ubuntu 24.04",
       "group": "wsl",
-      "desc": "Windows Subsystem for Linux with the Ubuntu distro. Needs a reboot to finish.",
+      "desc": "Windows Subsystem for Linux with Ubuntu 24.04 LTS as the default distro. Updates the WSL kernel, pins version 2 and enables systemd. Needs a reboot before the distro can start.",
       "profiles": [
         "full",
-        "ai"
+        "ai",
+        "embedded"
       ],
       "platforms": [
         "win"
@@ -1999,6 +2666,11 @@
       "reboot": true,
       "win": {
         "steps": [
+          {
+            "type": "shell",
+            "cmd": "wsl --install --no-launch --distribution Ubuntu-24.04",
+            "allowFail": true
+          },
           {
             "type": "shell",
             "cmd": "wsl --install --no-launch --distribution Ubuntu",
@@ -2012,6 +2684,84 @@
           {
             "type": "shell",
             "cmd": "wsl --set-default-version 2",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "$cfg = Join-Path $HOME '.wslconfig'; if (-not (Test-Path $cfg)) { Set-Content -Path $cfg -Value \"[wsl2]`nmemory=50%`nswap=4GB`nnetworkingMode=mirrored`n\" -Encoding ASCII; Write-Output 'wrote .wslconfig' } else { Write-Output '.wslconfig already present - left as is' }",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "wsl-devtools",
+      "name": "WSL: dev toolchain inside Ubuntu",
+      "group": "wsl",
+      "desc": "Inside the Ubuntu distro: build-essential, git, curl, python3 + venv + pip, Node.js LTS (NodeSource), Docker CLI, OpenSSH, and systemd turned on. Runs only after WSL has rebooted once; re-run this item if Ubuntu is not registered yet.",
+      "profiles": [
+        "full",
+        "ai",
+        "embedded"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "dependsOn": [
+        "wsl"
+      ],
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "$d = (wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^Ubuntu' } | Select-Object -First 1); if (-not $d) { Write-Output 'no Ubuntu distro registered yet - reboot, then re-run this item'; exit 2 }; Write-Output \"using $d\"",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "$d = (wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^Ubuntu' } | Select-Object -First 1); if ($d) { wsl -d $d -u root -- bash -lc 'printf \"[boot]\\nsystemd=true\\n\" > /etc/wsl.conf; apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential git curl wget unzip ca-certificates gnupg python3 python3-pip python3-venv pkg-config libssl-dev openssh-client jq ripgrep fzf htop' }",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "$d = (wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^Ubuntu' } | Select-Object -First 1); if ($d) { wsl -d $d -u root -- bash -lc 'curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && apt-get install -y nodejs' }",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "$d = (wsl -l -q 2>$null | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^Ubuntu' } | Select-Object -First 1); if ($d) { wsl -d $d -u root -- bash -lc 'apt-get install -y docker.io docker-compose-v2 && usermod -aG docker $(logname 2>/dev/null || echo ubuntu)' }",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "wsl --shutdown",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "wsl-distros",
+      "name": "WSL: Debian + Kali (extra distros)",
+      "group": "wsl",
+      "desc": "Debian and Kali Linux registered beside Ubuntu. Pick this if you want a clean Debian or a pen-testing distro inside Windows.",
+      "profiles": [],
+      "platforms": [
+        "win"
+      ],
+      "dependsOn": [
+        "wsl"
+      ],
+      "win": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "wsl --install --no-launch --distribution Debian",
+            "allowFail": true
+          },
+          {
+            "type": "shell",
+            "cmd": "wsl --install --no-launch --distribution kali-linux",
             "allowFail": true
           }
         ]
@@ -2074,7 +2824,8 @@
       "group": "ionity",
       "desc": "Creates the standard folder tree and drops a Policy 986 AED README at the dev root.",
       "profiles": [
-        "full"
+        "full",
+        "embedded"
       ],
       "steps": [
         {
@@ -2105,6 +2856,48 @@
             "cursor"
           ]
         }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'mkdir -p $HOME/.local/bin $HOME/.local/share/applications && curl -fsSL -o $HOME/.local/bin/cursor.AppImage \"https://downloader.cursor.sh/linux/appImage/x64\" && chmod +x $HOME/.local/bin/cursor.AppImage && printf \"[Desktop Entry]\\nName=Cursor\\nExec=%s/.local/bin/cursor.AppImage --no-sandbox %%U\\nType=Application\\nCategories=Development;IDE;\\n\" \"$HOME\" > $HOME/.local/share/applications/cursor.desktop'",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "kiro",
+      "name": "Kiro (AWS agentic IDE)",
+      "group": "ide",
+      "desc": "Amazon's agentic IDE - specs, steering files and hooks on a VS Code base. winget on Windows, Homebrew cask on macOS, the signed .deb or tarball on Linux. Sign in yourself on first launch; ProGramerly links nothing.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "Amazon.Kiro"
+        ],
+        "choco": [
+          "kiro"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "kiro"
+          ]
+        }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'set -e; arch=$(uname -m); case $arch in x86_64) a=x64;; aarch64|arm64) a=arm64;; *) echo \"unsupported arch $arch\"; exit 3;; esac; ver=$(curl -fsSL https://kiro.dev/downloads/ | grep -oE \"kiro-ide-[0-9]+\\.[0-9]+\\.[0-9]+-stable-linux-$a\\.deb\" | head -1 | sed -E \"s/kiro-ide-([0-9.]+)-stable.*/\\1/\"); [ -n \"$ver\" ] || ver=1.2.4; base=https://prod.download.desktop.kiro.dev/releases/stable/linux-$a/signed/$ver; if command -v apt-get >/dev/null; then curl -fsSL -o /tmp/kiro.deb $base/deb/kiro-ide-$ver-stable-linux-$a.deb && sudo apt-get install -y /tmp/kiro.deb; else mkdir -p $HOME/.local/opt && curl -fsSL $base/tar/kiro-ide-$ver-stable-linux-$a.tar.gz | tar -xz -C $HOME/.local/opt && ln -sf $HOME/.local/opt/Kiro*/kiro $HOME/.local/bin/kiro 2>/dev/null || true; fi'"
+          }
+        ]
       }
     },
     {
@@ -2126,6 +2919,18 @@
             "windsurf"
           ]
         }
+      },
+      "linux": {
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then curl -fsSL https://windsurf-stable.codeiumdata.com/wVxQEIWkwPUEAGf3/windsurf.gpg | gpg --dearmor | sudo tee /usr/share/keyrings/windsurf-stable-archive-keyring.gpg >/dev/null && echo \"deb [signed-by=/usr/share/keyrings/windsurf-stable-archive-keyring.gpg arch=amd64] https://windsurf-stable.codeiumdata.com/wVxQEIWkwPUEAGf3/apt stable main\" | sudo tee /etc/apt/sources.list.d/windsurf.list >/dev/null && sudo apt-get update; fi'",
+            "allowFail": true
+          }
+        ],
+        "apt": [
+          "windsurf"
+        ]
       }
     },
     {
@@ -2147,13 +2952,21 @@
             "zed"
           ]
         }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "curl -f https://zed.dev/install.sh | sh"
+          }
+        ]
       }
     },
     {
       "id": "jetbrains-toolbox",
       "name": "JetBrains Toolbox",
       "group": "ide",
-      "desc": "One launcher for IntelliJ, PyCharm, WebStorm, Rider, CLion, Android Studio.",
+      "desc": "One launcher that installs and updates every JetBrains IDE. Tick the individual IDEs below if you want them installed outright.",
       "profiles": [
         "full"
       ],
@@ -2171,6 +2984,299 @@
             "jetbrains-toolbox"
           ]
         }
+      },
+      "linux": {
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'set -e; url=$(curl -fsSL \"https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release\" | python3 -c \"import json,sys; print(json.load(sys.stdin)[\\\"TBA\\\"][0][\\\"downloads\\\"][\\\"linux\\\"][\\\"link\\\"])\"); mkdir -p $HOME/.local/share/JetBrains && curl -fsSL \"$url\" | tar -xz -C $HOME/.local/share/JetBrains && \"$(ls -d $HOME/.local/share/JetBrains/jetbrains-toolbox-*/ | tail -1)jetbrains-toolbox\" >/dev/null 2>&1 &'",
+            "allowFail": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "intellij-idea",
+      "name": "IntelliJ IDEA Community",
+      "group": "ide",
+      "desc": "Java and Kotlin IDE, the free Community edition.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "JetBrains.IntelliJIDEA.Community"
+        ],
+        "choco": [
+          "intellijidea-community"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "intellij-idea-ce"
+          ]
+        }
+      },
+      "linux": {
+        "snap": [
+          "intellij-idea-community --classic"
+        ],
+        "flatpak": [
+          "com.jetbrains.IntelliJ-IDEA-Community"
+        ]
+      }
+    },
+    {
+      "id": "pycharm",
+      "name": "PyCharm Community",
+      "group": "ide",
+      "desc": "Python IDE, the free Community edition. Pairs with the managed venv.",
+      "profiles": [
+        "full",
+        "ai"
+      ],
+      "win": {
+        "winget": [
+          "JetBrains.PyCharm.Community"
+        ],
+        "choco": [
+          "pycharm-community"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "pycharm-ce"
+          ]
+        }
+      },
+      "linux": {
+        "snap": [
+          "pycharm-community --classic"
+        ],
+        "flatpak": [
+          "com.jetbrains.PyCharm-Community"
+        ]
+      }
+    },
+    {
+      "id": "webstorm",
+      "name": "WebStorm",
+      "group": "ide",
+      "desc": "JavaScript and TypeScript IDE. Free for non-commercial use.",
+      "profiles": [],
+      "win": {
+        "winget": [
+          "JetBrains.WebStorm"
+        ],
+        "choco": [
+          "webstorm"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "webstorm"
+          ]
+        }
+      },
+      "linux": {
+        "snap": [
+          "webstorm --classic"
+        ],
+        "flatpak": [
+          "com.jetbrains.WebStorm"
+        ]
+      }
+    },
+    {
+      "id": "rider",
+      "name": "JetBrains Rider",
+      "group": "ide",
+      "desc": ".NET and Unity IDE. Free for non-commercial use.",
+      "profiles": [],
+      "win": {
+        "winget": [
+          "JetBrains.Rider"
+        ],
+        "choco": [
+          "jetbrains-rider"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "rider"
+          ]
+        }
+      },
+      "linux": {
+        "snap": [
+          "rider --classic"
+        ],
+        "flatpak": [
+          "com.jetbrains.Rider"
+        ]
+      }
+    },
+    {
+      "id": "clion",
+      "name": "CLion",
+      "group": "ide",
+      "desc": "C and C++ IDE with CMake and embedded (OpenOCD, ST-Link, PlatformIO) support. Free for non-commercial use.",
+      "profiles": [
+        "embedded"
+      ],
+      "win": {
+        "winget": [
+          "JetBrains.CLion"
+        ],
+        "choco": [
+          "clion-ide"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "clion"
+          ]
+        }
+      },
+      "linux": {
+        "snap": [
+          "clion --classic"
+        ],
+        "flatpak": [
+          "com.jetbrains.CLion"
+        ]
+      }
+    },
+    {
+      "id": "eclipse",
+      "name": "Eclipse IDE (Java + C/C++)",
+      "group": "ide",
+      "desc": "Eclipse IDE for Java Developers and Eclipse IDE for C/C++ Developers (CDT - the base many vendor IDEs such as STM32CubeIDE build on).",
+      "profiles": [],
+      "dependsOn": [
+        "java"
+      ],
+      "win": {
+        "winget": [
+          "EclipseFoundation.Eclipse.Java",
+          "EclipseFoundation.Eclipse.CPP"
+        ],
+        "choco": [
+          "eclipse"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "eclipse-java",
+            "eclipse-cpp"
+          ]
+        },
+        "allowPartial": true
+      },
+      "linux": {
+        "snap": [
+          "eclipse --classic"
+        ],
+        "flatpak": [
+          "org.eclipse.Java"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "sublime-text",
+      "name": "Sublime Text 4",
+      "group": "ide",
+      "desc": "Fast native text editor. Evaluation licence until you buy one.",
+      "profiles": [],
+      "win": {
+        "winget": [
+          "SublimeHQ.SublimeText.4"
+        ],
+        "choco": [
+          "sublimetext4"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "sublime-text"
+          ]
+        }
+      },
+      "linux": {
+        "snap": [
+          "sublime-text --classic"
+        ],
+        "flatpak": [
+          "com.sublimetext.three"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "notepad-plus-plus",
+      "name": "Notepad++",
+      "group": "ide",
+      "desc": "The Windows quick editor. Opens anything, instantly.",
+      "profiles": [
+        "full",
+        "minimal"
+      ],
+      "platforms": [
+        "win"
+      ],
+      "win": {
+        "winget": [
+          "Notepad++.Notepad++"
+        ],
+        "choco": [
+          "notepadplusplus"
+        ]
+      }
+    },
+    {
+      "id": "helix-lapce",
+      "name": "Helix + Lapce",
+      "group": "ide",
+      "desc": "Two Rust-built editors: Helix in the terminal (modal, tree-sitter, LSP built in) and Lapce on the desktop.",
+      "profiles": [],
+      "win": {
+        "winget": [
+          "Helix.Helix",
+          "Lapce.Lapce"
+        ],
+        "choco": [
+          "helix",
+          "lapce"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "helix"
+        ],
+        "brewCask": [
+          "lapce"
+        ],
+        "allowPartial": true
+      },
+      "linux": {
+        "snap": [
+          "helix --classic"
+        ],
+        "flatpak": [
+          "com.helix_editor.Helix",
+          "dev.lapce.lapce"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -2191,6 +3297,17 @@
       },
       "mac": {
         "brew": [
+          "neovim"
+        ]
+      },
+      "linux": {
+        "apt": [
+          "neovim"
+        ],
+        "dnf": [
+          "neovim"
+        ],
+        "pacman": [
           "neovim"
         ]
       }
@@ -2217,6 +3334,18 @@
             "unity-hub"
           ]
         }
+      },
+      "linux": {
+        "pre": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'if command -v apt-get >/dev/null; then wget -qO- https://hub.unity3d.com/linux/keys/public | gpg --dearmor | sudo tee /usr/share/keyrings/Unity_Technologies_ApS.gpg >/dev/null && echo \"deb [signed-by=/usr/share/keyrings/Unity_Technologies_ApS.gpg] https://hub.unity3d.com/linux/repos/deb stable main\" | sudo tee /etc/apt/sources.list.d/unityhub.list >/dev/null && sudo apt-get update; fi'",
+            "allowFail": true
+          }
+        ],
+        "apt": [
+          "unityhub"
+        ]
       }
     },
     {
@@ -2241,6 +3370,11 @@
             "godot"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "org.godotengine.Godot"
+        ]
       }
     },
     {
@@ -2265,6 +3399,12 @@
             "microsoft-edge"
           ]
         },
+        "allowPartial": true
+      },
+      "linux": {
+        "flatpak": [
+          "org.mozilla.firefox"
+        ],
         "allowPartial": true
       }
     },
@@ -2323,6 +3463,12 @@
             "whatsapp"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "io.github.mimbrero.WhatsAppDesktop"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -2347,6 +3493,11 @@
             "microsoft-teams"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "com.github.IsmaelMartinez.teams_for_linux"
+        ]
       }
     },
     {
@@ -2371,6 +3522,11 @@
             "zoom"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "us.zoom.Zoom"
+        ]
       }
     },
     {
@@ -2400,6 +3556,17 @@
           ]
         },
         "allowPartial": true
+      },
+      "linux": {
+        "flatpak": [
+          "com.slack.Slack",
+          "com.discordapp.Discord"
+        ],
+        "snap": [
+          "slack",
+          "discord"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -2428,6 +3595,13 @@
             "signal"
           ]
         },
+        "allowPartial": true
+      },
+      "linux": {
+        "flatpak": [
+          "org.telegram.desktop",
+          "org.signal.Signal"
+        ],
         "allowPartial": true
       }
     },
@@ -2503,6 +3677,11 @@
             "dropbox"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "com.dropbox.Client"
+        ]
       }
     },
     {
@@ -2523,6 +3702,17 @@
       },
       "mac": {
         "brew": [
+          "rclone"
+        ]
+      },
+      "linux": {
+        "apt": [
+          "rclone"
+        ],
+        "dnf": [
+          "rclone"
+        ],
+        "pacman": [
           "rclone"
         ]
       }
@@ -2612,7 +3802,8 @@
       "desc": "One virtual environment every AI and data item below installs into, at Development/.venvs/ionity. Nothing lands in the system Python.",
       "profiles": [
         "full",
-        "ai"
+        "ai",
+        "embedded"
       ],
       "dependsOn": [
         "python"
@@ -2802,6 +3993,21 @@
           "db-browser-for-sqlite"
         ],
         "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "sqlite3",
+          "sqlitebrowser"
+        ],
+        "dnf": [
+          "sqlite",
+          "sqlitebrowser"
+        ],
+        "pacman": [
+          "sqlite",
+          "sqlitebrowser"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -2837,6 +4043,12 @@
             "allowFail": true
           }
         ]
+      },
+      "linux": {
+        "flatpak": [
+          "com.mongodb.Compass"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -2867,6 +4079,23 @@
           "pgadmin4"
         ],
         "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "postgresql",
+          "postgresql-contrib"
+        ],
+        "dnf": [
+          "postgresql-server",
+          "postgresql-contrib"
+        ],
+        "pacman": [
+          "postgresql"
+        ],
+        "flatpak": [
+          "io.pgadmin.pgadmin4"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -2894,6 +4123,19 @@
         ],
         "brewCask": [
           "mysqlworkbench"
+        ],
+        "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "mariadb-server",
+          "mariadb-client"
+        ],
+        "dnf": [
+          "mariadb-server"
+        ],
+        "pacman": [
+          "mariadb"
         ],
         "allowPartial": true
       }
@@ -2939,6 +4181,21 @@
         ],
         "brewCask": [
           "dbeaver-community"
+        ],
+        "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "redis-server"
+        ],
+        "dnf": [
+          "redis"
+        ],
+        "pacman": [
+          "redis"
+        ],
+        "flatpak": [
+          "io.dbeaver.DBeaverCommunity"
         ],
         "allowPartial": true
       }
@@ -3259,11 +4516,12 @@
     },
     {
       "id": "arduino",
-      "name": "Arduino IDE 2 + arduino-cli",
+      "name": "Arduino IDE 2 + arduino-cli + cores",
       "group": "embedded",
-      "desc": "The IDE and the command line compiler/uploader that CI can drive.",
+      "desc": "Arduino IDE 2 and the arduino-cli it is built on, then the board cores: AVR (Uno/Nano/Mega), SAMD, Mbed RP2040 (Pico), ESP32 (Espressif), ESP8266 and the community RP2040 core. Linux also adds you to the dialout group so the serial port works without sudo.",
       "profiles": [
-        "full"
+        "full",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -3293,6 +4551,11 @@
         },
         {
           "type": "shell",
+          "cmd": "arduino-cli config set board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json,https://arduino.esp8266.com/stable/package_esp8266com_index.json,https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
           "cmd": "arduino-cli core update-index",
           "allowFail": true
         },
@@ -3303,10 +4566,60 @@
         },
         {
           "type": "shell",
-          "cmd": "arduino-cli core install esp32:esp32 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json",
+          "cmd": "arduino-cli core install arduino:samd",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli core install arduino:mbed_rp2040",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli core install esp32:esp32",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli core install esp8266:esp8266",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli core install rp2040:rp2040",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli lib update-index",
+          "allowFail": true
+        },
+        {
+          "type": "shell",
+          "cmd": "arduino-cli lib install \"Adafruit NeoPixel\" \"Adafruit Unified Sensor\" \"DHT sensor library\" ArduinoJson PubSubClient WiFiManager \"Adafruit SSD1306\" \"Adafruit GFX Library\" \"OneWire\" \"DallasTemperature\" \"Servo\" \"LiquidCrystal I2C\" \"ESP32Servo\"",
           "allowFail": true
         }
-      ]
+      ],
+      "dependsOn": [
+        "git"
+      ],
+      "linux": {
+        "flatpak": [
+          "cc.arduino.IDE2"
+        ],
+        "steps": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'mkdir -p $HOME/.local/bin && curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=$HOME/.local/bin sh'"
+          },
+          {
+            "type": "shell",
+            "cmd": "sudo usermod -aG dialout,uucp $USER 2>/dev/null || sudo usermod -aG dialout $USER",
+            "allowFail": true
+          }
+        ],
+        "allowPartial": true
+      }
     },
     {
       "id": "platformio",
@@ -3314,7 +4627,8 @@
       "group": "embedded",
       "desc": "PlatformIO in the managed venv, the VS Code extension, and udev/driver setup where it applies. This is the best embedded IDE going.",
       "profiles": [
-        "full"
+        "full",
+        "embedded"
       ],
       "dependsOn": [
         "python-venv",
@@ -3334,7 +4648,16 @@
           ],
           "allowFail": true
         }
-      ]
+      ],
+      "linux": {
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "sh -c 'curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules | sudo tee /etc/udev/rules.d/99-platformio-udev.rules >/dev/null && sudo udevadm control --reload-rules && sudo udevadm trigger && sudo usermod -aG dialout,plugdev $USER'",
+            "allowFail": true
+          }
+        ]
+      }
     },
     {
       "id": "esp-embedded-extras",
@@ -3342,7 +4665,8 @@
       "group": "embedded",
       "desc": "esptool, mpremote, adafruit-ampy and the Thonny editor, plus the ESP-IDF VS Code extension.",
       "profiles": [
-        "full"
+        "full",
+        "embedded"
       ],
       "dependsOn": [
         "python-venv"
@@ -3354,7 +4678,8 @@
             "esptool",
             "mpremote",
             "adafruit-ampy",
-            "pyserial"
+            "pyserial",
+            "rshell"
           ]
         },
         {
@@ -3377,6 +4702,334 @@
             "thonny"
           ]
         },
+        "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "thonny"
+        ],
+        "dnf": [
+          "thonny"
+        ],
+        "pacman": [
+          "thonny"
+        ],
+        "flatpak": [
+          "org.thonny.Thonny"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "esp-idf",
+      "name": "ESP-IDF v5 (Espressif IoT Development Framework)",
+      "group": "embedded",
+      "desc": "A shallow clone of the current ESP-IDF v5 release into <dev root>/Hardware/esp-idf, then Espressif's own install script for the esp32, esp32s3, esp32c3, esp32c6 and esp32h2 targets. Activate with `export.ps1` / `export.sh`. ~3 GB.",
+      "profiles": [
+        "embedded"
+      ],
+      "dependsOn": [
+        "git",
+        "python",
+        "cpp"
+      ],
+      "steps": [
+        {
+          "type": "gitClone",
+          "repo": "https://github.com/espressif/esp-idf.git",
+          "dest": "Hardware/esp-idf",
+          "branch": "v5.5",
+          "recursive": true
+        }
+      ],
+      "win": {
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "$root = if ($env:PROGRAMERLY_DEV_ROOT) { $env:PROGRAMERLY_DEV_ROOT } else { Join-Path $HOME 'Development' }; & (Join-Path $root 'Hardware\\esp-idf\\install.ps1') esp32,esp32s3,esp32c3,esp32c6,esp32h2",
+            "allowFail": true
+          }
+        ]
+      },
+      "mac": {
+        "brew": [
+          "cmake",
+          "ninja",
+          "dfu-util",
+          "ccache"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "\"${PROGRAMERLY_DEV_ROOT:-$HOME/Development}/Hardware/esp-idf/install.sh\" esp32,esp32s3,esp32c3,esp32c6,esp32h2",
+            "allowFail": true
+          }
+        ],
+        "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "git",
+          "wget",
+          "flex",
+          "bison",
+          "gperf",
+          "python3",
+          "python3-pip",
+          "python3-venv",
+          "cmake",
+          "ninja-build",
+          "ccache",
+          "libffi-dev",
+          "libssl-dev",
+          "dfu-util",
+          "libusb-1.0-0"
+        ],
+        "dnf": [
+          "git",
+          "wget",
+          "flex",
+          "bison",
+          "gperf",
+          "python3",
+          "cmake",
+          "ninja-build",
+          "ccache",
+          "dfu-util",
+          "libusbx"
+        ],
+        "pacman": [
+          "gcc",
+          "git",
+          "make",
+          "flex",
+          "bison",
+          "gperf",
+          "python",
+          "cmake",
+          "ninja",
+          "ccache",
+          "dfu-util",
+          "libusb"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "\"${PROGRAMERLY_DEV_ROOT:-$HOME/Development}/Hardware/esp-idf/install.sh\" esp32,esp32s3,esp32c3,esp32c6,esp32h2",
+            "allowFail": true
+          }
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "embedded-vscode",
+      "name": "VS Code embedded extension set",
+      "group": "embedded",
+      "desc": "Arduino (community), PlatformIO, ESP-IDF, Cortex-Debug, Serial Monitor, Wokwi simulator, C/C++ tools, CMake, MicroPython (Pymakr) and the Raspberry Pi Pico extension - installed with --force so a re-run repairs them.",
+      "profiles": [
+        "full",
+        "embedded"
+      ],
+      "dependsOn": [
+        "vscode"
+      ],
+      "steps": [
+        {
+          "type": "vscodeExt",
+          "ids": [
+            "vscode-arduino.vscode-arduino-community",
+            "platformio.platformio-ide",
+            "espressif.esp-idf-extension",
+            "marus25.cortex-debug",
+            "ms-vscode.vscode-serial-monitor",
+            "wokwi.wokwi-vscode",
+            "ms-vscode.cpptools-extension-pack",
+            "ms-vscode.cmake-tools",
+            "ms-vscode.vscode-embedded-tools",
+            "raspberry-pi.raspberry-pi-pico",
+            "pycom.pymakr",
+            "paulober.pico-w-go",
+            "dan-c-underwood.arm",
+            "zixuanwang.linkerscript",
+            "ms-python.python"
+          ],
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "serial-tools",
+      "name": "Serial terminals & flashing tools",
+      "group": "embedded",
+      "desc": "PuTTY and Tera Term 5 on Windows; minicom, picocom and screen on macOS and Linux. Plus esptool, pyserial and the serial-port permissions so a board shows up the moment it is plugged in.",
+      "profiles": [
+        "full",
+        "embedded"
+      ],
+      "dependsOn": [
+        "python-venv"
+      ],
+      "win": {
+        "winget": [
+          "PuTTY.PuTTY",
+          "TeraTermProject.teraterm5"
+        ],
+        "choco": [
+          "putty",
+          "teraterm"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "minicom",
+          "picocom",
+          "screen"
+        ],
+        "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "minicom",
+          "picocom",
+          "screen",
+          "usbutils"
+        ],
+        "dnf": [
+          "minicom",
+          "picocom",
+          "screen",
+          "usbutils"
+        ],
+        "pacman": [
+          "minicom",
+          "picocom",
+          "screen",
+          "usbutils"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "sudo usermod -aG dialout,uucp $USER 2>/dev/null || sudo usermod -aG dialout $USER",
+            "allowFail": true
+          }
+        ],
+        "allowPartial": true
+      },
+      "steps": [
+        {
+          "type": "venvPip",
+          "packages": [
+            "pyserial",
+            "esptool",
+            "pyocd"
+          ],
+          "allowFail": true
+        }
+      ]
+    },
+    {
+      "id": "pi-imager",
+      "name": "Raspberry Pi Imager + balenaEtcher",
+      "group": "embedded",
+      "desc": "Write Raspberry Pi OS, Ubuntu or any image to an SD card or USB stick. Pi Imager for Pi boards, Etcher for everything else.",
+      "profiles": [
+        "full",
+        "embedded"
+      ],
+      "win": {
+        "winget": [
+          "RaspberryPiFoundation.RaspberryPiImager",
+          "Balena.Etcher"
+        ],
+        "choco": [
+          "rpi-imager",
+          "etcher"
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "raspberry-pi-imager",
+            "balenaetcher"
+          ]
+        },
+        "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "rpi-imager"
+        ],
+        "dnf": [
+          "rpi-imager"
+        ],
+        "pacman": [
+          "rpi-imager"
+        ],
+        "flatpak": [
+          "org.raspberrypi.rpi-imager"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "stm32-tools",
+      "name": "STM32 & ARM Cortex tooling (OpenOCD, GNU Arm toolchain, stlink)",
+      "group": "embedded",
+      "desc": "The open toolchain for STM32 and other Cortex-M parts: arm-none-eabi-gcc, OpenOCD and the stlink tools. STM32CubeIDE itself needs an ST account to download, so it is left to you - CLion or VS Code + Cortex-Debug drive this toolchain directly.",
+      "profiles": [
+        "embedded"
+      ],
+      "win": {
+        "winget": [
+          "Arm.ArmGnuToolchain",
+          "Arm.GnuArmEmbeddedToolchain"
+        ],
+        "stopOnFirstSuccess": true,
+        "choco": [
+          "gcc-arm-embedded"
+        ],
+        "post": [
+          {
+            "type": "shell",
+            "cmd": "if (Get-Command choco -ErrorAction SilentlyContinue) { choco install openocd stlink -y --no-progress --limit-output } else { Write-Output 'Chocolatey not present - OpenOCD/stlink skipped; pyocd (serial-tools) covers Cortex-M flashing' }",
+            "allowFail": true
+          }
+        ],
+        "allowPartial": true
+      },
+      "mac": {
+        "brew": [
+          "open-ocd",
+          "stlink"
+        ],
+        "brewCask": [
+          "gcc-arm-embedded"
+        ],
+        "allowPartial": true
+      },
+      "linux": {
+        "apt": [
+          "gcc-arm-none-eabi",
+          "openocd",
+          "stlink-tools",
+          "gdb-multiarch"
+        ],
+        "dnf": [
+          "arm-none-eabi-gcc-cs",
+          "arm-none-eabi-newlib",
+          "openocd",
+          "stlink"
+        ],
+        "pacman": [
+          "arm-none-eabi-gcc",
+          "arm-none-eabi-newlib",
+          "arm-none-eabi-gdb",
+          "openocd",
+          "stlink"
+        ],
         "allowPartial": true
       }
     },
@@ -3402,6 +5055,23 @@
             "blender"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "blender"
+        ],
+        "dnf": [
+          "blender"
+        ],
+        "pacman": [
+          "blender"
+        ],
+        "flatpak": [
+          "org.blender.Blender"
+        ],
+        "snap": [
+          "blender --classic"
+        ]
       }
     },
     {
@@ -3426,6 +5096,20 @@
             "freecad"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "freecad"
+        ],
+        "dnf": [
+          "freecad"
+        ],
+        "pacman": [
+          "freecad"
+        ],
+        "flatpak": [
+          "org.freecad.FreeCAD"
+        ]
       }
     },
     {
@@ -3434,7 +5118,8 @@
       "group": "maker",
       "desc": "Schematic capture and PCB layout, with the symbol and footprint libraries.",
       "profiles": [
-        "full"
+        "full",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -3450,6 +5135,21 @@
             "kicad"
           ]
         }
+      },
+      "linux": {
+        "apt": [
+          "kicad"
+        ],
+        "dnf": [
+          "kicad"
+        ],
+        "pacman": [
+          "kicad",
+          "kicad-library"
+        ],
+        "flatpak": [
+          "org.kicad.KiCad"
+        ]
       }
     },
     {
@@ -3479,6 +5179,42 @@
           ]
         },
         "allowPartial": true
+      },
+      "linux": {
+        "flatpak": [
+          "com.prusa3d.PrusaSlicer",
+          "com.ultimaker.cura"
+        ],
+        "allowPartial": true
+      }
+    },
+    {
+      "id": "processing",
+      "name": "Processing 4",
+      "group": "maker",
+      "desc": "The sketchbook for visual art and interactive installations - the environment Arduino's IDE grew out of. Java under the hood.",
+      "profiles": [
+        "full"
+      ],
+      "win": {
+        "winget": [
+          "ProcessingFoundation.Processing"
+        ],
+        "choco": [
+          "processing"
+        ]
+      },
+      "mac": {
+        "brew": {
+          "cask": [
+            "processing"
+          ]
+        }
+      },
+      "linux": {
+        "flatpak": [
+          "org.processing.processingide"
+        ]
       }
     },
     {
@@ -3508,6 +5244,16 @@
             "insomnia"
           ]
         },
+        "allowPartial": true
+      },
+      "linux": {
+        "flatpak": [
+          "com.getpostman.Postman",
+          "rest.insomnia.Insomnia"
+        ],
+        "snap": [
+          "postman"
+        ],
         "allowPartial": true
       }
     },
@@ -3563,6 +5309,15 @@
             "bruno"
           ]
         }
+      },
+      "linux": {
+        "flatpak": [
+          "com.usebruno.Bruno"
+        ],
+        "snap": [
+          "bruno"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -3737,10 +5492,26 @@
         ]
       },
       "mac": {
-        "brew": [
+        "brew": {
+          "cask": [
+            "openrgb"
+          ]
+        }
+      },
+      "linux": {
+        "apt": [
           "openrgb"
         ],
-        "cask": true
+        "dnf": [
+          "openrgb"
+        ],
+        "pacman": [
+          "openrgb"
+        ],
+        "flatpak": [
+          "org.openrgb.OpenRGB"
+        ],
+        "allowPartial": true
       }
     },
     {
@@ -3788,7 +5559,8 @@
       "profiles": [
         "full",
         "ai",
-        "minimal"
+        "minimal",
+        "embedded"
       ],
       "win": {
         "winget": [
@@ -3800,6 +5572,17 @@
       },
       "mac": {
         "brew": [
+          "curl"
+        ]
+      },
+      "linux": {
+        "apt": [
+          "curl"
+        ],
+        "dnf": [
+          "curl"
+        ],
+        "pacman": [
           "curl"
         ]
       }
