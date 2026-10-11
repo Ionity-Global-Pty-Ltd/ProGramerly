@@ -42,6 +42,37 @@ function payloadUrl(file) {
   return `https://github.com/${PAYLOAD.repo}/releases/download/${PAYLOAD.tag}/${encodeURIComponent(file)}`;
 }
 
+const GITHUB_HTTPS = /^https:\/\/github\.com\//;
+
+/**
+ * A program may carry a `release` block: the public GitHub release of the same
+ * product (FANZi IO-nity v4.0.0 is the first). It is informational - only
+ * https://github.com/ links are passed through, and the renderer hands them to
+ * the OS browser via app:openExternal. Returns null when there is none.
+ */
+function publicRelease(program) {
+  const r = program.release;
+  if (!r || typeof r !== 'object') return null;
+  const page = GITHUB_HTTPS.test(r.page || '') ? r.page : null;
+  if (!page) return null;
+  const assets = Array.isArray(r.assets)
+    ? r.assets
+      .filter((a) => a && GITHUB_HTTPS.test(a.url || ''))
+      .map((a) => ({ id: String(a.id || a.file || ''), label: a.label || a.file || 'Download', file: a.file || null, size: a.size || null, url: a.url }))
+    : [];
+  return {
+    repo: r.repo || null,
+    tag: r.tag || null,
+    version: r.version || null,
+    date: r.date || null,
+    platform: r.platform || null,
+    page,
+    latest: GITHUB_HTTPS.test(r.latest || '') ? r.latest : page,
+    assets,
+    highlights: Array.isArray(r.highlights) ? r.highlights.map(String) : [],
+  };
+}
+
 /** Main registers a sink once; progress packets are forwarded to the renderer. */
 function setProgressSink(fn) {
   progressSink = typeof fn === 'function' ? fn : () => {};
@@ -272,6 +303,9 @@ function list() {
       sizeBytes: program.expectedBytes,
       sha256: program.sha256,
       platform: 'win',
+      // Public GitHub release of the same product, when one exists. Links only:
+      // the renderer opens them in the browser; nothing here is fetched or run.
+      release: publicRelease(program),
     };
   });
 }
@@ -319,6 +353,7 @@ module.exports = {
   managedDir,
   setProgressSink,
   payloadUrl,
+  publicRelease,
   DOWNLOAD_ENABLED,
   PAYLOAD,
   PROGRAMS,

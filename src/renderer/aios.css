@@ -997,3 +997,9 @@ body.brief-on #chat{gap:9px}
 @keyframes pf-ring{0%{transform:scale(1);opacity:.95}20%{transform:scale(1.45);opacity:0}100%{opacity:0}}
 @keyframes pf-glow{0%{box-shadow:0 0 22px 3px rgba(0,200,240,.55)}22%{box-shadow:0 0 0 0 rgba(0,200,240,0)}100%{box-shadow:none}}
 @media (prefers-reduced-motion:reduce){.pf-ico,.pf-ico::after,.pf-link::after{animation:none}}
+
+/* FANZi IO-nity public release card (Hardware workspace) */
+.fanzi-release h3{font-family:var(--sh-display);font-weight:700;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;margin:0}
+.fanzi-release .ed-presets{margin:10px 0 0}
+.fanzi-release .fanzi-assets .chip-btn{color:var(--sh-tx);border-color:rgba(0,200,240,.35)}
+.fanzi-release .fanzi-assets .chip-btn:hover{border-color:var(--sh-cyan);background:rgba(0,200,240,.14)}

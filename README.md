@@ -1107,7 +1107,7 @@ for separate download:
 
 | Capability | Where it lives in the app |
 | --- | --- |
-| **Fan control** (Ionity FanControl build, "Fanzi") | Hardware workspace, next to the sensors it reads |
+| **Fan control** (FANZi IO-nity, component `Fanzi.FanControl`; public release v4.0.0 linked) | Hardware workspace, next to the sensors it reads |
 | **AiOS operator layout** | The layout the Command Center follows - telemetry on top, one command box, tools as tiles, escapable kiosk |
 | **CiC** | One tile in the Command Center |
 | an internal audit side tool | maintainers only, asks before it runs |
@@ -1133,6 +1133,20 @@ they are **not in git**. They live as assets on the `programs-v1` release of the
   `payload.download` is `false`, so the app never reaches for the network for
   these; the download-and-verify path stays in the code for a future public
   payload. The self-updater ignores non-version tags.
+
+**FANZi IO-nity has a public release.** The fan tool bundled here is FANZi
+IO-nity (component `Fanzi.FanControl`); its first public GitHub release is
+**v4.0.0, 2026-10-11** (Windows 10 / 11 x64: Installer .zip, Portable .exe,
+Portable .zip, `SHA256SUMS.txt`). The `fanzi` entry in `programs.json` carries a
+`release` block for it (repo, tag, page, assets, highlights) and `programs.list()`
+passes it through as `release` after keeping only `https://github.com/` links. The
+Hardware → Fan control window shows a *FANZi IO-nity 4.0.0 · release* button in
+its head and a release card under *Who writes the curve*; every button opens the
+browser through `app:openExternal` - the app never downloads or runs anything
+from that release, and the bundled payload pin is unchanged. On a build without
+the payload the *not in this build* button opens the public release instead of a
+dead end. The download page has an *Also free from Ionity* section with the same
+links. See `docs/RELEASE-FANZI-4.0.0.md`.
 
 ### Local AI by default
 

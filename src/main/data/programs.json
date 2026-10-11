@@ -13,14 +13,31 @@
     {
       "id": "fanzi",
       "name": "Fan control",
-      "product": "Fanzi FanControl",
+      "product": "FANZi IO-nity",
       "file": "Fanzi.FanControl.exe",
-      "desc": "Fan curves and cooling control for this workstation - the Ionity FanControl build, opened from the Hardware workspace.",
+      "desc": "FANZi IO-nity - AI thermal intelligence, smart fan control, RGB Studio and system health for Windows. The bundled Fanzi.FanControl build opens from the Hardware workspace; the public 4.0.0 release is linked below it.",
       "role": "hardware",
-      "tags": ["hardware", "fans", "cooling"],
+      "tags": ["hardware", "fans", "cooling", "rgb", "thermal"],
       "kind": "utility",
       "version": null,
       "public": true,
+      "release": {
+        "_comment": "Public GitHub release of the same product. Not a payload: nothing here is downloaded or launched by ProGramerly; the app only opens these links in the browser.",
+        "repo": "Ionity-Global-Pty-Ltd/FANZi-IO-nity",
+        "tag": "v4.0.0",
+        "version": "4.0.0",
+        "date": "2026-10-11",
+        "page": "https://github.com/Ionity-Global-Pty-Ltd/FANZi-IO-nity/releases/tag/v4.0.0",
+        "latest": "https://github.com/Ionity-Global-Pty-Ltd/FANZi-IO-nity/releases/latest",
+        "platform": "Windows 10 / 11 x64",
+        "assets": [
+          { "id": "installer", "label": "Installer", "file": "FANZi-IO-nity-v4.0.0-Installer-win-x64.zip", "size": "112 MB", "url": "https://github.com/Ionity-Global-Pty-Ltd/FANZi-IO-nity/releases/download/v4.0.0/FANZi-IO-nity-v4.0.0-Installer-win-x64.zip" },
+          { "id": "portable-exe", "label": "Portable .exe", "file": "FANZi-IO-nity-v4.0.0-Portable-win-x64.exe", "size": "142 MB", "url": "https://github.com/Ionity-Global-Pty-Ltd/FANZi-IO-nity/releases/download/v4.0.0/FANZi-IO-nity-v4.0.0-Portable-win-x64.exe" },
+          { "id": "portable-zip", "label": "Portable .zip", "file": "FANZi-IO-nity-v4.0.0-Portable-win-x64.zip", "size": "59.1 MB", "url": "https://github.com/Ionity-Global-Pty-Ltd/FANZi-IO-nity/releases/download/v4.0.0/FANZi-IO-nity-v4.0.0-Portable-win-x64.zip" },
+          { "id": "sha256", "label": "SHA256SUMS.txt", "file": "SHA256SUMS.txt", "size": "599 B", "url": "https://github.com/Ionity-Global-Pty-Ltd/FANZi-IO-nity/releases/download/v4.0.0/SHA256SUMS.txt" }
+        ],
+        "highlights": ["RGB Studio", "AEDi Lighting AI (offline)", "Overlay Studio", "Deep hardware scan", "One live heartbeat"]
+      },
       "expectedBytes": 146727885,
       "sha256": "eb3c46043a0c113b56a64fcab81496e556b99756452a25185cca12240c5aa3cc"
     },

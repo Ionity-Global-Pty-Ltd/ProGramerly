@@ -162,6 +162,16 @@
       b.disabled = !(tool && tool.launchable);
       b.addEventListener('click', () => launchTool(app.tool, b));
       extra.appendChild(b);
+      // The product's public GitHub release, when the manifest carries one
+      // (FANZi IO-nity 4.0.0). Opens in the browser; never fetched by the app.
+      if (tool && tool.release && tool.release.page) {
+        const r = document.createElement('button');
+        r.className = 'btn ghost'; r.id = 'aw-release-btn';
+        r.textContent = `${tool.product || app.name} ${tool.release.version || ''} · release`.replace(/\s+/g, ' ');
+        r.title = tool.release.page;
+        r.addEventListener('click', () => api.openExternal(tool.release.page));
+        extra.appendChild(r);
+      }
     }
     addAskControl(id, app, extra);
   }
@@ -259,6 +269,11 @@
     const app = Object.values(APPS).find((a) => a.tool === toolId) || { name: toolId };
     if (!tool) { toast(`${app.name} is not part of this build.`, 'bad'); return; }
     if (!tool.launchable) {
+      if (tool.release && tool.release.page && !tool.available) {
+        toast(`${tool.product || app.name} is not bundled in this build - opening the public ${tool.release.version || ''} release.`.replace(/\s+/g, ' '), 'good');
+        api.openExternal(tool.release.page);
+        return;
+      }
       toast(tool.available ? `${app.name} runs on Windows only.` : `${app.name} is not in this build - install the full Windows release.`, 'bad');
       return;
     }

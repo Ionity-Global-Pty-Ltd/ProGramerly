@@ -397,6 +397,7 @@
       let editing = null;       // the profile being edited
       let revealEditor = false; // the editor opens below the fold - bring it up
       let timer = null;
+      let fanzi = null;         // programs.list() entry for the FANZi tool (bundled state + public release)
 
       host.innerHTML = '<div class="fan-app"><div class="dome-loading">Reading the sensor tree…</div></div>';
       const root = host.querySelector('.fan-app');
@@ -540,6 +541,34 @@
         return Math.round(Math.max(0, Math.min(100, pct)));
       }
 
+      /* FANZi IO-nity: the bundled Fanzi.FanControl build opens from the window
+         head; its public GitHub release is linked here. Links only - every
+         href goes through app:openExternal, nothing is downloaded by the app. */
+      function fanziCard() {
+        const rel = fanzi && fanzi.release;
+        if (!rel) return '';
+        const state = fanzi.available
+          ? `Bundled build ${fanzi.verified ? 'verified' : 'present'} in this installation - open it from the window head.`
+          : (fanzi.launchable ? 'Bundled build ready.' : 'The bundled build is not in this installation - get the public release below.');
+        return `
+          <section class="card fanzi-release">
+            <div class="cardhead">
+              <div>
+                <h3>FANZi IO-nity ${esc(rel.version || '')}</h3>
+                <p class="muted">AI thermal intelligence, smart fan control, RGB Studio and system health for Windows - by Ionity Global. ${esc(rel.platform || '')}${rel.date ? ` · released ${esc(rel.date)}` : ''}.</p>
+              </div>
+              <div class="cardactions">
+                <button class="btn primary" data-open="${esc(rel.page)}">Release ${esc(rel.tag || '')}</button>
+              </div>
+            </div>
+            ${rel.highlights.length ? `<div class="ed-presets">${rel.highlights.map((x) => `<span class="chip-btn" style="cursor:default">${esc(x)}</span>`).join('')}</div>` : ''}
+            <div class="ed-presets fanzi-assets">
+              ${rel.assets.map((a) => `<button class="chip-btn" data-open="${esc(a.url)}" title="${esc(a.file || a.label)}">${esc(a.label)}${a.size ? ` · ${esc(a.size)}` : ''}</button>`).join('')}
+            </div>
+            <p class="muted">${esc(state)} Verify downloads against SHA256SUMS.txt.</p>
+          </section>`;
+      }
+
       function render() {
         if (!live) return;
         const sum = live.available ? {
@@ -605,8 +634,10 @@
 
           <section class="card fan-honest">
             <h3>Who writes the curve</h3>
-            <p class="muted">Setting a fan curve means writing to the Super IO or embedded controller, and on Windows that needs a signed kernel-mode driver. ProGramerly does not ship one. It reads every channel, designs and stores the curve, shows you exactly what that curve would command at the temperature the machine is at right now, and exports it — then hands the apply to the tool that owns the driver. That is the correct division of labour, and it is why Fanzi FanControl is part of this build.</p>
-          </section>`;
+            <p class="muted">Setting a fan curve means writing to the Super IO or embedded controller, and on Windows that needs a signed kernel-mode driver. ProGramerly does not ship one. It reads every channel, designs and stores the curve, shows you exactly what that curve would command at the temperature the machine is at right now, and exports it — then hands the apply to the tool that owns the driver. That is the correct division of labour, and it is why FANZi IO-nity is part of this build.</p>
+          </section>
+
+          ${fanziCard()}`;
 
         // Duty bars through the CSSOM - a parsed style attribute would be dropped.
         if (live.available) {
@@ -646,6 +677,7 @@
       }
 
       function wire() {
+        root.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => api.openExternal(b.dataset.open)));
         root.querySelectorAll('[data-act]').forEach((b) => b.addEventListener('click', async () => {
           const act = b.dataset.act;
           if (act === 'refresh') { await reload(); h.toast('Sensor tree re-read.', 'good'); }
@@ -741,6 +773,7 @@
       }
 
       presets = await api.fans.presets();
+      try { fanzi = (await api.programs.list()).find((t) => t.id === 'fanzi') || null; } catch { fanzi = null; }
       await reload();
       // Fans move. Re-read while this window is open, and stop when it closes.
       timer = setInterval(async () => {
