@@ -11,6 +11,7 @@
  */
 
 const { run, has } = require('./runner');
+const macAuth = require('../services/macAuth');
 const tasks = require('./tasks');
 const mcp = require('./mcp-config');
 
@@ -316,7 +317,9 @@ async function runStep(step, log) {
         : (PLATFORM === 'win' && step.winCmd) ? step.winCmd
         : step.cmd;
       if (!cmd) return 0;
-      const real = PLATFORM === 'linux' ? sudoize(cmd, (await readLinuxFacts()).sudo) : cmd;
+      const real = PLATFORM === 'linux' ? sudoize(cmd, (await readLinuxFacts()).sudo)
+        : PLATFORM === 'mac' ? macAuth.sudoizeMac(cmd)
+        : cmd;
       log(`$ ${real}`);
       const { code } = await run(real, { onLine: (l) => log(`  ${l}`) });
       if (code !== 0) log(`  exit ${code}`);

@@ -98,7 +98,7 @@ async function run() {
   check(/Maker\s*&\s*Embedded/.test(embLabel || ''), 'the fifth profile is Maker & Embedded', (embLabel || '').trim().split('\n')[0]);
 
   const cat = (await page.evaluate(() => window.programerly.getCatalog())).catalog;
-  check(cat.meta.version === '1.4.0' && cat.items.length >= 166, 'catalog 1.4.0 with 166+ items', `${cat.meta.version} · ${cat.items.length} items`);
+  check(cat.meta.version >= '1.4.0' && cat.items.length >= 166, 'catalog 1.4.0+ with 166+ items', `${cat.meta.version} · ${cat.items.length} items`);
   check(Object.keys(cat.profiles).length === 5 && cat.profiles.embedded, 'the catalog declares the embedded profile');
 
   const plat = process.platform === 'win32' ? 'win' : process.platform === 'darwin' ? 'mac' : 'linux';

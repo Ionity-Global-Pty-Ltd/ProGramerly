@@ -32,7 +32,7 @@
   <div id="shell">
     <header id="topbar">
       <div class="tb-side">
-        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.7.0</span></span>
+        <span class="tb-brand"><img src="assets/logo.png" alt="" /><b>ProGramerly</b><span id="appVersion">v3.9.0</span></span>
         <span class="tb-divider"></span>
         <span id="clock">--:--</span>
         <span id="date">Local time</span>
@@ -123,7 +123,7 @@
         <span class="dock-side left">
         <button class="dock-btn" data-app="software"><span class="tip">Software</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><rect x="4" y="4" width="16" height="16" rx="4"/></svg></button>
         <button class="dock-btn" data-app="predict"><span class="tip">AEDi Predict</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 4v10l-7 4-7-4V7z"/><path d="M12 3v18M5 7l7 4 7-4"/></svg></button>
-        <button class="dock-btn" data-app="ai"><span class="tip">AEDi · Local AI</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
+        <button class="dock-btn" data-app="ai"><span class="tip">AEDi · Assistant</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></button>
         <button class="dock-btn" data-app="relations"><span class="tip">Relations</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.6"/><circle cx="4.5" cy="6" r="2"/><circle cx="19.5" cy="6" r="2"/><circle cx="4.5" cy="18" r="2"/><circle cx="19.5" cy="18" r="2"/><path d="M6.3 7.2l3.8 3.2M17.7 7.2l-3.8 3.2M6.3 16.8l3.8-3.2M17.7 16.8l-3.8-3.2"/></svg></button>
         <button class="dock-btn" data-app="envs"><span class="tip">Environments</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></button>
         <button class="dock-btn" data-app="system"><span class="tip">System</span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 9h4M7 12h7"/></svg></button>
@@ -186,7 +186,9 @@
       <div id="rebootNote" class="note" hidden>
         WSL was installed. Restart Windows to finish setting it up.
       </div>
+      <div class="ai-answer" id="summaryAi" hidden></div>
       <div class="sheet-actions">
+        <button class="btn ghost" id="summaryExplain" hidden>Explain failures with AEDi</button>
         <button class="btn ghost" id="summaryLog">Open log file</button>
         <button class="btn ghost" id="summaryRoot">Open dev folder</button>
         <button class="btn" id="summaryClose">Back to list</button>
@@ -208,6 +210,11 @@
       </label>
       <select id="aediModelPick" aria-label="Starter model"></select>
       <span class="muted" id="aediState">checking…</span>
+    </section>
+    <section class="aedi-recommend" id="aediRecommend">
+      <input type="text" id="recText" autocomplete="off" placeholder="Describe what you build - e.g. “Flutter apps with a Firebase backend and some Python data work”" aria-label="Describe your stack" />
+      <button class="btn" id="recBtn">Suggest with AEDi</button>
+      <p class="muted" id="recNote">AEDi picks from this catalog only and ticks the items - you review before anything installs.</p>
     </section>
     <section class="profiles" id="profiles" aria-label="Install profiles"></section>
     <div class="workarea">
@@ -369,6 +376,42 @@
 
 <!-- =============================== AI ================================ -->
   <main id="aiView" class="view pad" hidden>
+    <!-- 3.9.0: who answers. Both providers start OFF. -->
+    <section class="card wide" id="aiProviders">
+      <div class="cardhead">
+        <h3>AEDi · providers</h3>
+        <span class="muted" id="aiProvState">Both off - AEDi does not answer until you turn one on.</span>
+      </div>
+      <div class="provgrid">
+        <div class="prov" id="provLocal">
+          <label class="check">
+            <input type="checkbox" id="aiLocalOn" />
+            <span><b>Local AI · Ollama on this machine</b><em>Private: prompts and machine data never leave this computer. Needs Ollama and a model (Software → AEDi local core). Off by default.</em></span>
+          </label>
+        </div>
+        <div class="prov" id="provClaude">
+          <label class="check">
+            <input type="checkbox" id="aiClaudeOn" />
+            <span><b>Claude · Anthropic API</b><em>Your own API key. Prompts, and the machine context a feature attaches, are sent to Anthropic. The key is encrypted with the OS keychain and never written to settings.</em></span>
+          </label>
+          <div class="row2 provkey">
+            <input type="password" id="aiClaudeKey" autocomplete="off" spellcheck="false" placeholder="sk-ant-… (console.anthropic.com → API keys)" />
+            <button class="btn" id="aiClaudeSave">Save key</button>
+            <button class="btn ghost" id="aiClaudeForget" hidden>Remove key</button>
+          </div>
+          <div class="row2 provkey">
+            <select id="aiClaudeModel" aria-label="Claude model"><option value="">Save a key to list your models</option></select>
+            <select id="aiProvider" aria-label="Who answers first">
+              <option value="auto">Both on: Claude answers first</option>
+              <option value="local">Both on: local answers first</option>
+            </select>
+          </div>
+          <p class="cardnote" id="aiClaudeNote"></p>
+        </div>
+      </div>
+      <label class="check inline"><input type="checkbox" id="aiBriefOn" /><span>Launch brief - have AEDi read the machine once when ProGramerly starts</span></label>
+    </section>
+
     <section class="card wide">
       <div class="cardhead">
         <h3>AEDi · local services</h3>
@@ -407,7 +450,7 @@
         </div>
       </div>
       <div id="aiGpu" class="gpustrip" hidden></div>
-      <div class="chatlog" id="aiChatLog"><p class="empty">Pick a model. Ask. Everything stays on this machine.</p></div>
+      <div class="chatlog" id="aiChatLog"><p class="empty">Pick a model and ask. Local models keep everything on this machine; Claude sends the conversation to Anthropic.</p></div>
       <div class="chatrow">
         <textarea id="aiPrompt" rows="2" placeholder="Ask the model… (Ctrl+Enter to send)"></textarea>
         <div class="chatbtns">
@@ -543,12 +586,14 @@
         <div class="cardactions">
           <button class="btn ghost" id="docOpenFolderBtn">Reports folder</button>
           <button class="btn ghost" id="docReportBtn">Full report</button>
+          <button class="btn ghost" id="docAiBtn" disabled title="Run diagnostics first">Explain with AEDi</button>
           <button class="btn ghost" id="docFixAllBtn">Fix everything safe</button>
           <button class="btn" id="docScanBtn">Run diagnostics</button>
         </div>
       </div>
       <p class="cardnote">Diagnosing changes nothing. <b>Fix</b> appears only on a failed check and says what it ran.</p>
       <div class="docsummary" id="docSummary" hidden></div>
+      <div class="ai-answer" id="docAi" hidden></div>
       <div id="docList" class="doclist">
         <p class="empty"><b>Run diagnostics</b> - a few seconds.</p>
       </div>
@@ -766,5 +811,6 @@
   <script src="icons.js"></script>
   <script src="dome3d.js"></script>
   <script src="renderer.js"></script>
+  <script src="assistant-ui.js"></script>
 </body>
 </html>

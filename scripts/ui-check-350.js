@@ -21,7 +21,7 @@ function loadPlaywright() {
 const { _electron: electron } = loadPlaywright();
 
 const ROOT = path.resolve(__dirname, '..');
-const SHOT = path.join(ROOT, 'Claude outputs');
+const SHOT = path.join(ROOT, 'docs', 'archive', 'claude-outputs');
 const EXE = process.platform === 'win32'
   ? path.join(ROOT, 'node_modules', 'electron', 'dist', 'electron.exe')
   : process.platform === 'darwin'

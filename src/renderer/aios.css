@@ -1003,3 +1003,31 @@ body.brief-on #chat{gap:9px}
 .fanzi-release .ed-presets{margin:10px 0 0}
 .fanzi-release .fanzi-assets .chip-btn{color:var(--sh-tx);border-color:rgba(0,200,240,.35)}
 .fanzi-release .fanzi-assets .chip-btn:hover{border-color:var(--sh-cyan);background:rgba(0,200,240,.14)}
+
+/* ------------------------------------------------------------ macOS (3.9) */
+/* hiddenInset puts the traffic lights inside the window: leave them room, and
+   keep the strip they sit on draggable. */
+body.os-mac #topbar{padding-left:76px}
+body.os-mac #topbar .tb-brand{margin-left:0}
+body.os-mac.kiosk-shell #topbar{padding-left:0}
+body.os-mac{-webkit-font-smoothing:antialiased}
+
+/* ---------------------------------------------- Software header, neatened (3.9) */
+/* One left edge for everything above the list: the AEDi strip, the recommend
+   bar and the profile cards all sit on the same 22px inset, and all five
+   profiles share one row when there is room for them. */
+#pickView .aedi-pick{margin:14px 22px 0}
+#pickView .aedi-recommend{padding:12px 22px 0;margin:0}
+#pickView .profiles{grid-template-columns:repeat(5,minmax(0,1fr));padding:14px 22px 6px;align-items:stretch}
+#pickView .profile{display:flex;flex-direction:column;justify-content:flex-start;min-width:0}
+#pickView .profile p{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+@media (max-width:1320px){ #pickView .profiles{grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media (max-width:1040px){ #pickView .profiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+
+/* Providers card */
+.provgrid{align-items:start}
+.provkey input[type=password],.provkey select{height:36px;padding:0 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.25);color:inherit;font:inherit;font-size:12.5px}
+.provkey input[type=password]:focus,.provkey select:focus{outline:none;border-color:rgba(0,200,240,.5)}
+#engine-chip.cloud{border-color:rgba(139,124,245,.45);background:rgba(139,124,245,.10);color:#d6cffc}
+#engine-chip.cloud i{background:#8b7cf5}

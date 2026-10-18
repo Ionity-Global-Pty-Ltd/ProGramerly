@@ -50,9 +50,22 @@ function cmpVersion(a, b) {
 
 /* --------------------------------------------------------------- assets -- */
 
+let familyCache = null;
+/** debian | rpm | other, from /etc/os-release. */
+function linuxFamily() {
+  if (familyCache) return familyCache;
+  let txt = '';
+  try { txt = fs.readFileSync('/etc/os-release', 'utf8').toLowerCase(); } catch { txt = ''; }
+  const like = `${(txt.match(/^id=(.*)$/m) || [])[1] || ''} ${(txt.match(/^id_like=(.*)$/m) || [])[1] || ''}`;
+  familyCache = /debian|ubuntu|mint|pop/.test(like) ? 'debian' : /fedora|rhel|centos|suse|rocky|alma/.test(like) ? 'rpm' : 'other';
+  return familyCache;
+}
+
 function assetScore(name) {
   const n = name.toLowerCase();
-  const arm = process.arch === 'arm64';
+  // An x64 build running under Rosetta still sits on an Apple Silicon Mac:
+  // the update should move it onto the native arm64 build.
+  const arm = process.arch === 'arm64' || app.runningUnderARM64Translation === true;
   if (IS_WIN) {
     if (!/\.exe$/.test(n)) return -1;
     let s = 10;
@@ -69,8 +82,11 @@ function assetScore(name) {
     if (arm ? n.includes('arm64') : (!n.includes('arm64'))) s += 4;
     return s;
   }
-  if (!/\.(appimage|deb)$/.test(n)) return -1;
-  return n.endsWith('.appimage') ? 12 : 8;
+  if (!/\.(appimage|deb|rpm)$/.test(n)) return -1;
+  const fam = linuxFamily();
+  if (n.endsWith('.deb')) return fam === 'debian' ? 14 : 6;
+  if (n.endsWith('.rpm')) return fam === 'rpm' ? 14 : 4;
+  return 12;   // AppImage runs anywhere
 }
 
 function pickAsset(release) {

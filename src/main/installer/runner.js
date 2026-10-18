@@ -13,6 +13,13 @@ const os = require('node:os');
 
 const IS_WIN = process.platform === 'win32';
 
+/* Extra environment every child gets - set by the macOS password session
+   (SUDO_ASKPASS) and cleared when it ends. Kept here so the engine, Doctor
+   and services all inherit it without threading it through every call. */
+let sessionEnv = {};
+function setSessionEnv(e) { sessionEnv = { ...(e || {}) }; }
+function extraEnv() { return sessionEnv; }
+
 /** Wrap a command so it runs in the right shell for this OS. */
 function shellFor(cmd) {
   if (IS_WIN) {
@@ -32,10 +39,34 @@ function shellFor(cmd) {
       ],
     };
   }
-  // Same idea on macOS / Linux: user-level bins (arduino-cli, kiro-cli, rustup,
-  // uv) land in ~/.local/bin or ~/.cargo/bin before any rc file mentions them.
-  const extra = '$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/snap/bin:/var/lib/flatpak/exports/bin';
-  return { file: '/bin/bash', args: ['-lc', `export PATH="${extra}:$PATH"; ${cmd}`] };
+  // Same idea on macOS / Linux. An app opened from Finder or a desktop
+  // launcher starts with PATH=/usr/bin:/bin:/usr/sbin:/sbin, and a login bash
+  // does not read ~/.zprofile - which is exactly where Homebrew registers
+  // itself. So every known tool location is put first, explicitly.
+  return { file: '/bin/bash', args: ['-lc', `export PATH="${EXTRA_PATH}:$PATH"; ${cmd}`] };
+}
+
+/** Every place a dev tool lands on macOS / Linux before any rc file knows. */
+const EXTRA_PATH = [
+  '/opt/homebrew/bin', '/opt/homebrew/sbin', '/usr/local/bin', '/usr/local/sbin',
+  '$HOME/.local/bin', '$HOME/.cargo/bin', '$HOME/.bun/bin', '$HOME/.deno/bin',
+  '/Library/Frameworks/Python.framework/Versions/Current/bin',
+  '/Applications/Visual Studio Code.app/Contents/Resources/app/bin',
+  '/snap/bin', '/var/lib/flatpak/exports/bin',
+].join(':');
+
+/**
+ * Give this process the same PATH a login shell would have, once, at start.
+ * Node's own spawn/execFile calls (has(), the services) then see Homebrew,
+ * VS Code's CLI and user-level bins too. No-op on Windows.
+ */
+function hydratePath() {
+  if (IS_WIN) return process.env.PATH;
+  const home = os.homedir();
+  const want = EXTRA_PATH.replace(/\$HOME/g, home).split(':');
+  const have = String(process.env.PATH || '').split(':').filter(Boolean);
+  process.env.PATH = [...want.filter((p) => !have.includes(p)), ...have].join(':');
+  return process.env.PATH;
 }
 
 /**
@@ -56,15 +87,22 @@ function run(cmd, opts = {}) {
     let timedOut = false;
     let settled = false;
 
+    // macOS / Linux: each step runs in its own session (setsid via
+    // `detached`). With no controlling terminal, `sudo` can never wait on a
+    // hidden TTY - it goes to SUDO_ASKPASS or fails fast, never hangs.
     const child = spawn(file, args, {
       cwd: cwd || os.homedir(),
-      env: { ...process.env, ...(env || {}) },
+      env: { ...process.env, ...extraEnv(), ...(env || {}) },
       windowsHide: true,
+      detached: !IS_WIN,
     });
 
     const timer = setTimeout(() => {
       timedOut = true;
-      try { child.kill('SIGKILL'); } catch { /* already gone */ }
+      try {
+        if (!IS_WIN && child.pid) process.kill(-child.pid, 'SIGKILL');   // the whole group
+        else child.kill('SIGKILL');
+      } catch { try { child.kill('SIGKILL'); } catch { /* already gone */ } }
     }, timeoutMs);
 
     const pump = (stream, tag) => {
@@ -113,4 +151,6 @@ async function has(bin) {
   return code === 0;
 }
 
-module.exports = { run, has, shellFor, IS_WIN };
+module.exports = {
+  run, has, shellFor, hydratePath, setSessionEnv, EXTRA_PATH, IS_WIN,
+};

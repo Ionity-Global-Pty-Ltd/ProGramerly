@@ -30,6 +30,7 @@ jobs:
       - run: node scripts/validate-catalog.js
       - run: node scripts/check-programs.js
       - run: node scripts/test-predict.js
+      - run: node scripts/test-390.js
       - run: node scripts/dry-run.js full win
       - run: node scripts/dry-run.js full mac
       - run: node scripts/dry-run.js ai win
@@ -83,6 +84,7 @@ jobs:
           xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/ui-check-350.js
           xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/ui-check-360.js
           xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/ui-check-370.js
+          xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/ui-check-390.js
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -90,10 +92,11 @@ jobs:
           path: |
             screenshot.png
             app.log
-            Claude outputs/ui-350-*.png
-            Claude outputs/ui-check-350.json
-            Claude outputs/ui-360-*.png
-            Claude outputs/ui-check-360.json
+            docs/archive/claude-outputs/ui-350-*.png
+            docs/archive/claude-outputs/ui-check-350.json
+            docs/archive/claude-outputs/ui-360-*.png
+            docs/archive/claude-outputs/ui-check-360.json
+            docs/screenshots/3.9.0/*.png
           if-no-files-found: warn
 
   windows:
@@ -219,21 +222,23 @@ jobs:
           MAC_APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           MAC_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          extra=""
           if [ -n "$MAC_CERT_P12_BASE64" ]; then
             export CSC_LINK="$MAC_CERT_P12_BASE64"
             export CSC_KEY_PASSWORD="$MAC_CERT_PASSWORD"
-            echo "signing with the certificate from repository secrets"
+            extra="-c.mac.hardenedRuntime=true"
+            echo "signing with the Developer ID from repository secrets (hardened runtime on)"
           else
             export CSC_IDENTITY_AUTO_DISCOVERY=false
-            echo "::notice::no signing certificate in secrets - building an unsigned .dmg"
+            echo "::notice::no Developer ID in secrets - the .app is ad-hoc signed (scripts/after-pack.js) so it opens on Apple Silicon"
           fi
-          if [ -n "$MAC_APPLE_ID" ] && [ -n "$MAC_APPLE_APP_PASSWORD" ] && [ -n "$MAC_APPLE_TEAM_ID" ]; then
+          if [ -n "$MAC_CERT_P12_BASE64" ] && [ -n "$MAC_APPLE_ID" ] && [ -n "$MAC_APPLE_APP_PASSWORD" ] && [ -n "$MAC_APPLE_TEAM_ID" ]; then
             export APPLE_ID="$MAC_APPLE_ID"
             export APPLE_APP_SPECIFIC_PASSWORD="$MAC_APPLE_APP_PASSWORD"
             export APPLE_TEAM_ID="$MAC_APPLE_TEAM_ID"
             echo "notarising as $APPLE_ID"
           else
-            echo "::notice::Apple ID secrets absent - skipping notarisation"
+            echo "::notice::no Developer ID + Apple ID secrets - skipping notarisation"
           fi
           # One architecture at a time, each retried. electron-builder writes the
           # artifacts and then unmounts the DMG volume; on the Apple-Silicon
@@ -247,7 +252,7 @@ jobs:
             arch=$1; dmg=$2; zip=$3
             for attempt in 1 2 3; do
               hdiutil info | awk '/\/Volumes\/ProGramerly/ {print $1}' | xargs -I{} hdiutil detach -force {} 2>/dev/null
-              npx electron-builder --mac dmg zip --$arch --publish never
+              npx electron-builder --mac dmg zip --$arch --publish never $extra
               rc=$?
               if [ -f "dist/$dmg" ] && [ -f "dist/$zip" ]; then
                 [ "$rc" -ne 0 ] && echo "::warning::$arch: electron-builder exited $rc after writing $dmg and $zip (hdiutil detach flake) - artifacts verified present"
@@ -267,6 +272,27 @@ jobs:
             exit 1
           fi
           exit 0
+      - name: Prove each Mac build opens
+        # The check that 3.6-3.8 never had: unpack each .zip the way a user
+        # would, verify the signature seal, and launch the binary for a few
+        # seconds. A broken seal ("is damaged") fails here, not on a user's Mac.
+        shell: bash
+        run: |
+          set -e
+          for z in dist/*-mac.zip; do
+            d=$(mktemp -d); ditto -x -k "$z" "$d"
+            app="$d/ProGramerly.app"
+            codesign --verify --deep --strict --verbose=2 "$app"
+            bin="$app/Contents/MacOS/ProGramerly"
+            file "$bin"
+            if [ "$(uname -m)" = "arm64" ] && file "$bin" | grep -q x86_64 && ! /usr/bin/pgrep -q oahd; then
+              echo "::notice::$z is x64 and Rosetta is not running on this runner - seal verified, launch skipped"; continue
+            fi
+            "$bin" --minimised --no-sandbox > "$d/run.log" 2>&1 & pid=$!
+            sleep 12
+            if kill -0 $pid 2>/dev/null; then echo "$z: running after 12 s - ok"; kill $pid || true
+            else echo "::error::$z exited during launch"; cat "$d/run.log"; exit 1; fi
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: ProGramerly-macos

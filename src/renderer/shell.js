@@ -52,7 +52,7 @@
      id; `launch` means the app is the tool itself and opens no window. */
   const APPS = {
     software: { name: 'Software', sub: 'Provision a complete toolchain', view: 'softwareApp', tab: 'software', hue: '#2f7ff0', scope: 'toolchain', desc: 'Tick. Install. Done - one elevated run.' },
-    ai: { name: 'AEDi · Local AI', sub: 'Powered by Ollama on this machine', view: 'aiView', tab: 'ai', hue: '#00c8f0', scope: 'intelligence', desc: 'Models, chat, GPU. Nothing leaves this machine.' },
+    ai: { name: 'AEDi · Assistant', sub: 'Local Ollama or Claude - both off until you choose', view: 'aiView', tab: 'ai', hue: '#00c8f0', scope: 'intelligence', desc: 'Providers, models, chat, GPU. You choose what leaves the machine.' },
     projects: { name: 'Projects', sub: 'Git state across every workspace', view: 'projectsView', tab: 'projects', hue: '#8b7cf5', scope: 'repos', desc: 'Every repo under the dev root, live.' },
     monitor: { name: 'Monitor', sub: 'Telemetry, disks and network history', view: 'monitorView', tab: 'monitor', hue: '#bdd631', scope: 'all', desc: 'CPU, memory, drives, network - live.' },
     network: { name: 'Network', sub: 'Sweep, throughput and official links', view: 'networkView', tab: 'network', hue: '#2f7ff0', scope: 'services-ports', desc: 'Regions, speed test, link registry.' },
@@ -263,6 +263,10 @@
   };
   // Built-in surfaces can hand off to one another (Relations → Environments).
   window.PGShell = { openApp, closeApp, toast };
+  window.addEventListener('pg:ai-changed', async () => {
+    try { shellSettings = await api.getSettings(); } catch { /* keep the last copy */ }
+    refreshAi();
+  });
 
   async function launchTool(toolId, button) {
     const tool = tools.find((t) => t.id === toolId);
@@ -510,6 +514,8 @@
     chip.hidden = !mode; if (label) chip.textContent = label; chip.disabled = mode === 'busy';
   }
   function pickTarget(list) {
+    const pref = list.find((t) => t.preferred && t.cloud);
+    if (pref) return pref;
     const base = defaultModel().split(':')[0];
     return list.find((t) => String(t.model || '').startsWith(defaultModel())) || list.find((t) => String(t.model || '').startsWith(base)) || list[0] || null;
   }
@@ -523,11 +529,20 @@
       preferredTarget = pickTarget(list);
       if (preferredTarget) {
         const idx = list.indexOf(preferredTarget); if (idx >= 0) $('aiTarget').value = String(idx);
-        $('engine-chip').className = ''; setText('engine-label', `AEDi · ${preferredTarget.model}`);
-        $('engine-chip').title = `AEDi - the Ionity local core. Powered by Ollama on this machine · model ${preferredTarget.model}`;
+        const cloud = Boolean(preferredTarget.cloud);
+        $('engine-chip').className = cloud ? 'cloud' : ''; setText('engine-label', cloud ? 'AEDi · Claude' : `AEDi · ${preferredTarget.model}`);
+        $('engine-chip').title = cloud
+          ? `AEDi is answering with Claude (${preferredTarget.model}) through your Anthropic API key - prompts leave this machine`
+          : `AEDi - the Ionity local core. Powered by Ollama on this machine · model ${preferredTarget.model}`;
         $('ask-orb').classList.remove('off'); $('ask-send').disabled = false;
-        $('ask-input').placeholder = `Ask AEDi (${preferredTarget.model}), or type a workspace name… (Ctrl+K)`;
-        showAiSetup(String(preferredTarget.model || '').startsWith(defaultModel().split(':')[0]) ? null : 'pull', `Add ${defaultModel()}`);
+        $('ask-input').placeholder = `Ask AEDi (${cloud ? 'Claude' : preferredTarget.model}), or type a workspace name… (Ctrl+K)`;
+        showAiSetup(cloud || String(preferredTarget.model || '').startsWith(defaultModel().split(':')[0]) ? null : 'pull', `Add ${defaultModel()}`);
+      } else if (!shellSettings.aiLocalEnabled && !shellSettings.aiClaudeEnabled) {
+        $('engine-chip').className = 'off'; setText('engine-label', 'AEDi · off');
+        $('engine-chip').title = 'AI is off by default. Open AEDi → Providers to turn on local AI (Ollama) or Claude.';
+        $('ask-orb').classList.add('off'); $('ask-send').disabled = true;
+        $('ask-input').placeholder = 'Type a workspace name - or turn on AEDi (local or Claude) to ask questions here';
+        showAiSetup('enable', 'Turn on AEDi');
       } else if (ollama && ollama.up) {
         $('engine-chip').className = 'off'; setText('engine-label', 'AEDi · no model yet');
         $('engine-chip').title = 'Ollama is running but holds no model - AEDi cannot answer until one is pulled';
@@ -548,11 +563,12 @@
     const ready = Boolean(preferredTarget);
     const askBtn = $('aw-ask-btn'); if (askBtn) askBtn.disabled = !ready;
     document.querySelectorAll('#suggest .preset-chip').forEach((b) => { b.disabled = !ready; });
-    setText('om-model', ready ? `${preferredTarget.model} · Ollama on this machine` : 'no local model yet');
+    setText('om-model', ready ? `${preferredTarget.model} · ${preferredTarget.cloud ? 'Claude · Anthropic API' : 'Ollama on this machine'}` : 'AEDi is off');
     paintOptions();
   }
   async function runAiSetup() {
     const model = defaultModel();
+    if (aiSetup === 'enable') { openApp('ai'); return; }
     if (aiSetup === 'install') {
       ['ollama', 'ollama-small'].forEach((id) => { if (CATALOG.items.some((i) => i.id === id)) selected.add(id); });
       renderItems();
@@ -597,7 +613,7 @@
     const text = $('ask-input').value.trim(); if (!text) return;
     const appId = findAppByName(text);
     if (appId) { $('ask-input').value = ''; openApp(appId); return; }
-    if (!preferredTarget) { toast(aiSetup ? 'Set up local AI first - one click on the chip below.' : 'No local model is online.', 'bad'); return; }
+    if (!preferredTarget) { toast(aiSetup === 'enable' ? 'AEDi is off - turn on local AI or Claude in AEDi → Providers.' : aiSetup ? 'Set up local AI first - one click on the chip below.' : 'No model is online.', 'bad'); return; }
     if (chatBusy) { toast('The model is still answering.'); return; }
     $('ask-input').value = '';
     $('aiPrompt').value = text;

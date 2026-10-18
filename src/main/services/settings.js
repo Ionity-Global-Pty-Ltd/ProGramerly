@@ -48,7 +48,12 @@ const DEFAULTS = Object.freeze({
   startMinimised: false,
   kioskMode: false,                 // opt-in full-screen operator shell; Ctrl+Shift+K exits
   aiDefaultModel: 'llama3.2:1b',    // small local Ollama model the Command Center sets up and prefers (~1.3 GB, runs on CPU)
-  aiAutoBrief: true,                // on launch, have the local model read the machine and report once
+  aiAutoBrief: false,               // on launch, have the assistant read the machine and report once (opt-in since 3.9.0)
+  /* AI providers - BOTH OFF until the user turns one on (3.9.0). */
+  aiLocalEnabled: false,            // Ollama / LM Studio on this machine; nothing leaves it
+  aiClaudeEnabled: false,           // Anthropic API with the user's own key (stored encrypted, never here)
+  aiClaudeModel: '',                // '' = the default; filled from the key's /v1/models list
+  aiProvider: 'auto',               // auto | local | claude - who answers first when both are on
   aiBriefPreset: 'state-of-machine',// which standing question the launch brief asks
   aiAskEverywhere: true,            // an Ask button in every workspace window
   domeInterval: 45,                 // seconds between dome re-reads while the deck is showing

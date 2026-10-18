@@ -519,6 +519,53 @@ const CHECKS = [
       return { ok: true, detail: "Apple's installer was launched" };
     },
   },
+  {
+    id: 'brew-shellenv',
+    title: 'Homebrew on your shell PATH',
+    platforms: ['mac'],
+    why: 'ProGramerly finds Homebrew on its own, but your Terminal only does if `brew shellenv` is in ~/.zprofile. Without it, `brew`, and everything it installed, is "command not found" in a new terminal.',
+    async run() {
+      const brew = ['/opt/homebrew/bin/brew', '/usr/local/bin/brew'].find((p) => fs.existsSync(p));
+      if (!brew) return { status: 'info', detail: 'Homebrew is not installed - the Software tab installs it' };
+      const zprofile = path.join(os.homedir(), '.zprofile');
+      let text = '';
+      try { text = fs.readFileSync(zprofile, 'utf8'); } catch { text = ''; }
+      if (/brew shellenv/.test(text)) return { status: 'ok', detail: `${brew} - registered in ~/.zprofile` };
+      return { status: 'warn', detail: `${brew} is installed but ~/.zprofile does not load it`, fixable: true };
+    },
+    fixLabel: 'Add it to ~/.zprofile',
+    auto: true,
+    async fix(log) {
+      const brew = ['/opt/homebrew/bin/brew', '/usr/local/bin/brew'].find((p) => fs.existsSync(p));
+      if (!brew) return { ok: false, detail: 'Homebrew is not installed' };
+      const zprofile = path.join(os.homedir(), '.zprofile');
+      const line = `\n# Added by ProGramerly - Homebrew on PATH\neval "$(${brew} shellenv)"\n`;
+      try {
+        if (fs.existsSync(zprofile)) fs.copyFileSync(zprofile, `${zprofile}.programerly.bak`);
+        fs.appendFileSync(zprofile, line);
+      } catch (err) { return { ok: false, detail: err.message }; }
+      log(`appended brew shellenv to ${zprofile} (backup: .zprofile.programerly.bak)`);
+      return { ok: true, detail: 'open a new Terminal window to pick it up' };
+    },
+  },
+  {
+    id: 'rosetta',
+    title: 'Rosetta 2 (Apple Silicon)',
+    platforms: ['mac'],
+    why: 'A handful of Intel-only installers and toolchains (older JDKs, some embedded toolchains) need Rosetta on an M-series Mac.',
+    async run() {
+      if (process.arch !== 'arm64') return { status: 'skip', detail: 'Intel Mac - not needed' };
+      const ok = fs.existsSync('/Library/Apple/usr/share/rosetta/rosetta');
+      return ok ? { status: 'ok', detail: 'installed' } : { status: 'info', detail: 'not installed - only needed for Intel-only tools', fixable: true };
+    },
+    fixLabel: 'Install Rosetta',
+    auto: false,
+    async fix(log) {
+      log('softwareupdate --install-rosetta --agree-to-license (asks for your password)');
+      const res = await run('sudo -A /usr/sbin/softwareupdate --install-rosetta --agree-to-license', { onLine: log, timeoutMs: 600000 });
+      return res.code === 0 ? { ok: true, detail: 'installed' } : { ok: false, detail: `exit ${res.code}` };
+    },
+  },
 
   /* --------------------------------------------------------- app itself */
   {

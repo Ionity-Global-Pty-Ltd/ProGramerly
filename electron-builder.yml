@@ -8,6 +8,10 @@ directories:
   buildResources: build
   output: dist
 
+# Ad-hoc signs the macOS .app when no Developer ID is configured, so the
+# unsigned build still opens on Apple Silicon. See scripts/after-pack.js.
+afterPack: scripts/after-pack.js
+
 files:
   - src/**/*
   - build/icon.*
@@ -53,8 +57,15 @@ mac:
   icon: build/icon.icns
   category: public.app-category.developer-tools
   darkModeSupport: true
-  hardenedRuntime: true
+  minimumSystemVersion: "11.0"
+  # Hardened runtime only matters (and only works) with a real Developer ID +
+  # notarisation; CI turns it on when those secrets exist. Ad-hoc builds run
+  # without it - with it, library validation refuses Electron's own frameworks.
+  hardenedRuntime: false
   gatekeeperAssess: false
+  extendInfo:
+    NSAppleEventsUsageDescription: ProGramerly opens Terminal and asks for your password through a native macOS dialog.
+    LSApplicationCategoryType: public.app-category.developer-tools
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   target:

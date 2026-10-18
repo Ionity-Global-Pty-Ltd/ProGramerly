@@ -20,5 +20,5 @@ do-commit.cmd
 commitmsg.txt
 
 # Dissected Ai-OS demo (400 MB extracted app) - reference only, never committed
-Claude outputs/aios-dissect/
-Claude outputs/ProGramerly-STATUS-2026-09-13.md
+docs/archive/claude-outputs/aios-dissect/
+docs/archive/claude-outputs/ProGramerly-STATUS-2026-09-13.md

@@ -339,6 +339,15 @@ function scheduleForecastLine() {
 
 /* What the shell's surfaces may do with the Software selection. */
 window.PGSelection = {
+  /* 3.9.0: AEDi recommendations replace the tick set wholesale. */
+  set: (ids) => {
+    if (!CATALOG) return 0;
+    const known = new Set(CATALOG.items.filter(applies).map((i) => i.id));
+    selected = new Set((ids || []).filter((id) => known.has(id)));
+    activeProfile = 'custom';
+    renderProfiles(); renderItems(); renderNav(); updateFooter();
+    return selected.size;
+  },
   get: () => [...selected],
   has: (id) => selected.has(id),
   add: (id) => {
@@ -909,7 +918,7 @@ function paintTargets(list) {
   const sel = $('aiTarget');
   sel.innerHTML = list.length
     ? list.map((t, i) => `<option value="${i}">${esc(t.model)} — ${esc(t.endpoint)}</option>`).join('')
-    : '<option value="">No live model found — start Ollama or LM Studio</option>';
+    : '<option value="">No model available - turn on a provider above (local or Claude)</option>';
   const on = list.length > 0;
   ['aiSendBtn', 'aiExplainBtn', 'aiBenchBtn'].forEach((id) => { $(id).disabled = !on; });
 }
@@ -1366,7 +1375,10 @@ function paintDoctorSummary(sum) {
   box.hidden = !box.innerHTML;
 }
 
+let lastDoctorScan = null;
 function paintDoctor(scan) {
+  lastDoctorScan = scan;
+  if ($('docAiBtn')) { $('docAiBtn').disabled = false; $('docAiBtn').title = 'Have AEDi rank what matters in this scan'; }
   paintDoctorSummary(scan.summary);
   const list = $('docList');
   if (!scan.results.length) {
@@ -1613,7 +1625,10 @@ async function boot() {
     priv.className = `badge ${INFO.elevated ? 'admin' : 'limited'}`;
     $('elevateBtn').hidden = INFO.elevated;
   } else {
-    priv.textContent = 'Will prompt for admin';
+    priv.textContent = PLATFORM === 'mac' ? 'Asks for your password once' : 'Asks for admin when needed';
+    priv.title = PLATFORM === 'mac'
+      ? 'One native macOS password dialog per install run; every installer underneath reuses it, nothing else asks.'
+      : 'Package installs go through a desktop password dialog (pkexec / zenity) only when the step needs root.';
     priv.className = 'badge admin';
   }
 
@@ -1942,6 +1957,8 @@ api.onDone((s) => {
       ? 'Open the log to see which ones and why — most failures are a package ID that moved, and re-running just that item usually fixes it.'
       : 'Open a fresh terminal so the new PATH entries take effect.');
   $('rebootNote').hidden = !s.needsReboot;
+  $('summaryExplain').hidden = !(s.failed || s.partial);
+  $('summaryAi').hidden = true;
   $('summarySheet').hidden = false;
 });
 

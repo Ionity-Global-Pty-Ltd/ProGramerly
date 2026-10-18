@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-02T03:42:18.680Z",
+  "at": "2026-10-18T07:56:31.303Z",
   "platform": "linux",
   "results": [
     {
@@ -14,17 +14,17 @@
     {
       "pass": true,
       "name": "the engine chip is AEDi",
-      "detail": "AEDi · offline"
+      "detail": "AEDi · off"
     },
     {
       "pass": true,
       "name": "the chip says AEDi is powered by Ollama",
-      "detail": "AEDi runs on Ollama, which is not installed or not running on this machine"
+      "detail": "AI is off by default. Open AEDi → Providers to turn on local AI (Ollama) or Claude."
     },
     {
       "pass": true,
       "name": "the ask box asks AEDi",
-      "detail": "Type a workspace name, or set up AEDi to ask questions here"
+      "detail": "Type a workspace name - or turn on AEDi (local or Claude) to ask questions here"
     },
     {
       "pass": true,
@@ -56,7 +56,7 @@
     {
       "pass": true,
       "name": "the Processes and services segment exists",
-      "detail": "96 processes · 1 unseen · computed"
+      "detail": "86 processes · 1 unseen · computed"
     },
     {
       "pass": true,
@@ -71,17 +71,17 @@
     {
       "pass": true,
       "name": "the Relations graph is built from this machine",
-      "detail": "63 nodes · 62 relations · 78 processes (1 unseen) · 7 listeners · 0/0 services"
+      "detail": "62 nodes · 61 relations · 79 processes (1 unseen) · 6 listeners · 0/0 services"
     },
     {
       "pass": true,
       "name": "the graph carries real processes",
-      "detail": "Processes39 · Unseen1 · Ports7 · Volumes3"
+      "detail": "Processes39 · Unseen1 · Ports6 · Volumes3"
     },
     {
       "pass": true,
       "name": "searching the hostname opens the machine node panel",
-      "detail": "vmmachine · Linux 6.18.44-fc-v51 · x64"
+      "detail": "vmmachine · Linux 6.18.44-fc-v139 · x64"
     },
     {
       "pass": true,
@@ -106,12 +106,12 @@
     {
       "pass": true,
       "name": "a real venv was created through the surface and listed",
-      "detail": "pg-check-muqf2osd"
+      "detail": "pg-check-mvdj7d7x"
     },
     {
       "pass": true,
       "name": "pip list read from the new venv",
-      "detail": "3 packages"
+      "detail": "2 packages"
     },
     {
       "pass": true,
@@ -120,7 +120,7 @@
     {
       "pass": true,
       "name": "the Processes table lists this machine's processes",
-      "detail": "78 rows · 78 from ps -eo · 5:42:13 AM"
+      "detail": "78 rows · 78 from ps -eo · 9:56:26 AM"
     },
     {
       "pass": true,
@@ -140,7 +140,7 @@
     {
       "pass": true,
       "name": "System · listeners read",
-      "detail": "7 row(s) · 2024tcp0.0.0.0—— Inspect"
+      "detail": "6 row(s) · 2024tcp0.0.0.0—— Inspect"
     },
     {
       "pass": true,
@@ -150,7 +150,7 @@
     {
       "pass": true,
       "name": "ticking AEDi adds Ollama + the starter model to the install",
-      "detail": "48 selected → 50 selected"
+      "detail": "114 selected → 116 selected"
     },
     {
       "pass": true,

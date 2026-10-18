@@ -9,6 +9,12 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
+// The platform as a body class, before first paint: macOS needs room for the
+// traffic lights, and CSS can say so without waiting for an IPC round trip.
+window.addEventListener('DOMContentLoaded', () => {
+  document.body.classList.add(`os-${({ win32: 'win', darwin: 'mac' })[process.platform] || 'linux'}`);
+});
+
 const on = (channel, cb) => {
   const handler = (_e, payload) => cb(payload);
   ipcRenderer.on(channel, handler);
@@ -101,6 +107,18 @@ contextBridge.exposeInMainWorld('programerly', {
   aiBenchmark: (target) => ipcRenderer.invoke('ai:benchmark', target),
   aiGpu: () => ipcRenderer.invoke('ai:gpu'),
   aiExplain: (req) => ipcRenderer.invoke('ai:explain', req),
+
+  /* ------------------------------------------- AEDi assistant (3.9.0) */
+  assistant: {
+    status: () => ipcRenderer.invoke('assistant:status'),
+    configure: (patch) => ipcRenderer.invoke('assistant:configure', patch),
+    setKey: (key) => ipcRenderer.invoke('assistant:setKey', key),
+    models: () => ipcRenderer.invoke('assistant:models'),
+    recommend: (text) => ipcRenderer.invoke('assistant:recommend', { text }),
+    explainRun: () => ipcRenderer.invoke('assistant:explainRun'),
+    explainDoctor: (results) => ipcRenderer.invoke('assistant:explainDoctor', { results }),
+    onToken: (cb) => on('assistant:token', cb),
+  },
 
   /* ------------------------------------------------------------ projects */
   projScan: () => ipcRenderer.invoke('proj:scan'),

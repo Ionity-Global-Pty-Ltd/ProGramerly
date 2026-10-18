@@ -8,7 +8,7 @@
 **One free desktop app. A complete development machine in one run —
 then kept in sync, watched from the tray, and repaired when Windows breaks it.**
 
-Windows · macOS · Linux · No licence key · No account · No telemetry
+Windows · macOS · Linux · No licence key · No account · No telemetry · AI off until you turn it on
 
 [![Build installers](https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/actions/workflows/build.yml/badge.svg)](https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/actions/workflows/build.yml)
 [![Licence: CC BY-NC-SA 4.0](https://img.shields.io/badge/licence-CC%20BY--NC--SA%204.0-00c6ff)](LICENSE)
@@ -17,6 +17,30 @@ Windows · macOS · Linux · No licence key · No account · No telemetry
 _Antwerp Designs | Ionity (Pty) Ltd | AEDI — Building Tomorrow, Today._
 
 </div>
+
+---
+
+## New in 3.9.0
+
+**Install in one line**
+
+```bash
+# macOS (Apple Silicon or Intel) - verifies SHA256.txt, installs to /Applications, opens the app
+curl -fsSL https://raw.githubusercontent.com/Ionity-Global-Pty-Ltd/ProGramerly/main/scripts/install-mac.sh | bash
+```
+
+Windows and Linux: grab the installer for your system from
+[Releases](https://github.com/Ionity-Global-Pty-Ltd/ProGramerly/releases/latest)
+(`.exe`, `.AppImage`, `.deb`, `.rpm`).
+
+| | |
+| --- | --- |
+| **A Mac build that works** | The `.app` is ad-hoc signed after packing, so it opens on Apple Silicon instead of "is damaged". One native password dialog per install run feeds every `sudo`, Homebrew bootstrap and cask through `SUDO_ASKPASS`. Homebrew, VS Code's CLI and user bins are on PATH even when the app is opened from Finder. A Mac menu bar with ⌘, for Settings, room for the traffic lights, and Doctor checks for `brew shellenv` and Rosetta. CI unpacks and launches each Mac build before it ships. |
+| **AEDi assistant - local or Claude, both off** | AEDi → Providers: turn on **Local AI** (Ollama, nothing leaves the machine) and/or **Claude** with your own Anthropic API key (stored encrypted with the OS keychain; prompts go to Anthropic and the app says so). A fresh install runs no model, no launch brief, and no profile ticks Ollama. |
+| **AI that does work** | **Suggest with AEDi** on the Software list turns "Flutter apps with a Firebase backend" into ticked catalog items (only real ids, only ones that apply to your OS). **Explain failures** reads the log of every failed item after a run. **Explain with AEDi** in Doctor ranks what matters in the scan. |
+| **Neater** | The Software header sits on one inset with all five profiles on one row; loose screenshots and old build notes moved to `docs/archive/`. |
+
+Release notes: [`docs/RELEASE-3.9.0.md`](docs/RELEASE-3.9.0.md).
 
 ---
 
@@ -54,7 +78,7 @@ Then it stays. Four things run after the install is finished:
 | Profile | Items (Windows) | Roughly | Good for |
 | --- | ---: | --- | --- |
 | **Full Stack** | 150 | 70–120 GB | A fresh machine you want finished — apps, comms, drives, CAD, every runtime, every IDE |
-| **AI Dev** | 68 | 22–40 GB | Claude, Kiro, Gemini, Codex, Copilot, MCP, Firebase, local models, PyTorch, Node, Python |
+| **AI Dev** | 64 | 14–30 GB | Claude, Kiro, Gemini, Codex, Copilot, MCP, Firebase, PyTorch, Node, Python. Local models are opt-in (AEDi local core tick) since 3.9.0 |
 | **Minimal** | 26 | 6–12 GB | Git, Node + toolbelt, Python, VS Code, Chrome, pwsh, WhatsApp, Drive, OneDrive |
 | **Maker & Embedded** — 3.7.0 | 31 | 8–14 GB | Arduino IDE 2 + every common core, PlatformIO, ESP-IDF, MicroPython, serial tools, KiCad, Pi Imager, VS Code with the embedded extension set, WSL |
 | **Custom** | — | — | Tick exactly what you want |

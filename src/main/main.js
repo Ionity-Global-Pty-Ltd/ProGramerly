@@ -17,7 +17,11 @@ const fs = require('node:fs');
 const os = require('node:os');
 
 const engine = require('./installer/engine');
-const { run } = require('./installer/runner');
+const { run, hydratePath, setSessionEnv } = require('./installer/runner');
+
+// Finder and desktop launchers hand a GUI app a bare PATH. Fix it before any
+// service probes for brew, code, ollama or git.
+hydratePath();
 const { devRoot } = require('./installer/mcp-config');
 
 const settings = require('./services/settings');
@@ -46,6 +50,8 @@ const envs = require('./services/envs');
 const graph = require('./services/graph');
 const predict = require('./services/predict');
 const tray = require('./tray');
+const macAuth = require('./services/macAuth');
+const assistant = require('./services/assistant');
 
 const IS_WIN = process.platform === 'win32';
 const IS_MAC = process.platform === 'darwin';
@@ -176,19 +182,22 @@ async function ensureElevated() {
   return res.ok;   // ok === true means this process is already on its way out
 }
 
-/** macOS: cache sudo credentials once so cask installers do not stall. */
+/**
+ * macOS: ask for the password once, natively, and route every `sudo`
+ * underneath through SUDO_ASKPASS for the rest of this run. See macAuth.js
+ * for why osascript-with-administrator-privileges alone was not enough.
+ */
 async function primeSudo() {
-  if (!IS_MAC) return true;
-  const script = 'do shell script "echo primed" with administrator privileges '
-    + 'with prompt "ProGramerly needs administrator access to install applications."';
-  const { code } = await run(`osascript -e '${script}'`, { timeoutMs: 120000 });
-  if (code !== 0) return false;
-  sudoKeepAlive = setInterval(() => { run('sudo -n -v', { timeoutMs: 10000 }); }, 60000);
-  return true;
+  if (!IS_MAC) return { ok: true };
+  const res = await macAuth.begin();
+  if (res.ok) setSessionEnv(res.env);
+  return res;
 }
 
 function stopSudoKeepAlive() {
   if (sudoKeepAlive) { clearInterval(sudoKeepAlive); sudoKeepAlive = null; }
+  setSessionEnv({});
+  macAuth.end();
 }
 
 /* ----------------------------------------------------------------- intro -- */
@@ -647,12 +656,12 @@ ipcMain.handle('ai:pull', async (_e, model) => {
 /* --- talking to models ----------------------------------------------------- */
 let chatSeq = 0;
 
-ipcMain.handle('ai:targets', () => ai.chatTargets());
+ipcMain.handle('ai:targets', () => assistant.targets());
 ipcMain.handle('ai:gpu', () => ai.gpu());
 
 ipcMain.handle('ai:chat', async (_e, req) => {
   const id = ++chatSeq;
-  const res = await ai.chat(req, (t) => emit('ai:token', { id, ...t }));
+  const res = await assistant.chat(req, (t) => emit('ai:token', { id, ...t }));
   emit('ai:token', { id, done: true, stats: res.stats || null, ok: res.ok, error: res.error || null });
   return { id, ...res };
 });
@@ -672,8 +681,9 @@ ipcMain.handle('dome:refresh', (_e, prefix) => { dome.invalidate(prefix); return
 /** Pick the model the copilot should use: the configured small default first. */
 async function preferredTarget(explicit) {
   if (explicit && explicit.model) return explicit;
-  const list = await ai.chatTargets();
+  const list = await assistant.targets();
   if (!list.length) return null;
+  if (list[0].preferred && list[0].cloud) return list[0];
   const want = String(settings.get('aiDefaultModel') || '');
   const base = want.split(':')[0];
   return list.find((t) => String(t.model || '') === want)
@@ -690,7 +700,7 @@ ipcMain.handle('dome:ask', async (_e, req = {}) => {
   const id = ++chatSeq;
   const target = await preferredTarget(req.target);
   if (!target) {
-    return { id, ok: false, error: 'No local model is running. Install Ollama and pull a model from the Software or Local AI workspace.' };
+    return { id, ok: false, error: 'No AI provider is on. Open AEDi > Providers: turn on local AI (Ollama) or add a Claude API key.' };
   }
   let pack;
   try {
@@ -701,7 +711,7 @@ ipcMain.handle('dome:ask', async (_e, req = {}) => {
   const question = String(req.question || pack.question || 'Report on the sets above.').slice(0, 4000);
   emit('dome:token', { id, start: true, model: target.model, sets: pack.sets, chars: pack.chars, preset: pack.preset });
 
-  const res = await ai.chat({
+  const res = await assistant.chat({
     endpointId: target.endpointId,
     port: target.port,
     model: target.model,
@@ -887,9 +897,9 @@ ipcMain.handle('env:terminal', (_e, dir) => {
 /** Ask AEDi for an environment recipe. Returns the parsed spec for the operator to confirm - nothing is created here. */
 ipcMain.handle('env:recipe', async (_e, { prompt } = {}) => {
   const target = await preferredTarget();
-  if (!target) return { ok: false, error: 'AEDi has no model to answer with - set up the local core first.' };
+  if (!target) return { ok: false, error: 'No AI provider is on. Open AEDi > Providers: turn on local AI (Ollama) or add a Claude API key.' };
   let text = '';
-  const res = await ai.chat({
+  const res = await assistant.chat({
     endpointId: target.endpointId, port: target.port, model: target.model,
     messages: [{ role: 'system', content: envs.RECIPE_SYSTEM }, { role: 'user', content: String(prompt || '').slice(0, 2000) }],
   }, (t) => { if (t.token) text += t.token; });
@@ -907,7 +917,7 @@ ipcMain.handle('graph:build', async (_e, opts) => {
 ipcMain.handle('graph:ask', async (_e, { nodeId, question } = {}) => {
   const id = ++chatSeq;
   const target = await preferredTarget();
-  if (!target) return { id, ok: false, error: 'AEDi has no model to answer with - set up the local core first.' };
+  if (!target) return { id, ok: false, error: 'No AI provider is on. Open AEDi > Providers: turn on local AI (Ollama) or add a Claude API key.' };
   if (!lastGraph) lastGraph = await graph.build({});
   const desc = graph.describe(lastGraph, nodeId);
   if (!desc) return { id, ok: false, error: `no node "${nodeId}" in the current graph` };
@@ -916,7 +926,7 @@ ipcMain.handle('graph:ask', async (_e, { nodeId, question } = {}) => {
   const pack = await dome.brief({ setIds: setsFor[n.kind] || ['metrics.live'] });
   const q = String(question || `Explain what "${n.label}" is on this machine, what it is related to, whether it looks healthy, and what action if any is worth taking. Be concrete and brief.`).slice(0, 4000);
   emit('dome:token', { id, start: true, model: target.model, sets: pack.sets, chars: pack.chars + desc.length, preset: { id: 'graph', name: `AEDi · ${n.label}`, scope: n.group } });
-  const res = await ai.chat({
+  const res = await assistant.chat({
     endpointId: target.endpointId, port: target.port, model: target.model,
     messages: [{ role: 'system', content: `${pack.system}\n\n${desc}` }, { role: 'user', content: q }],
   }, (t) => emit('dome:token', { id, ...t }));
@@ -939,6 +949,9 @@ ipcMain.handle('fans:openFolder', () => shell.openPath(fans.exportDir()));
 ipcMain.handle('fans:presets', () => fans.PRESETS);
 
 ipcMain.handle('ai:benchmark', async (_e, target) => {
+  if (!target || target.cloud || target.endpointId === assistant.CLAUDE_ID) {
+    return { ok: false, error: 'Benchmark times local models; Claude runs in Anthropic\'s cloud.' };
+  }
   aiLog(`benchmark: ${target.model} on ${target.endpoint}`, 'head');
   const res = await ai.benchmark(target, () => {});
   if (res.ok) {
@@ -961,7 +974,7 @@ ipcMain.handle('ai:explain', async (_e, { target, text, context }) => {
     + '(1) what it means, (2) the most likely cause, (3) the single next thing to try. '
     + 'If a command would help, give it on its own line. Do not speculate beyond the evidence.'
     + (context ? ` Machine context: ${context}` : '');
-  const res = await ai.chat({ ...target, messages: [{ role: 'system', content: system }, { role: 'user', content: text }] },
+  const res = await assistant.chat({ ...target, messages: [{ role: 'system', content: system }, { role: 'user', content: text }] },
     (t) => emit('ai:token', { id, ...t }));
   emit('ai:token', { id, done: true, stats: res.stats || null, ok: res.ok, error: res.error || null });
   return { id, ...res };
@@ -1047,9 +1060,18 @@ function doctorLog(text) {
 let lastReportDir = '';
 
 ipcMain.handle('doctor:scan', () => doctor.diagnose(doctorLog));
-ipcMain.handle('doctor:fix', (_e, id) => {
+ipcMain.handle('doctor:fix', async (_e, id) => {
   const pub = settings.get('publish') || {};
-  return doctor.fixOne(id, doctorLog, { authorName: pub.authorName, authorEmail: pub.authorEmail });
+  // Fixes that need root on a Mac get the same one-password session the
+  // installer uses, opened just for the fix and closed straight after.
+  const needsRoot = IS_MAC && ['rosetta'].includes(id) && !running;
+  if (needsRoot) {
+    const primed = await primeSudo();
+    if (!primed.ok) return { ok: false, detail: primed.error };
+  }
+  try {
+    return await doctor.fixOne(id, doctorLog, { authorName: pub.authorName, authorEmail: pub.authorEmail });
+  } finally { if (needsRoot) stopSudoKeepAlive(); }
 });
 ipcMain.handle('doctor:fixAll', () => {
   const pub = settings.get('publish') || {};
@@ -1211,16 +1233,64 @@ ipcMain.handle('predict:reset', () => predict.reset());
 ipcMain.handle('predict:explain', async (_e, req = {}) => {
   const id = ++chatSeq;
   const target = await preferredTarget(req.target);
-  if (!target) return { id, ok: false, error: 'No local model is running. Tick "AEDi local core" in Software, or pull a model in AEDi · Local AI.' };
+  if (!target) return { id, ok: false, error: 'No AI provider is on. Open AEDi > Providers: turn on local AI (Ollama) or add a Claude API key.' };
   const pack = req.pack || lastForecast;
   if (!pack) return { id, ok: false, error: 'Nothing to explain yet - forecast a selection first.' };
   const messages = predict.explainMessages(pack, predict.machine(metrics.snapshot()));
   emit('predict:token', { id, start: true, model: target.model });
-  const res = await ai.chat({ endpointId: target.endpointId, port: target.port, model: target.model, messages },
+  const res = await assistant.chat({ endpointId: target.endpointId, port: target.port, model: target.model, messages },
     (t) => emit('predict:token', { id, ...t }));
   emit('predict:token', { id, done: true, ok: res.ok, error: res.error || null, stats: res.stats || null });
   return { id, ...res, model: target.model };
 });
+
+/* --- AEDi assistant: providers and task helpers (3.9.0) ----------------- */
+let lastRun = null;          // { results, queue } of the most recent install run
+
+ipcMain.handle('assistant:status', () => assistant.status());
+ipcMain.handle('assistant:configure', (_e, patch = {}) => {
+  const allowed = {};
+  ['aiLocalEnabled', 'aiClaudeEnabled', 'aiClaudeModel', 'aiProvider', 'aiAutoBrief'].forEach((k) => {
+    if (patch[k] !== undefined) allowed[k] = patch[k];
+  });
+  if (allowed.aiProvider && !['auto', 'local', 'claude'].includes(allowed.aiProvider)) delete allowed.aiProvider;
+  settings.save(allowed);
+  emit('settings:changed', settings.get());
+  return assistant.status();
+});
+ipcMain.handle('assistant:setKey', async (_e, key) => {
+  const res = assistant.setKey(key);
+  if (!res.ok) return res;
+  if (res.cleared) { settings.save({ aiClaudeEnabled: false }); emit('settings:changed', settings.get()); return { ok: true, cleared: true }; }
+  // Prove the key works before switching Claude on.
+  const models = await assistant.claudeModels({ force: true });
+  if (!models.ok) { assistant.setKey(''); return { ok: false, error: `Anthropic refused the key: ${models.error}` }; }
+  const current = settings.get('aiClaudeModel');
+  const pick = models.models.some((m) => m.id === current) ? current
+    : (models.models.find((m) => /sonnet/i.test(m.id)) || models.models[0] || {}).id || '';
+  settings.save({ aiClaudeEnabled: true, aiClaudeModel: pick });
+  emit('settings:changed', settings.get());
+  return { ok: true, models: models.models, model: pick };
+});
+ipcMain.handle('assistant:models', () => assistant.claudeModels());
+
+function assistantStream(fn) {
+  return async (_e, req = {}) => {
+    const id = ++chatSeq;
+    const res = await fn(req, (t) => emit('assistant:token', { id, ...t }));
+    emit('assistant:token', { id, done: true, ok: res.ok, error: res.error || null, stats: res.stats || null });
+    return { id, ...res };
+  };
+}
+ipcMain.handle('assistant:recommend', assistantStream((req, onToken) => {
+  const catalog = JSON.parse(fs.readFileSync(CATALOG_PATH, 'utf8'));
+  return assistant.recommend({ text: req.text, catalog, applies: engine.applies }, onToken);
+}));
+ipcMain.handle('assistant:explainRun', assistantStream((_req, onToken) => {
+  if (!lastRun) return Promise.resolve({ ok: false, error: 'No install has run in this session yet.' });
+  return assistant.explainRun(lastRun, onToken);
+}));
+ipcMain.handle('assistant:explainDoctor', assistantStream((req, onToken) => assistant.explainDoctor({ results: req.results }, onToken)));
 
 /* --- installer ---------------------------------------------------------- */
 ipcMain.handle('install:cancel', () => { cancelRequested = true; return true; });
@@ -1243,10 +1313,11 @@ ipcMain.handle('install:start', async (_e, ids) => {
   }
 
   if (IS_MAC) {
-    logLine('Requesting administrator access (macOS)...');
+    logLine('Asking for your Mac password once (native dialog)...');
     const primed = await primeSudo();
-    logLine(primed ? 'Administrator access granted.' : 'No admin access - cask installs may fail.',
-      primed ? 'ok' : 'warn');
+    logLine(primed.ok ? 'Password accepted - every installer in this run uses it, nothing asks again.'
+      : `No administrator access (${primed.error}) - Homebrew bootstrap and cask installers that need it will fail.`,
+    primed.ok ? 'ok' : 'warn');
   }
 
   emit('install:queue', queue.map((i) => ({ id: i.id, name: i.name })));
@@ -1266,9 +1337,10 @@ ipcMain.handle('install:start', async (_e, ids) => {
     logLine(`--- [${idx + 1}/${queue.length}] ${item.name} -------------------------`, 'head');
 
     let res;
+    const tail = [];        // the last lines of this item's log, for "Explain failures"
     try {
       // eslint-disable-next-line no-await-in-loop
-      res = await engine.installItem(item, (l) => logLine(l));
+      res = await engine.installItem(item, (l) => { logLine(l); tail.push(l); if (tail.length > 60) tail.shift(); });
     } catch (err) {
       res = { status: 'failed', detail: err.message };
       logLine(`unhandled error: ${err.message}`, 'err');
@@ -1278,9 +1350,10 @@ ipcMain.handle('install:start', async (_e, ids) => {
       res.status === 'ok' ? 'ok' : res.status === 'failed' ? 'err' : 'warn');
     res.ms = Date.now() - itemStarted;
     emit('install:item', { id: item.id, ...res, index: idx, total: queue.length });
-    results.push({ id: item.id, ...res });
+    results.push({ id: item.id, ...res, logTail: res.status === 'ok' ? [] : tail.slice() });
   }
 
+  lastRun = { results, queue: queue.map((i) => ({ id: i.id, name: i.name })) };
   stopSudoKeepAlive();
   running = false;
 
@@ -1311,6 +1384,42 @@ ipcMain.handle('install:start', async (_e, ids) => {
   return { ok: true, summary, results };
 });
 
+/* ---------------------------------------------------------------- macOS menu -- */
+/* A Mac app with no Edit menu cannot copy or paste in its own text fields,
+   and every Mac user reaches for Cmd+, to open Settings. */
+function macMenuTemplate() {
+  const open = (tab) => () => showWindow(tab);
+  return [
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { label: 'Settings…', accelerator: 'Cmd+,', click: open('settings') },
+        { label: 'Check for Updates…', click: open('updates') },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' }, { role: 'hideOthers' }, { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
+    { role: 'editMenu' },
+    {
+      label: 'Go',
+      submenu: [
+        { label: 'Software', accelerator: 'Cmd+1', click: open('software') },
+        { label: 'AEDi Assistant', accelerator: 'Cmd+2', click: open('ai') },
+        { label: 'Doctor', accelerator: 'Cmd+3', click: open('doctor') },
+        { label: 'Terminals', accelerator: 'Cmd+4', click: open('terminals') },
+      ],
+    },
+    { role: 'viewMenu' },
+    { role: 'windowMenu' },
+  ];
+}
+
 /* ---------------------------------------------------------------- lifecycle -- */
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -1337,7 +1446,7 @@ if (!gotLock) {
       appPath: app.getAppPath(),
     });
     predict.configure({ userData: app.getPath('userData') });
-    Menu.setApplicationMenu(IS_MAC ? Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }]) : null);
+    Menu.setApplicationMenu(IS_MAC ? Menu.buildFromTemplate(macMenuTemplate()) : null);
 
     createWindow();      // hidden - warms up while the intro plays
     startServices();

@@ -2,23 +2,23 @@
   "$schema": "./catalog.schema.json",
   "meta": {
     "title": "ProGramerly - Basic Coding Software for All",
-    "documentId": "DOC-2026-10-003",
-    "version": "1.4.0",
+    "documentId": "DOC-2026-10-005",
+    "version": "1.5.0",
     "governance": "Policy 986 AED",
     "author": "Johan Wilhelm van Antwerp",
     "organisation": "Ionity (Pty) Ltd | Antwerp Designs | AEDI",
     "web": "https://www.ionity.today",
-    "updated": "2026-10-05"
+    "updated": "2026-10-18"
   },
   "profiles": {
     "full": {
       "label": "Full Stack",
-      "desc": "Everything. Every app, every runtime, every SDK, every shell, comms and drives. ~55-85 GB, 75-150 min.",
+      "desc": "Everything. Every app, every runtime, every SDK, every shell, comms and drives. Local AI is opt-in (tick AEDi local core). ~50-80 GB, 70-140 min.",
       "recommended": true
     },
     "ai": {
       "label": "AI Dev",
-      "desc": "Claude, Gemini, Codex, Copilot, MCP servers, Firebase, local models, Node, Python, Git, VS Code. ~14-24 GB.",
+      "desc": "Claude, Gemini, Codex, Copilot, MCP servers, Firebase, Node, Python, Git, VS Code. Local models are opt-in (tick AEDi local core). ~8-14 GB.",
       "recommended": false
     },
     "minimal": {
@@ -2125,10 +2125,7 @@
       "name": "Ollama",
       "group": "ai",
       "desc": "Run open models locally. Qwen, Llama, Mistral, DeepSeek.",
-      "profiles": [
-        "full",
-        "ai"
-      ],
+      "profiles": [],
       "win": {
         "winget": [
           "Ollama.Ollama"
@@ -2158,10 +2155,7 @@
       "name": "Local AI starter model (llama3.2:1b, ~1.3 GB)",
       "group": "ai",
       "desc": "The small model the Command Center copilot uses by default. Runs on CPU, answers in seconds on a laptop, and is enough for health briefs, checklists and log triage without leaving the machine.",
-      "profiles": [
-        "full",
-        "ai"
-      ],
+      "profiles": [],
       "dependsOn": [
         "ollama"
       ],
@@ -5675,10 +5669,7 @@
       "name": "Gemma family (gemma4:e2b + gemma3:1b)",
       "group": "ai",
       "desc": "Google's Gemma on this machine. gemma4:e2b is the everyday model - strong instruction following, reads long context, and still answers on a laptop; gemma3:1b is the pocket version for quick triage. Both run through the same local Ollama the Command Center uses, so nothing leaves the machine.",
-      "profiles": [
-        "full",
-        "ai"
-      ],
+      "profiles": [],
       "dependsOn": [
         "ollama"
       ],
@@ -5722,10 +5713,7 @@
       "name": "Tiny OCR and vision (moondream + granite3.2-vision)",
       "group": "ai",
       "desc": "Reading models small enough to run beside everything else. moondream is about 1.7 GB and describes and transcribes a screenshot in seconds; granite3.2-vision is built for documents - tables, forms, invoices and scanned pages. Both answer through the local Ollama, so a document never leaves the machine to be read.",
-      "profiles": [
-        "full",
-        "ai"
-      ],
+      "profiles": [],
       "dependsOn": [
         "ollama"
       ],
