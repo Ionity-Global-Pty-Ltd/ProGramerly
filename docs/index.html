@@ -312,11 +312,12 @@ footer ul{list-style:none}
 .wisp-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;align-items:center;margin-bottom:22px}
 .wisp-shot{position:relative;margin:0;border-radius:18px;overflow:visible}
 .wisp-shot img{display:block;width:100%;height:auto;border-radius:16px;border:1px solid var(--line)}
-.wisp-shot::before{content:"";position:absolute;inset:-3px;border-radius:19px;padding:3px;pointer-events:none;
+.wisp-frame{position:relative;display:block;border-radius:16px}
+.wisp-frame::before{content:"";position:absolute;inset:-3px;border-radius:19px;padding:3px;pointer-events:none;
   background:conic-gradient(from var(--wa,0deg),transparent 0 62%,#3366FF 78%,#00D2FF 90%,#fff 96%,transparent 100%);
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);filter:drop-shadow(0 0 10px #3366FF);animation:wisp-run 4.5s linear infinite}
-.wisp-shot::after{content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;box-shadow:0 0 0 1px rgba(51,102,255,.55),0 0 34px -4px rgba(51,102,255,.65)}
+.wisp-frame::after{content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;box-shadow:0 0 0 1px rgba(51,102,255,.55),0 0 34px -4px rgba(51,102,255,.65)}
 @property --wa{syntax:'<angle>';inherits:false;initial-value:0deg}
 @keyframes wisp-run{to{--wa:360deg}}
 .wisp-shot figcaption{font-size:12.5px;color:var(--text-faint);margin-top:10px}
@@ -328,7 +329,8 @@ footer ul{list-style:none}
 .wisp-dots{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px}
 .wisp-dots i{width:16px;height:16px;border-radius:50%;background:var(--d);box-shadow:0 0 10px var(--d)}
 @media (max-width:760px){.wisp-grid{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){.wisp-shot::before{animation:none}}
+@media (prefers-reduced-motion:reduce){.wisp-frame{position:relative;display:block;border-radius:16px}
+.wisp-frame::before{animation:none}}
 @media (prefers-reduced-motion:reduce){.pf-ico,.pf-ico::after,.pf-link::after{animation:none!important}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -484,7 +486,7 @@ footer ul{list-style:none}
       <p class="lede">Aura Wisp &mdash; a living light that follows your focus. A glowing, colour-changeable aura around the active window and the active screen, pulled from window to window as you work. Windows, macOS and Linux &middot; free &middot; open source.</p>
       <div class="wisp-grid">
         <figure class="wisp-shot">
-          <img src="assets/wisp/wisp-puller.jpg" alt="WISP pulling its blue aura from one window to the next" width="1600" height="1000" loading="lazy">
+          <span class="wisp-frame"><img src="assets/wisp/wisp-puller.jpg" alt="WISP pulling its blue aura from one window to the next" width="1600" height="1000" loading="lazy"></span>
           <figcaption>The puller &mdash; switch windows and the aura glides across while a wisp-comet flies ahead.</figcaption>
         </figure>
         <div class="wisp-side">
