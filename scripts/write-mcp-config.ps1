@@ -27,17 +27,20 @@ $cfg = switch ($Target) {
 $cfgDir = Split-Path $cfg
 Write-Host "     $Target -> $cfg" -ForegroundColor DarkGray
 
+# Claude Desktop and the IDEs spawn without a shell; Node refuses .cmd files
+# that way, so npx runs through cmd /c. The time server gets this PC's zone.
+$tz = try { $z = (& node -e "process.stdout.write(Intl.DateTimeFormat().resolvedOptions().timeZone)" 2>$null); if ($z) { $z } else { 'UTC' } } catch { 'UTC' }
 $servers = [ordered]@{
-    filesystem            = @{ command = 'npx.cmd'; args = @('-y','@modelcontextprotocol/server-filesystem', $root) }
-    memory                = @{ command = 'npx.cmd'; args = @('-y','@modelcontextprotocol/server-memory') }
-    'sequential-thinking' = @{ command = 'npx.cmd'; args = @('-y','@modelcontextprotocol/server-sequential-thinking') }
-    playwright            = @{ command = 'npx.cmd'; args = @('-y','@playwright/mcp@latest') }
-    context7              = @{ command = 'npx.cmd'; args = @('-y','@upstash/context7-mcp') }
+    filesystem            = @{ command = 'cmd'; args = @('/c','npx','-y','@modelcontextprotocol/server-filesystem', $root) }
+    memory                = @{ command = 'cmd'; args = @('/c','npx','-y','@modelcontextprotocol/server-memory') }
+    'sequential-thinking' = @{ command = 'cmd'; args = @('/c','npx','-y','@modelcontextprotocol/server-sequential-thinking') }
+    playwright            = @{ command = 'cmd'; args = @('/c','npx','-y','@playwright/mcp@latest') }
+    context7              = @{ command = 'cmd'; args = @('/c','npx','-y','@upstash/context7-mcp') }
     git                   = @{ command = 'uvx.exe'; args = @('--from','mcp-server-git','mcp-server-git','--repository', $root) }
     fetch                 = @{ command = 'uvx.exe'; args = @('mcp-server-fetch') }
-    time                  = @{ command = 'uvx.exe'; args = @('mcp-server-time','--local-timezone','Africa/Johannesburg') }
-    firebase              = @{ command = 'npx.cmd'; args = @('-y','firebase-tools@latest','experimental:mcp') }
-    'desktop-commander'   = @{ command = 'npx.cmd'; args = @('-y','@wonderwhy-er/desktop-commander@latest') }
+    time                  = @{ command = 'uvx.exe'; args = @('mcp-server-time','--local-timezone',$tz) }
+    firebase              = @{ command = 'cmd'; args = @('/c','npx','-y','firebase-tools@latest','experimental:mcp') }
+    'desktop-commander'   = @{ command = 'cmd'; args = @('/c','npx','-y','@wonderwhy-er/desktop-commander@latest') }
 }
 
 if ($WhatIf) {

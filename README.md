@@ -1306,6 +1306,17 @@ Windsurf and Claude Code. The runner refreshes PATH before every step, so a
 tool installed one step earlier is callable in the next. See
 `docs/RELEASE-3.7.0.md`.
 
+### Hardened — 3.9.1
+
+Ships 3.7.0 and 3.9.0 and fixes 39 bugs. The one-password-per-run session now
+covers Linux as well as macOS, and its socket only answers a helper that holds
+a one-run token. **Cancel** stops the step in
+progress and its whole process tree. On Windows, MCP servers now actually start
+(`cmd /c npx`) and Git repo sync runs. Downloads, settings and MCP configs are
+written atomically, and the IPC surface no longer runs a path the window names.
+New `scripts/test-engine.js` (34 checks) runs in CI on Linux, Windows and macOS.
+See `docs/RELEASE-3.9.1.md`.
+
 ## The download page
 
 `docs/index.html` is the public landing page, served by GitHub Pages from the

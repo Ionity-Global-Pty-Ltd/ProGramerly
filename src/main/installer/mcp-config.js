@@ -49,32 +49,25 @@ function devRoot() {
   return process.env.PROGRAMERLY_DEV_ROOT || path.join(os.homedir(), 'Development');
 }
 
+/** The machine's own IANA zone, so the time server is right outside SA too. */
+function localZone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch { return 'UTC'; }
+}
+
 function serverDefs() {
-  const npx = IS_WIN ? 'npx.cmd' : 'npx';
-  const uvx = IS_WIN ? 'uvx.exe' : 'uvx';
   const root = devRoot();
+  // Windows: MCP clients spawn without a shell, and Node refuses to spawn a
+  // .cmd file that way (EINVAL since the 2024 CVE fix), so `npx.cmd` servers
+  // never start. Going through cmd /c is the form every client accepts.
+  const npxDef = (args) => (IS_WIN ? { command: 'cmd', args: ['/c', 'npx', ...args] } : { command: 'npx', args });
+  const uvx = IS_WIN ? 'uvx.exe' : 'uvx';
 
   return {
-    filesystem: {
-      command: npx,
-      args: ['-y', '@modelcontextprotocol/server-filesystem', root],
-    },
-    memory: {
-      command: npx,
-      args: ['-y', '@modelcontextprotocol/server-memory'],
-    },
-    'sequential-thinking': {
-      command: npx,
-      args: ['-y', '@modelcontextprotocol/server-sequential-thinking'],
-    },
-    playwright: {
-      command: npx,
-      args: ['-y', '@playwright/mcp@latest'],
-    },
-    context7: {
-      command: npx,
-      args: ['-y', '@upstash/context7-mcp'],
-    },
+    filesystem: npxDef(['-y', '@modelcontextprotocol/server-filesystem', root]),
+    memory: npxDef(['-y', '@modelcontextprotocol/server-memory']),
+    'sequential-thinking': npxDef(['-y', '@modelcontextprotocol/server-sequential-thinking']),
+    playwright: npxDef(['-y', '@playwright/mcp@latest']),
+    context7: npxDef(['-y', '@upstash/context7-mcp']),
     git: {
       command: uvx,
       args: ['--from', 'mcp-server-git', 'mcp-server-git', '--repository', root],
@@ -85,20 +78,14 @@ function serverDefs() {
     },
     time: {
       command: uvx,
-      args: ['mcp-server-time', '--local-timezone', 'Africa/Johannesburg'],
+      args: ['mcp-server-time', '--local-timezone', localZone()],
     },
     // Firebase's own MCP server, served by firebase-tools. It talks to
     // whatever project the user has selected with `firebase use`; nothing is
     // signed in or selected by ProGramerly.
-    firebase: {
-      command: npx,
-      args: ['-y', 'firebase-tools@latest', 'experimental:mcp'],
-    },
+    firebase: npxDef(['-y', 'firebase-tools@latest', 'experimental:mcp']),
     // Terminal + file access for Claude Desktop, scoped to the dev root.
-    'desktop-commander': {
-      command: npx,
-      args: ['-y', '@wonderwhy-er/desktop-commander@latest'],
-    },
+    'desktop-commander': npxDef(['-y', '@wonderwhy-er/desktop-commander@latest']),
   };
 }
 
@@ -118,17 +105,18 @@ function writeConfig(log = () => {}, which = 'claude') {
     fs.mkdirSync(devRoot(), { recursive: true });
 
     let existing = {};
-    let backup;
+    let raw = null;
     if (fs.existsSync(target)) {
-      const raw = fs.readFileSync(target, 'utf8');
-      backup = `${target}.${new Date().toISOString().replace(/[:.]/g, '-')}.bak`;
-      fs.writeFileSync(backup, raw, 'utf8');
-      log(`backed up existing config -> ${path.basename(backup)}`);
+      raw = fs.readFileSync(target, 'utf8');
       try {
-        existing = JSON.parse(raw);
-      } catch {
-        log('existing config was not valid JSON; starting from a clean object (backup kept)');
-        existing = {};
+        existing = raw.trim() ? JSON.parse(raw) : {};
+      } catch (err) {
+        // Never replace a file we cannot read: ~/.claude.json carries all of
+        // Claude Code's state. Report and leave it exactly as it is.
+        return { ok: false, path: target, added, kept, error: `existing file is not valid JSON (${err.message}) - left untouched` };
+      }
+      if (!existing || typeof existing !== 'object' || Array.isArray(existing)) {
+        return { ok: false, path: target, added, kept, error: 'existing file is not a JSON object - left untouched' };
       }
     }
 
@@ -142,8 +130,23 @@ function writeConfig(log = () => {}, which = 'claude') {
       added.push(name);
     }
 
+    let backup;
+    if (!added.length) {
+      log(`nothing to add - all ${kept.length} servers already configured`);
+      return { ok: true, path: target, added, kept };
+    }
+    if (raw !== null) {
+      backup = `${target}.${new Date().toISOString().replace(/[:.]/g, '-')}.bak`;
+      fs.writeFileSync(backup, raw, 'utf8');
+      log(`backed up existing config -> ${path.basename(backup)}`);
+    }
+
+    // Write beside the target, then rename: a crash mid-write can never
+    // leave a half-written config behind.
     const next = { ...existing, mcpServers: servers };
-    fs.writeFileSync(target, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+    const tmp = `${target}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+    fs.renameSync(tmp, target);
 
     log(`wrote ${target}`);
     if (added.length) log(`added: ${added.join(', ')}`);

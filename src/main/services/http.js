@@ -36,6 +36,10 @@ function getBuffer(url, opts = {}, depth = 0) {
         return resolve(getBuffer(new URL(res.headers.location, u).toString(), opts, depth + 1));
       }
       const chunks = [];
+      // A dropped connection mid-body emits 'error'/'aborted' on res; without
+      // a listener that is an uncaught exception in the main process.
+      res.on('error', reject);
+      res.on('aborted', () => reject(new Error('connection aborted')));
       res.on('data', (c) => chunks.push(c));
       res.on('end', () => resolve({
         status: res.statusCode,
@@ -84,14 +88,29 @@ function download(url, dest, onProgress = () => {}, depth = 0) {
       }
       const total = Number(res.headers['content-length'] || 0);
       let received = 0;
-      const out = fs.createWriteStream(dest);
+      let failed = false;
+      const part = `${dest}.part`;
+      const out = fs.createWriteStream(part);
+      const fail = (err) => {
+        if (failed) return;
+        failed = true;
+        try { out.destroy(); } catch { /* closed */ }
+        fs.rm(part, { force: true }, () => reject(err));
+      };
       res.on('data', (c) => {
         received += c.length;
         onProgress({ received, total, pct: total ? Math.round((received / total) * 100) : 0 });
       });
+      res.on('error', fail);
+      res.on('aborted', () => fail(new Error('download interrupted')));
       res.pipe(out);
-      out.on('finish', () => out.close(() => resolve({ path: dest, bytes: received })));
-      out.on('error', reject);
+      out.on('finish', () => out.close(() => {
+        if (failed) return;
+        if (total && received !== total) { fail(new Error(`download incomplete (${received} of ${total} bytes)`)); return; }
+        // Only a complete file ever takes the real name.
+        fs.rename(part, dest, (err) => (err ? fail(err) : resolve({ path: dest, bytes: received })));
+      }));
+      out.on('error', fail);
     });
     req.on('timeout', () => req.destroy(new Error('timeout')));
     req.on('error', reject);

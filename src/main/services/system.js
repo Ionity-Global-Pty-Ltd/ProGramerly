@@ -85,16 +85,33 @@ async function processes() {
         user: null,
       })), 'Win32_Process + Get-Process');
     }
-    const r = await sh('ps -eo pid=,ppid=,pcpu=,rss=,user=,lstart=,comm=,args= -ww', 30000);
+    // LC_ALL=C: lstart is localised (af_ZA prints "Do" for Thursday) and
+    // every row failed to parse. uid instead of user: procps truncates user
+    // names to 8 characters ("johanva+"), which marked all of the user's own
+    // processes hidden. comm goes in its own read because it may contain
+    // spaces ("Web Content"), which shifted every later column.
+    const r = await sh('LC_ALL=C ps -eo pid=,ppid=,pcpu=,rss=,uid=,lstart=,args= -ww', 30000);
     if (r.code !== 0) return gone(r.text.trim() || `ps exited ${r.code}`, 'ps');
+    const names = new Map();
+    const c = await sh('LC_ALL=C ps -eo pid=,comm=', 30000);
+    for (const line of (c.text || '').split(/\r?\n/)) {
+      const m = line.match(/^\s*(\d+)\s+(.*)$/);
+      if (m) names.set(Number(m[1]), m[2].trim());
+    }
+    const myUid = typeof process.getuid === 'function' ? process.getuid() : os.userInfo().uid;
     const rows = [];
     for (const line of r.text.split(/\r?\n/)) {
-      const m = line.match(/^\s*(\d+)\s+(\d+)\s+([\d.]+)\s+(\d+)\s+(\S+)\s+(\w{3}\s+\w{3}\s+\d+\s+[\d:]+\s+\d{4})\s+(\S+)\s+(.*)$/);
+      const m = line.match(/^\s*(\d+)\s+(\d+)\s+([\d.]+)\s+(\d+)\s+(\d+)\s+(\w{3}\s+\w{3}\s+\d+\s+[\d:]+\s+\d{4})\s+(.*)$/);
       if (!m) continue;
+      const pid = Number(m[1]);
+      const d = new Date(m[6]);
+      const comm = names.get(pid) || (m[7].split(/\s+/)[0] || '');
       rows.push({
-        pid: Number(m[1]), ppid: Number(m[2]), cpuPct: Number(m[3]), rss: Number(m[4]) * 1024,
-        user: m[5], started: new Date(m[6]).toISOString(), name: path.basename(m[7]), path: m[7], cmd: m[8],
-        hidden: m[5] !== os.userInfo().username, cpuSec: null, threads: null, company: null,
+        pid, ppid: Number(m[2]), cpuPct: Number(m[3]), rss: Number(m[4]) * 1024,
+        user: Number(m[5]) === myUid ? os.userInfo().username : `uid ${m[5]}`,
+        started: Number.isNaN(d.getTime()) ? null : d.toISOString(),
+        name: path.basename(comm), path: comm.includes('/') ? comm : null, cmd: m[7],
+        hidden: Number(m[5]) !== myUid, cpuSec: null, threads: null, company: null,
       });
     }
     return ok(rows, 'ps -eo');
@@ -262,31 +279,48 @@ async function startup() {
 }
 
 /** Disable one startup entry. Registry values are backed up first. */
+/* Entries arrive over IPC from the renderer. Everything that reaches a shell
+   or a file path is checked against what a real startup entry can look like,
+   and every PowerShell literal is single-quote escaped. */
+const psq = (v) => `'${String(v).replace(/'/g, "''")}'`;
+function entryProblem(entry) {
+  if (!entry || typeof entry.name !== 'string' || !entry.name) return 'no entry';
+  if (/[\\/]|\.\./.test(entry.name) && entry.kind !== 'task') return 'invalid entry name';
+  if (entry.backup !== undefined && (typeof entry.backup !== 'string' || path.basename(entry.backup) !== entry.backup)) return 'invalid backup reference';
+  if (entry.kind === 'registry' && !/^(HKCU|HKLM):\\/i.test(String(entry.key || ''))) return 'invalid registry key';
+  if (entry.kind === 'task' && !/^\\/.test(String(entry.key || ''))) return 'invalid task path';
+  if (entry.kind === 'folder' && !/[\\/]Start Menu[\\/]Programs[\\/]Startup[\\/][^\\/]+$/i.test(String(entry.command || ''))) return 'not a Startup-folder item';
+  if (entry.kind === 'systemd-user' && !/^[\w@.:-]+$/.test(entry.name)) return 'invalid unit name';
+  if (entry.kind === 'autostart' && !/[\\/]autostart$/.test(String(entry.key || ''))) return 'not an autostart folder';
+  return null;
+}
+
 async function startupDisable(entry) {
-  if (!entry || !entry.name) return { ok: false, error: 'no entry' };
+  const bad = entryProblem(entry);
+  if (bad) return { ok: false, error: bad };
   if (IS_WIN) {
     if (entry.kind === 'registry') {
       if (entry.scope === 'machine' && !(await ctx.isElevated())) return { ok: false, error: 'a machine-wide Run entry needs administrator rights' };
       const backup = { ...entry, at: new Date().toISOString() };
       const file = path.join(backupDir(), `${Date.now()}-${entry.name.replace(/[^\w.-]/g, '_')}.json`);
       fs.writeFileSync(file, JSON.stringify(backup, null, 2));
-      const r = await sh(`Remove-ItemProperty -Path '${entry.key}' -Name '${entry.name.replace(/'/g, "''")}' -ErrorAction Stop; 'removed'`, 20000);
+      const r = await sh(`Remove-ItemProperty -LiteralPath ${psq(entry.key)} -Name ${psq(entry.name)} -ErrorAction Stop; 'removed'`, 20000);
       if (r.code !== 0 || !/removed/.test(r.text)) { try { fs.unlinkSync(file); } catch { /* keep going */ } return { ok: false, error: r.text.trim().split(/\r?\n/).pop() }; }
       return { ok: true, backup: path.basename(file) };
     }
     if (entry.kind === 'task') {
-      const r = await sh(`Disable-ScheduledTask -TaskPath '${entry.key}' -TaskName '${entry.name.replace(/'/g, "''")}' -ErrorAction Stop | Out-Null; 'disabled'`, 20000);
+      const r = await sh(`Disable-ScheduledTask -TaskPath ${psq(entry.key)} -TaskName ${psq(entry.name)} -ErrorAction Stop | Out-Null; 'disabled'`, 20000);
       return r.code === 0 && /disabled/.test(r.text) ? { ok: true } : { ok: false, error: r.text.trim().split(/\r?\n/).pop() };
     }
     if (entry.kind === 'folder') {
       // Move the shortcut into the backup folder rather than deleting it.
-      const dest = path.join(backupDir(), `${Date.now()}-${entry.name}`);
+      const dest = path.join(backupDir(), `${Date.now()}-${path.basename(entry.name)}`);
       try { fs.renameSync(entry.command, dest); fs.writeFileSync(`${dest}.json`, JSON.stringify({ ...entry, moved: dest, at: new Date().toISOString() }, null, 2)); return { ok: true, backup: path.basename(dest) }; } catch (e) { return { ok: false, error: e.message }; }
     }
     return { ok: false, error: `cannot disable a ${entry.kind} entry` };
   }
   if (entry.kind === 'systemd-user') {
-    const r = await sh(`systemctl --user disable ${entry.name} 2>&1 && echo disabled`, 20000);
+    const r = await sh(`systemctl --user disable '${entry.name}' 2>&1 && echo disabled`, 20000);
     return r.code === 0 ? { ok: true } : { ok: false, error: r.text.trim() };
   }
   if (entry.kind === 'autostart') {
@@ -302,17 +336,18 @@ async function startupDisable(entry) {
 
 /** Put a disabled entry back. */
 async function startupEnable(entry) {
-  if (!entry || !entry.name) return { ok: false, error: 'no entry' };
+  const bad = entryProblem(entry);
+  if (bad) return { ok: false, error: bad };
   if (IS_WIN) {
     if (entry.kind === 'registry' && entry.backup) {
       const file = path.join(backupDir(), entry.backup);
       const b = JSON.parse(fs.readFileSync(file, 'utf8'));
-      const r = await sh(`New-ItemProperty -Path '${b.key}' -Name '${b.name.replace(/'/g, "''")}' -Value '${String(b.command).replace(/'/g, "''")}' -PropertyType String -Force -ErrorAction Stop | Out-Null; 'restored'`, 20000);
+      const r = await sh(`New-ItemProperty -LiteralPath ${psq(b.key)} -Name ${psq(b.name)} -Value ${psq(b.command)} -PropertyType String -Force -ErrorAction Stop | Out-Null; 'restored'`, 20000);
       if (r.code === 0 && /restored/.test(r.text)) { fs.unlinkSync(file); return { ok: true }; }
       return { ok: false, error: r.text.trim().split(/\r?\n/).pop() };
     }
     if (entry.kind === 'task') {
-      const r = await sh(`Enable-ScheduledTask -TaskPath '${entry.key}' -TaskName '${entry.name.replace(/'/g, "''")}' -ErrorAction Stop | Out-Null; 'enabled'`, 20000);
+      const r = await sh(`Enable-ScheduledTask -TaskPath ${psq(entry.key)} -TaskName ${psq(entry.name)} -ErrorAction Stop | Out-Null; 'enabled'`, 20000);
       return r.code === 0 && /enabled/.test(r.text) ? { ok: true } : { ok: false, error: r.text.trim().split(/\r?\n/).pop() };
     }
     if (entry.kind === 'folder' && entry.backup) {
@@ -326,7 +361,7 @@ async function startupEnable(entry) {
     return { ok: false, error: 'nothing to restore' };
   }
   if (entry.kind === 'systemd-user') {
-    const r = await sh(`systemctl --user enable ${entry.name} 2>&1 && echo enabled`, 20000);
+    const r = await sh(`systemctl --user enable '${entry.name}' 2>&1 && echo enabled`, 20000);
     return r.code === 0 ? { ok: true } : { ok: false, error: r.text.trim() };
   }
   if (entry.kind === 'autostart') {

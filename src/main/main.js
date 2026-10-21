@@ -17,7 +17,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 
 const engine = require('./installer/engine');
-const { run, hydratePath, setSessionEnv } = require('./installer/runner');
+const { run, hydratePath, setSessionEnv, killAll } = require('./installer/runner');
+const askpass = require('./installer/askpass');
 
 // Finder and desktop launchers hand a GUI app a bare PATH. Fix it before any
 // service probes for brew, code, ollama or git.
@@ -50,7 +51,6 @@ const envs = require('./services/envs');
 const graph = require('./services/graph');
 const predict = require('./services/predict');
 const tray = require('./tray');
-const macAuth = require('./services/macAuth');
 const assistant = require('./services/assistant');
 
 const IS_WIN = process.platform === 'win32';
@@ -183,21 +183,24 @@ async function ensureElevated() {
 }
 
 /**
- * macOS: ask for the password once, natively, and route every `sudo`
- * underneath through SUDO_ASKPASS for the rest of this run. See macAuth.js
- * for why osascript-with-administrator-privileges alone was not enough.
+ * macOS + Linux: ask for the password once per run, natively, and route
+ * every `sudo` underneath through SUDO_ASKPASS for the rest of this run (see
+ * installer/askpass.js). osascript "with administrator privileges" alone
+ * never primed sudo. No dialog at all when sudo is already passwordless.
  */
 async function primeSudo() {
-  if (!IS_MAC) return { ok: true };
-  const res = await macAuth.begin();
-  if (res.ok) setSessionEnv(res.env);
+  if (IS_WIN) return { ok: true };
+  const res = await askpass.begin((l) => logLine(l, 'warn'));
+  setSessionEnv(res.ok ? res.env : {});
+  engine.resetLinuxFacts();
   return res;
 }
 
 function stopSudoKeepAlive() {
   if (sudoKeepAlive) { clearInterval(sudoKeepAlive); sudoKeepAlive = null; }
   setSessionEnv({});
-  macAuth.end();
+  askpass.end();
+  engine.resetLinuxFacts();
 }
 
 /* ----------------------------------------------------------------- intro -- */
@@ -267,7 +270,8 @@ function createWindow() {
   win.once('ready-to-show', revealWindow);
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    // Web links only: never hand file:, smb: or custom schemes to the OS.
+    if (/^https?:\/\//i.test(String(url))) shell.openExternal(url);
     return { action: 'deny' };
   });
 
@@ -289,7 +293,9 @@ function createWindow() {
         message: 'An installation is still running.',
         detail: 'Quitting now leaves packages half-installed. Stop anyway?',
       }).then(({ response }) => {
-        if (response === 1) { cancelRequested = true; running = false; quitting = true; win.destroy(); }
+        // Stop the step in progress too, then really quit - destroy() alone
+        // left the app alive in the tray with the install still running.
+        if (response === 1) { cancelRequested = true; killAll(); quitting = true; win.destroy(); app.quit(); }
       });
       return;
     }
@@ -427,7 +433,7 @@ function startServices() {
   // Re-arm the schedule after the machine wakes: a laptop that slept through
   // 08:00 should sync when it comes back, not silently miss the day.
   try {
-    powerMonitor.on('resume', () => sync.schedule());
+    powerMonitor.on('resume', () => sync.resume());
   } catch { /* not supported everywhere */ }
 }
 
@@ -468,9 +474,18 @@ ipcMain.handle('app:openDevRoot', () => {
   return root;
 });
 
-ipcMain.handle('app:openPath', (_e, p) => {
-  if (typeof p === 'string' && p) shell.openPath(p);
-  return p;
+// Opens a folder or a document. Never an executable: shell.openPath would
+// otherwise run any .exe/.bat/.desktop/.app a (compromised) renderer named.
+ipcMain.handle('app:openPath', async (_e, p) => {
+  if (typeof p !== 'string' || !p) return { ok: false, error: 'no path' };
+  const abs = path.resolve(p);
+  let isDir = false;
+  try { isDir = fs.statSync(abs).isDirectory(); } catch { return { ok: false, error: 'not found' }; }
+  const exec = /\.(exe|bat|cmd|com|ps1|psm1|vbs|vbe|wsf|jse?|msi|msp|lnk|scr|pif|hta|cpl|reg|desktop|sh|command|appimage|run|jar)$/i.test(abs)
+    || (isDir && /\.app$/i.test(abs));
+  if (exec) return { ok: false, error: 'refused: executables are never opened from here' };
+  const err = await shell.openPath(abs);
+  return err ? { ok: false, error: err } : { ok: true, path: abs };
 });
 
 ipcMain.handle('app:minimiseToTray', () => {
@@ -589,16 +604,20 @@ ipcMain.handle('update:check', async () => {
   return info;
 });
 
+let downloadedUpdate = null; // the only file update:install will ever run
 ipcMain.handle('update:download', async () => {
   if (!pendingUpdate || !pendingUpdate.available) return { ok: false, error: 'nothing to download' };
   const res = await updater.fetchUpdate(pendingUpdate, (p) => emit('update:progress', p));
+  downloadedUpdate = res && res.ok && res.file ? res.file : null;
   emit('update:downloaded', res);
   return res;
 });
 
-ipcMain.handle('update:install', async (_e, file) => {
-  const res = updater.applyUpdate(file);
-  return res;
+ipcMain.handle('update:install', async () => {
+  // Ignore any path from the renderer: run exactly what was downloaded and
+  // SHA-256 checked in this process.
+  if (!downloadedUpdate) return { ok: false, error: 'download the update first' };
+  return updater.applyUpdate(downloadedUpdate);
 });
 
 /* --- registry ----------------------------------------------------------- */
@@ -1293,7 +1312,13 @@ ipcMain.handle('assistant:explainRun', assistantStream((_req, onToken) => {
 ipcMain.handle('assistant:explainDoctor', assistantStream((req, onToken) => assistant.explainDoctor({ results: req.results }, onToken)));
 
 /* --- installer ---------------------------------------------------------- */
-ipcMain.handle('install:cancel', () => { cancelRequested = true; return true; });
+ipcMain.handle('install:cancel', () => {
+  cancelRequested = true;
+  // Stop the item in progress as well, not only the ones queued after it.
+  const stopped = running ? killAll() : 0;
+  if (stopped) logLine(`Cancel: stopped ${stopped} running step${stopped === 1 ? '' : 's'}.`, 'warn');
+  return true;
+});
 
 ipcMain.handle('install:start', async (_e, ids) => {
   if (running) return { ok: false, error: 'already running' };
@@ -1312,11 +1337,11 @@ ipcMain.handle('install:start', async (_e, ids) => {
     emit('install:needsElevation', true);
   }
 
-  if (IS_MAC) {
-    logLine('Asking for your Mac password once (native dialog)...');
+  if (!IS_WIN && queue.length) {
+    logLine(`Asking for your ${IS_MAC ? 'Mac' : 'Linux'} password once (native dialog)...`);
     const primed = await primeSudo();
-    logLine(primed.ok ? 'Password accepted - every installer in this run uses it, nothing asks again.'
-      : `No administrator access (${primed.error}) - Homebrew bootstrap and cask installers that need it will fail.`,
+    logLine(primed.ok ? 'Administrator access ready - every installer in this run uses it, nothing asks again.'
+      : `No administrator access (${primed.error}) - items that need it will fail; everything else continues.`,
     primed.ok ? 'ok' : 'warn');
   }
 

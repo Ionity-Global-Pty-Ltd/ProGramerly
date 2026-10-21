@@ -31,6 +31,7 @@ jobs:
       - run: node scripts/check-programs.js
       - run: node scripts/test-predict.js
       - run: node scripts/test-390.js
+      - run: node scripts/test-engine.js
       - run: node scripts/dry-run.js full win
       - run: node scripts/dry-run.js full mac
       - run: node scripts/dry-run.js ai win
@@ -107,6 +108,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci || npm install
+      - run: node scripts/test-engine.js
       # The Ionity tools (~495 MB, three files over GitHub's 100 MB per-file
       # limit) are integrated capabilities of ProGramerly, not separate
       # products, so they are never published for download. They live as
@@ -206,6 +208,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci || npm install
+      # Runner, askpass and MCP tests on a real Mac: process groups, no-TTY
+      # sudo routing and the socket helper are exercised on macOS itself.
+      - run: node scripts/test-engine.js
       - name: Build macOS installer
         # A missing secret still defines the variable, as an empty string, and
         # electron-builder resolves an empty CSC_LINK against the project root

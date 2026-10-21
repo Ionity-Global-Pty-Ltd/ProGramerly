@@ -258,7 +258,15 @@ async function tagExists(tag) {
 
 async function tagAndPush(tag, log) {
   if (await tagExists(tag)) {
-    log(`Tag ${tag} already exists locally.`);
+    // A stale tag from an earlier attempt would release old code under the
+    // new version number. Refuse unless it already points at HEAD.
+    const [t, h] = await Promise.all([exec('git', ['rev-list', '-n', '1', tag]), exec('git', ['rev-parse', 'HEAD'])]);
+    if (t.out.trim() !== h.out.trim()) {
+      const msg = `Tag ${tag} already exists on an older commit (${t.out.trim().slice(0, 7)}). Bump the version, or delete the tag, then publish again.`;
+      log(msg, 'err');
+      return { ok: false, error: msg };
+    }
+    log(`Tag ${tag} already exists and points at this commit.`);
   } else {
     const r = await exec('git', ['tag', tag]);
     if (r.code !== 0) { log(`git tag failed: ${r.err}`, 'err'); return { ok: false, error: r.err }; }
@@ -266,7 +274,11 @@ async function tagAndPush(tag, log) {
   }
   const r2 = await exec('git', ['push', 'origin', tag], { timeoutMs: 180000 });
   if (r2.code !== 0) {
-    if (/already exists/i.test(r2.err)) { log(`Tag ${tag} is already on GitHub.`); return { ok: true }; }
+    if (/already exists/i.test(r2.err)) {
+      const msg = `Tag ${tag} is already on GitHub (possibly on another commit) - no new build was started. Bump the version to release this code.`;
+      log(msg, 'err');
+      return { ok: false, error: msg };
+    }
     log(`git push tag failed: ${r2.err || r2.out}`, 'err');
     return { ok: false, error: r2.err || r2.out };
   }
@@ -343,7 +355,9 @@ async function publishRelease(cfg, log) {
     log(`${owner}/${repo} already exists on GitHub.`);
   }
 
-  await step('Stage and commit', () => commitAll(`ProGramerly v${version} - ${description}`, author, log));
+  const committed = await step('Stage and commit', () => commitAll(`ProGramerly v${version} - ${description}`, author, log));
+  // Pushing and tagging HEAD after a failed commit would release the old code.
+  if (!committed.ok) return { ok: false, steps };
 
   const branch = await currentBranch();
   const pushed = await step('Push to origin', () => push(branch, log));

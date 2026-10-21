@@ -24,6 +24,18 @@ mkdir -p "$(dirname "$CFG")" "$ROOT"
 python3 - "$CFG" "$ROOT" <<'PY'
 import json, os, sys, datetime, shutil
 cfg, root = sys.argv[1], sys.argv[2]
+def local_zone():
+    tz = os.environ.get("TZ", "").lstrip(":")
+    if "/" in tz: return tz
+    try:
+        p = os.path.realpath("/etc/localtime")
+        if "zoneinfo/" in p: return p.split("zoneinfo/", 1)[1]
+    except Exception: pass
+    try:
+        z = open("/etc/timezone").read().strip()
+        if z: return z
+    except Exception: pass
+    return "UTC"
 servers = {
   "filesystem": {"command":"npx","args":["-y","@modelcontextprotocol/server-filesystem",root]},
   "memory": {"command":"npx","args":["-y","@modelcontextprotocol/server-memory"]},
@@ -32,7 +44,7 @@ servers = {
   "context7": {"command":"npx","args":["-y","@upstash/context7-mcp"]},
   "git": {"command":"uvx","args":["--from","mcp-server-git","mcp-server-git","--repository",root]},
   "fetch": {"command":"uvx","args":["mcp-server-fetch"]},
-  "time": {"command":"uvx","args":["mcp-server-time","--local-timezone","Africa/Johannesburg"]},
+  "time": {"command":"uvx","args":["mcp-server-time","--local-timezone",local_zone()]},
   "firebase": {"command":"npx","args":["-y","firebase-tools@latest","experimental:mcp"]},
   "desktop-commander": {"command":"npx","args":["-y","@wonderwhy-er/desktop-commander@latest"]},
 }

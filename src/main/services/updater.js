@@ -27,23 +27,38 @@ const IS_MAC = process.platform === 'darwin';
 
 /** Compare two semver-ish strings. Returns 1 if a > b, -1 if a < b, 0 equal. */
 function cmpVersion(a, b) {
-  const norm = (v) => String(v || '0').replace(/^v/i, '').split(/[.+-]/);
-  const A = norm(a);
-  const B = norm(b);
-  for (let i = 0; i < Math.max(A.length, B.length); i += 1) {
-    const x = A[i];
-    const y = B[i];
-    const nx = Number(x);
-    const ny = Number(y);
-    const bothNum = Number.isFinite(nx) && Number.isFinite(ny);
-    if (bothNum) {
-      if (nx !== ny) return nx > ny ? 1 : -1;
-    } else if ((x || '') !== (y || '')) {
-      // a release without a pre-release suffix outranks one with it
-      if (x === undefined) return 1;
-      if (y === undefined) return -1;
-      return x > y ? 1 : -1;
-    }
+  // SemVer 2.0: build metadata (+...) never affects order; a release outranks
+  // its pre-releases; pre-release identifiers compare numerically when both
+  // are numbers, and rc10 > rc2 (letter/digit runs are split apart).
+  const parse = (v) => {
+    const s = String(v || '0').trim().replace(/^v/i, '').split('+')[0];
+    const dash = s.indexOf('-');
+    const core = (dash < 0 ? s : s.slice(0, dash)).split('.').map((n) => Number(n) || 0);
+    const pre = dash < 0 ? [] : s.slice(dash + 1).split('.')
+      .flatMap((id) => id.match(/\d+|\D+/g) || [id]);
+    return { core, pre };
+  };
+  const A = parse(a);
+  const B = parse(b);
+  for (let i = 0; i < Math.max(A.core.length, B.core.length, 3); i += 1) {
+    const x = A.core[i] || 0;
+    const y = B.core[i] || 0;
+    if (x !== y) return x > y ? 1 : -1;
+  }
+  if (!A.pre.length || !B.pre.length) {
+    if (A.pre.length === B.pre.length) return 0;
+    return A.pre.length ? -1 : 1;
+  }
+  for (let i = 0; i < Math.max(A.pre.length, B.pre.length); i += 1) {
+    const x = A.pre[i];
+    const y = B.pre[i];
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    const nx = /^\d+$/.test(x);
+    const ny = /^\d+$/.test(y);
+    if (nx && ny) { if (Number(x) !== Number(y)) return Number(x) > Number(y) ? 1 : -1; }
+    else if (nx !== ny) return nx ? -1 : 1;
+    else if (x !== y) return x > y ? 1 : -1;
   }
   return 0;
 }
@@ -82,7 +97,13 @@ function assetScore(name) {
     if (arm ? n.includes('arm64') : (!n.includes('arm64'))) s += 4;
     return s;
   }
+  // Linux: match how this copy was installed. An AppImage sets APPIMAGE;
+  // otherwise the distro family decides between .deb and .rpm. Never offer
+  // an arm64 package to x64 or the other way round.
   if (!/\.(appimage|deb|rpm)$/.test(n)) return -1;
+  const archOk = arm ? /(arm64|aarch64)/.test(n) : !/(arm64|aarch64|armv7)/.test(n);
+  if (!archOk) return -1;
+  if (process.env.APPIMAGE) return n.endsWith('.appimage') ? 14 : 6;
   const fam = linuxFamily();
   if (n.endsWith('.deb')) return fam === 'debian' ? 14 : 6;
   if (n.endsWith('.rpm')) return fam === 'rpm' ? 14 : 4;
@@ -211,12 +232,17 @@ function applyUpdate(file, { silent = true } = {}) {
         stdio: 'ignore',
         windowsHide: false,
       });
+      child.once('error', () => { /* reported by the exists check above in practice */ });
       child.unref();
       setTimeout(() => app.quit(), 900);
       return { ok: true, launched: true };
     }
-    shell.openPath(file);
-    return { ok: true, launched: false, manual: true };
+    // Linux AppImage: a download has no exec bit; without it the file
+    // manager refuses to run it.
+    if (/\.appimage$/i.test(file)) { try { fs.chmodSync(file, 0o755); } catch { /* read-only */ } }
+    return shell.openPath(file).then((err) => (err
+      ? { ok: false, error: `could not open the installer: ${err}`, file }
+      : { ok: true, launched: false, manual: true, file }));
   } catch (err) {
     return { ok: false, error: err.message };
   }

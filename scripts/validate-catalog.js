@@ -67,7 +67,10 @@ for (const item of cat.items) {
   }
   for (const s of allSteps) {
     if (!STEP_TYPES.has(s.type)) errors.push(`${at}: unknown step type "${s.type}"`);
-    if (s.type === 'shell' && !s.cmd && !s.winCmd && !s.macCmd) {
+    const STEP_KEYS = new Set(['type', 'cmd', 'winCmd', 'macCmd', 'linuxCmd', 'check', 'allowFail', 'ids', 'repo', 'dest', 'branch', 'recursive', 'packages', 'args', 'kind', 'target', 'label', 'desc']);
+    for (const k of Object.keys(s)) if (!STEP_KEYS.has(k)) errors.push(`${at}: unknown step key "${k}" (${s.type})`);
+    if (s.check !== undefined && typeof s.check !== 'boolean' && typeof s.check !== 'string') errors.push(`${at}: step check must be a command string or true`);
+    if (s.type === 'shell' && !s.cmd && !s.winCmd && !s.macCmd && !s.linuxCmd) {
       errors.push(`${at}: shell step with no command`);
     }
     if (s.type === 'gitClone' && (!s.repo || !s.dest)) errors.push(`${at}: gitClone needs repo + dest`);

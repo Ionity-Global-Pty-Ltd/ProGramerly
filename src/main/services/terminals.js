@@ -66,6 +66,7 @@ function candidates() {
         id: 'cmd', name: 'Command Prompt', note: 'cmd.exe. Still the fastest thing on the machine.',
         find: () => firstExisting([path.join(SYS32, 'cmd.exe')]),
         args: (cwd) => ['/K', `cd /d "${cwd}"`],
+        verbatim: true,
         console: true,
       },
       {
@@ -162,7 +163,21 @@ async function wslDistros() {
  * Open one. Detached and unref'd: the terminal outlives ProGramerly, which is
  * the only sane relationship between an app and a shell it launched.
  */
-function open(id, cwd, extra) {
+/**
+ * spawn() reports ENOENT/EACCES asynchronously; without an 'error' listener
+ * that is an uncaught exception in the main process. Resolve after the
+ * spawn either happened or failed.
+ */
+function launch(file, args, opts) {
+  return new Promise((resolve) => {
+    let child;
+    try { child = spawn(file, args, opts); } catch (e) { resolve(e); return; }
+    child.once('error', (e) => resolve(e));
+    child.once('spawn', () => { child.unref(); resolve(null); });
+  });
+}
+
+async function open(id, cwd, extra) {
   const c = candidates().find((x) => x.id === id);
   if (!c) return { ok: false, error: 'unknown terminal' };
   const exe = c.find();
@@ -173,39 +188,44 @@ function open(id, cwd, extra) {
   try {
     if (c.open) {
       // macOS: hand the folder to the app and let LaunchServices place it.
-      const child = spawn('/usr/bin/open', ['-a', exe, dir], { detached: true, stdio: 'ignore' });
-      child.unref();
+      const err = await launch('/usr/bin/open', ['-a', exe, dir], { detached: true, stdio: 'ignore' });
+      if (err) return { ok: false, error: err.message };
       return { ok: true, detail: `${c.name} opened in ${dir}` };
     }
 
     if (c.wrapCmd) {
       // A .bat that must be sourced, then left interactive.
-      const child = spawn(path.join(SYS32, 'cmd.exe'), ['/K', `"${exe}" && cd /d "${dir}"`], {
+      const err = await launch(path.join(SYS32, 'cmd.exe'), ['/K', `"${exe}" && cd /d "${dir}"`], {
         detached: true, stdio: 'ignore', windowsVerbatimArguments: true,
       });
-      child.unref();
+      if (err) return { ok: false, error: err.message };
       return { ok: true, detail: `${c.name} opened in ${dir}` };
     }
 
     let args = c.args ? c.args(dir) : [];
-    if (id === 'wsl' && extra) args = ['-d', extra, '--cd', '~'];
+    if (id === 'wsl' && extra) {
+      // Windows Terminal splits its command line on ';' - a distro name is
+      // letters, digits, dot, dash and underscore, nothing else.
+      if (!/^[\w.-]+$/.test(String(extra))) return { ok: false, error: 'invalid WSL distribution name' };
+      args = ['-d', extra, '--cd', '~'];
+    }
 
     // A console program needs a console. Windows Terminal, if present, is a
     // far better one than conhost - so use it as the host when it exists.
     if (IS_WIN && c.console) {
       const wt = firstExisting([path.join(LOCAL, 'Microsoft', 'WindowsApps', 'wt.exe')]);
       if (wt) {
-        const child = spawn(wt, ['-d', dir, exe, ...args], { detached: true, stdio: 'ignore' });
-        child.unref();
+        const err = await launch(wt, ['-d', dir, exe, ...args], { detached: true, stdio: 'ignore' });
+        if (err) return { ok: false, error: err.message };
         return { ok: true, detail: `${c.name} opened in Windows Terminal, in ${dir}` };
       }
-      const child = spawn(exe, args, { detached: true, stdio: 'ignore', cwd: dir, shell: false, windowsHide: false });
-      child.unref();
+      const err = await launch(exe, args, { detached: true, stdio: 'ignore', cwd: dir, shell: false, windowsHide: false, windowsVerbatimArguments: Boolean(c.verbatim) });
+      if (err) return { ok: false, error: err.message };
       return { ok: true, detail: `${c.name} opened in ${dir}` };
     }
 
-    const child = spawn(exe, args, { detached: true, stdio: 'ignore', cwd: dir });
-    child.unref();
+    const err = await launch(exe, args, { detached: true, stdio: 'ignore', cwd: dir });
+    if (err) return { ok: false, error: err.message };
     return { ok: true, detail: `${c.name} opened in ${dir}` };
   } catch (e) {
     return { ok: false, error: e.message };

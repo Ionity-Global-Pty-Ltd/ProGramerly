@@ -78,7 +78,7 @@ async function run() {
 
   check(await until(page, () => { const b = document.getElementById('boot'); return Boolean(b && (b.hidden || b.classList.contains('done'))); }, 45000), 'the DOME boot cleared');
   const version = await page.textContent('#appVersion');
-  check(version === 'v3.9.0', 'the top bar carries v3.9.0', version);
+  { const want = 'v' + require('../package.json').version; check(version === want, 'the top bar carries the package version', version); }
 
   const plat = process.platform === 'win32' ? 'win' : process.platform === 'darwin' ? 'mac' : 'linux';
   check(await page.evaluate((p) => document.body.classList.contains(`os-${p}`), plat), `the body carries os-${plat} before first paint`);

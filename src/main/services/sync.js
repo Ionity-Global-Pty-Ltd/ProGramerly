@@ -179,17 +179,29 @@ async function scanRepos(apply) {
   log(`git: ${repos.length} repository(ies) under ${root}`);
   const results = [];
   for (const dir of repos) {
-    const { output } = await run(`git -C "${dir}" fetch --all --quiet && git -C "${dir}" status -sb`, { timeoutMs: 5 * 60 * 1000 });
+    // Two separate runs: Windows PowerShell 5.1 has no `&&`, so the chained
+    // form never ran there and every repo read as "behind 0". The path is
+    // single-quoted for the shell in use so `$` or backticks in a folder name
+    // are text, not code.
+    const q = shellQuote(dir);
+    await run(`git -C ${q} fetch --all --quiet`, { timeoutMs: 5 * 60 * 1000 });
+    const { output } = await run(`git -C ${q} status -sb`, { timeoutMs: 60 * 1000 });
     const behind = /behind (\d+)/.exec(output);
     const n = behind ? Number(behind[1]) : 0;
     results.push({ repo: path.basename(dir), behind: n });
     if (n) log(`  ${path.basename(dir)} is ${n} commit(s) behind`);
     if (apply && n) {
-      const { code } = await run(`git -C "${dir}" pull --ff-only`, { onLine: (l) => log(`    ${l}`), timeoutMs: 10 * 60 * 1000 });
+      const { code } = await run(`git -C ${q} pull --ff-only`, { onLine: (l) => log(`    ${l}`), timeoutMs: 10 * 60 * 1000 });
       log(`  pulled ${path.basename(dir)} (exit ${code})`, code === 0 ? 'ok' : 'warn');
     }
   }
   return { engine: 'git', repos: results };
+}
+
+function shellQuote(p) {
+  return process.platform === 'win32'
+    ? `'${String(p).replace(/'/g, "''")}'`
+    : `'${String(p).replace(/'/g, "'\\''")}'`;
 }
 
 async function scanOllama(apply) {
@@ -200,6 +212,7 @@ async function scanOllama(apply) {
   log(`ollama: ${models.length} model(s) local`);
   if (apply && models.length) {
     for (const m of models) {
+      if (!/^[\w.:/-]+$/.test(m)) continue;
       const { code } = await run(`ollama pull ${m}`, { onLine: (l) => log(`  ${l}`), timeoutMs: 60 * 60 * 1000 });
       log(`  ${m} refreshed (exit ${code})`, code === 0 ? 'ok' : 'warn');
     }
@@ -344,6 +357,37 @@ function schedule() {
   return next;
 }
 
+/** The most recent configured slot that has already passed (last 24 h). */
+function lastSlotBefore(times, now = new Date()) {
+  let best = null;
+  for (const t of times || []) {
+    const hm = parseHHMM(t);
+    if (!hm) continue;
+    for (const dayOffset of [0, -1]) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + dayOffset);
+      d.setHours(hm.h, hm.m, 0, 0);
+      if (d.getTime() <= now.getTime() && (!best || d > best)) best = d;
+    }
+  }
+  return best;
+}
+
+/**
+ * After sleep: a slot that passed while the machine was asleep runs now,
+ * instead of waiting for the next one (08:00 missed, woke 09:00 -> run, not 20:00).
+ */
+function resume() {
+  const s = settings.get();
+  const next = schedule();
+  if (!s.keepInSync || busy) return next;
+  const slot = lastSlotBefore(s.syncTimes);
+  if (slot && (Number(s.lastSyncAt) || 0) < slot.getTime()) {
+    setTimeout(() => runSync({ trigger: 'resume' }), 30000);
+  }
+  return next;
+}
+
 function init(emitter) {
   emit = emitter || (() => {});
   const next = schedule();
@@ -367,4 +411,4 @@ function status() {
   };
 }
 
-module.exports = { init, schedule, stop, runSync, status, nextRunAt, scanLinks };
+module.exports = { init, schedule, resume, stop, runSync, status, nextRunAt, lastSlotBefore, scanLinks };

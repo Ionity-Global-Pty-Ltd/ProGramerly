@@ -113,22 +113,45 @@ function deepMerge(base, patch) {
   return out;
 }
 
+/**
+ * One dev root for the whole app. The installer, MCP writer, terminals and
+ * "Open dev root" all read PROGRAMERLY_DEV_ROOT through mcp-config.devRoot(),
+ * so the setting is mirrored there whenever it is loaded or changed.
+ */
+function applyDevRoot(c) {
+  const v = c && typeof c.devRoot === 'string' ? c.devRoot.trim() : '';
+  if (v) process.env.PROGRAMERLY_DEV_ROOT = v;
+  else if (process.env.PROGRAMERLY_DEV_ROOT_FROM_SETTINGS) delete process.env.PROGRAMERLY_DEV_ROOT;
+  if (v) process.env.PROGRAMERLY_DEV_ROOT_FROM_SETTINGS = '1';
+}
+
+function readJson(p) {
+  return JSON.parse(fs.readFileSync(p, 'utf8'));
+}
+
 function load() {
   if (cache) return cache;
   try {
-    const raw = fs.readFileSync(file(), 'utf8');
-    cache = deepMerge(DEFAULTS, JSON.parse(raw));
+    cache = deepMerge(DEFAULTS, readJson(file()));
   } catch {
-    cache = deepMerge(DEFAULTS, {});
+    // A torn write must not silently reset installedIds, publish config and
+    // sync times: fall back to the last good copy before using defaults.
+    try { cache = deepMerge(DEFAULTS, readJson(`${file()}.bak`)); } catch { cache = deepMerge(DEFAULTS, {}); }
   }
+  applyDevRoot(cache);
   return cache;
 }
 
 function save(patch) {
   cache = deepMerge(load(), patch || {});
+  applyDevRoot(cache);
   try {
-    fs.mkdirSync(path.dirname(file()), { recursive: true });
-    fs.writeFileSync(file(), `${JSON.stringify(cache, null, 2)}\n`, 'utf8');
+    const f = file();
+    fs.mkdirSync(path.dirname(f), { recursive: true });
+    const tmp = `${f}.tmp`;
+    fs.writeFileSync(tmp, `${JSON.stringify(cache, null, 2)}\n`, 'utf8');
+    try { if (fs.existsSync(f)) fs.copyFileSync(f, `${f}.bak`); } catch { /* best effort */ }
+    fs.renameSync(tmp, f);
   } catch { /* read-only profile - keep the in-memory copy */ }
   return cache;
 }

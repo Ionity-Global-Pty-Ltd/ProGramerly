@@ -38,6 +38,15 @@ async function gitClone(repo, dest, log, opts = {}) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
 
   if (fs.existsSync(path.join(target, '.git'))) {
+    // A clone pinned to a tag (ESP-IDF v5.5) sits on a detached HEAD, where
+    // `git pull` always fails. Pinned means pinned: refresh submodules only.
+    const head = await run(`git -C "${target}" symbolic-ref -q HEAD`, { timeoutMs: 30000 });
+    if (head.code !== 0) {
+      log(`${dest} already cloned and pinned${opts.branch ? ` to ${opts.branch}` : ''} - leaving the version as it is`);
+      if (!opts.recursive) return 0;
+      const sub = await run(`git -C "${target}" submodule update --init --recursive --depth 1`, { onLine: (l) => log(`  ${l}`), timeoutMs: 40 * 60 * 1000 });
+      return sub.code;
+    }
     log(`${dest} already cloned - pulling latest`);
     const { code } = await run(`git -C "${target}" pull --ff-only${opts.recursive ? ' --recurse-submodules' : ''}`, { onLine: (l) => log(`  ${l}`), timeoutMs: 20 * 60 * 1000 });
     return code;

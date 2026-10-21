@@ -20,7 +20,38 @@ function desktopDir() {
 function target() {
   // In development the exe is Electron itself, so point the shortcut at the
   // project folder as an argument - it still launches the real app.
-  return { exe: process.execPath, args: app.isPackaged ? '' : path.join(__dirname, '..', '..', '..') };
+  // Linux AppImage: process.execPath is the temporary /tmp/.mount_* copy,
+  // gone after exit. APPIMAGE is the real file on disk.
+  const exe = (process.platform === 'linux' && process.env.APPIMAGE) ? process.env.APPIMAGE : process.execPath;
+  return { exe, args: app.isPackaged ? '' : path.join(__dirname, '..', '..', '..') };
+}
+
+/** Linux: copy the icon out of app.asar, where no desktop can read it. */
+function linuxIcon() {
+  const src = path.join(__dirname, '..', '..', '..', 'build', 'icon.png');
+  const dir = path.join(os.homedir(), '.local', 'share', 'icons', 'hicolor', '256x256', 'apps');
+  const dest = path.join(dir, 'programerly.png');
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(dest, fs.readFileSync(src));
+    return dest;
+  } catch { return 'utilities-terminal'; }
+}
+
+function desktopEntry({ exe, args, minimised }) {
+  const q = (v) => `"${String(v).replace(/(["`$\\])/g, '\\$1')}"`;
+  return [
+    '[Desktop Entry]',
+    'Type=Application',
+    'Name=ProGramerly',
+    'Comment=Basic Coding Software for All - Ionity (Pty) Ltd',
+    `Exec=${q(exe)}${args ? ` ${q(args)}` : ''}${minimised ? ' --minimised' : ''}`,
+    `Icon=${linuxIcon()}`,
+    'Terminal=false',
+    'Categories=Development;',
+    'StartupWMClass=ProGramerly',
+    '',
+  ].join('\n');
 }
 
 /**
@@ -65,17 +96,7 @@ async function createDesktopShortcut({ minimised = false } = {}) {
   }
 
   const file = path.join(desktop, 'programerly.desktop');
-  const body = [
-    '[Desktop Entry]',
-    'Type=Application',
-    'Name=ProGramerly',
-    'Comment=Basic Coding Software for All - Ionity (Pty) Ltd',
-    `Exec="${exe}"${args ? ` "${args}"` : ''}${minimised ? ' --minimised' : ''}`,
-    `Icon=${path.join(__dirname, '..', '..', '..', 'build', 'icon.png')}`,
-    'Terminal=false',
-    'Categories=Development;',
-    '',
-  ].join('\n');
+  const body = desktopEntry({ exe, args, minimised });
   try {
     fs.writeFileSync(file, body, 'utf8');
     fs.chmodSync(file, 0o755);
@@ -83,7 +104,24 @@ async function createDesktopShortcut({ minimised = false } = {}) {
   } catch (err) { return { ok: false, error: err.message }; }
 }
 
+function autostartFile() {
+  return path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), 'autostart', 'programerly.desktop');
+}
+
 function setLaunchAtLogin(enabled, { minimised = true } = {}) {
+  // Electron's login items exist on Windows and macOS only; on Linux they
+  // returned ok and did nothing. XDG autostart is the standard there.
+  if (process.platform === 'linux') {
+    const f = autostartFile();
+    try {
+      if (enabled) {
+        fs.mkdirSync(path.dirname(f), { recursive: true });
+        const { exe, args } = target();
+        fs.writeFileSync(f, desktopEntry({ exe, args, minimised }), 'utf8');
+      } else if (fs.existsSync(f)) fs.unlinkSync(f);
+      return { ok: true, enabled: Boolean(enabled) };
+    } catch (err) { return { ok: false, error: err.message }; }
+  }
   try {
     app.setLoginItemSettings({
       openAtLogin: Boolean(enabled),
@@ -97,6 +135,7 @@ function setLaunchAtLogin(enabled, { minimised = true } = {}) {
 }
 
 function loginState() {
+  if (process.platform === 'linux') return { openAtLogin: fs.existsSync(autostartFile()) };
   try { return app.getLoginItemSettings(); } catch { return { openAtLogin: false }; }
 }
 

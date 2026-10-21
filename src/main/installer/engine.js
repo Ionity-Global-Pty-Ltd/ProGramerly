@@ -5,13 +5,14 @@
  *
  * Turns a catalog item into an ordered list of attempts and runs them until
  * one succeeds. Windows: winget candidates -> Chocolatey fallback.
- * macOS: Homebrew formula/cask. Linux (3.7.0): the native manager that is
+ * macOS: Homebrew formula/cask (sudo via one askpass dialog, 3.9.0). Linux: the native manager that is
  * present (apt / dnf / pacman / zypper) -> Flatpak -> snap. Then npm globals,
  * then custom steps.
  */
 
 const { run, has } = require('./runner');
 const macAuth = require('../services/macAuth');
+const askpass = require('./askpass');
 const tasks = require('./tasks');
 const mcp = require('./mcp-config');
 
@@ -35,14 +36,29 @@ let linuxFacts = null; // { native: {key,bin,install}|null, flatpak: bool, snap:
  */
 async function sudoPrefix() {
   if (process.getuid && process.getuid() === 0) return '';
+  // A run that asked for the password once serves it to sudo through
+  // SUDO_ASKPASS - one dialog for the whole queue.
+  if (askpass.active()) return 'sudo -A ';
   const { code } = await run('sudo -n true', { timeoutMs: 15000 });
   if (code === 0) return 'sudo ';
-  if (await has('pkexec')) return 'pkexec ';
-  return 'sudo ';
+  // pkexec does not accept VAR=value before the program, so it always goes
+  // through env(1): `pkexec env DEBIAN_FRONTEND=noninteractive apt-get ...`.
+  if (await has('pkexec')) return 'pkexec env ';
+  // Last resort: fail fast instead of waiting on a password nobody can type.
+  return 'sudo -n ';
 }
 
+/** Forget cached facts - after "Linux package sources" adds Flatpak, say. */
+function resetLinuxFacts() { linuxFacts = null; }
+
 async function readLinuxFacts() {
-  if (linuxFacts) return linuxFacts;
+  if (linuxFacts) {
+    // A previous item may have installed flatpak or snapd since we looked.
+    if (!linuxFacts.flatpak) linuxFacts.flatpak = await has('flatpak');
+    if (!linuxFacts.snap) linuxFacts.snap = await has('snap');
+    if (askpass.active()) linuxFacts.sudo = 'sudo -A ';
+    return linuxFacts;
+  }
   let native = null;
   for (const m of LINUX_NATIVE) {
     // eslint-disable-next-line no-await-in-loop
@@ -64,6 +80,7 @@ async function readLinuxFacts() {
  */
 function sudoize(cmd, prefix) {
   if (PLATFORM !== 'linux' || prefix === 'sudo ') return cmd;
+  if (prefix === 'sudo -A ') return cmd.replace(/(^|[;&|(]\s*|\bthen\s+|\belse\s+|\bdo\s+)sudo\s+(?!-A\b)/g, (_m, lead) => `${lead}sudo -A `);
   return cmd.replace(/(^|[;&|(]\s*|\bthen\s+|\belse\s+|\bdo\s+)sudo\s+(-E\s+)?/g, (_m, lead) => `${lead}${prefix}`);
 }
 
@@ -274,10 +291,22 @@ async function installItem(item, log) {
       anyFailure = true;
     } else {
       log(`npm install -g ${npmPkgs.join(' ')}`);
-      const { code } = await run(`npm install -g ${npmPkgs.join(' ')} --no-fund --no-audit`, {
+      let { code, output } = await run(`npm install -g ${npmPkgs.join(' ')} --no-fund --no-audit`, {
         onLine: (l) => log(`  ${l}`),
         timeoutMs: 20 * 60 * 1000,
       });
+      // A distro or root-owned Node puts globals in /usr/lib - not writable
+      // without root. Install to ~/.npm-global instead (on the runner's PATH)
+      // rather than running npm as root.
+      if (code !== 0 && !IS_WIN && /EACCES|permission denied/i.test(output || '')) {
+        log('  global folder is not writable - installing to ~/.npm-global instead');
+        ({ code, output } = await run('mkdir -p "$HOME/.npm-global" && npm config set prefix "$HOME/.npm-global" && '
+          + `npm install -g ${npmPkgs.join(' ')} --no-fund --no-audit`, {
+          onLine: (l) => log(`  ${l}`),
+          timeoutMs: 20 * 60 * 1000,
+        }));
+        if (code === 0) log('  add  export PATH="$HOME/.npm-global/bin:$PATH"  to your shell profile to use these in a terminal');
+      }
       if (code === 0) { anySuccess = true; log('  ok'); }
       else { anyFailure = true; log(`  npm failed (exit ${code})`); }
     }
@@ -315,8 +344,15 @@ async function runStep(step, log) {
     case 'shell': {
       const cmd = (PLATFORM === 'mac' && step.macCmd) ? step.macCmd
         : (PLATFORM === 'win' && step.winCmd) ? step.winCmd
+        : (PLATFORM === 'linux' && step.linuxCmd) ? step.linuxCmd
         : step.cmd;
       if (!cmd) return 0;
+      // `check`: a command that exits 0 when this step is already satisfied.
+      // (`check: true` marks the step itself as the verification.)
+      if (typeof step.check === 'string' && step.check.trim()) {
+        const probe = await run(step.check, { timeoutMs: 60000 });
+        if (probe.code === 0) { log(`already satisfied: ${step.check}`); return 0; }
+      }
       const real = PLATFORM === 'linux' ? sudoize(cmd, (await readLinuxFacts()).sudo)
         : PLATFORM === 'mac' ? macAuth.sudoizeMac(cmd)
         : cmd;
@@ -350,4 +386,4 @@ async function runStep(step, log) {
   }
 }
 
-module.exports = { installItem, itemsForProfile, orderSelection, applies, PLATFORM, LINUX_NATIVE, readLinuxFacts, sudoize };
+module.exports = { installItem, itemsForProfile, orderSelection, applies, PLATFORM, LINUX_NATIVE, readLinuxFacts, resetLinuxFacts, sudoize };

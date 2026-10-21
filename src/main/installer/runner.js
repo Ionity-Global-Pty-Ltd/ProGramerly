@@ -12,6 +12,16 @@ const { spawn } = require('node:child_process');
 const os = require('node:os');
 
 const IS_WIN = process.platform === 'win32';
+const IS_MAC = process.platform === 'darwin';
+
+// Keep only the tail of a step's output in memory. ESP-IDF clones and model
+// pulls print megabytes; the engine only ever inspects the end for verdicts.
+const OUTPUT_CAP = 512 * 1024;
+
+// Every child that is still running, so Cancel can stop the current item
+// instead of only the ones after it.
+const live = new Set();
+
 
 /* Extra environment every child gets - set by the macOS password session
    (SUDO_ASKPASS) and cleared when it ends. Kept here so the engine, Doctor
@@ -43,13 +53,17 @@ function shellFor(cmd) {
   // launcher starts with PATH=/usr/bin:/bin:/usr/sbin:/sbin, and a login bash
   // does not read ~/.zprofile - which is exactly where Homebrew registers
   // itself. So every known tool location is put first, explicitly.
-  return { file: '/bin/bash', args: ['-lc', `export PATH="${EXTRA_PATH}:$PATH"; ${cmd}`] };
+  // With SUDO_ASKPASS set (macOS or Linux password session), a plain `sudo`
+  // anywhere in the command - including scripts it pipes into bash - becomes
+  // `sudo -A`, so it asks the helper and never a terminal.
+  const askpassFn = 'if [ -n "$SUDO_ASKPASS" ]; then sudo() { command sudo -A "$@"; }; export -f sudo 2>/dev/null; fi; ';
+  return { file: '/bin/bash', args: ['-lc', `export PATH="${EXTRA_PATH}:$PATH"; export HOMEBREW_NO_AUTO_UPDATE=1 NONINTERACTIVE=1; ${askpassFn}${cmd}`] };
 }
 
 /** Every place a dev tool lands on macOS / Linux before any rc file knows. */
 const EXTRA_PATH = [
   '/opt/homebrew/bin', '/opt/homebrew/sbin', '/usr/local/bin', '/usr/local/sbin',
-  '$HOME/.local/bin', '$HOME/.cargo/bin', '$HOME/.bun/bin', '$HOME/.deno/bin',
+  '$HOME/.local/bin', '$HOME/.cargo/bin', '$HOME/.npm-global/bin', '$HOME/.bun/bin', '$HOME/.deno/bin',
   '/Library/Frameworks/Python.framework/Versions/Current/bin',
   '/Applications/Visual Studio Code.app/Contents/Resources/app/bin',
   '/snap/bin', '/var/lib/flatpak/exports/bin',
@@ -87,22 +101,29 @@ function run(cmd, opts = {}) {
     let timedOut = false;
     let settled = false;
 
-    // macOS / Linux: each step runs in its own session (setsid via
-    // `detached`). With no controlling terminal, `sudo` can never wait on a
-    // hidden TTY - it goes to SUDO_ASKPASS or fails fast, never hangs.
-    const child = spawn(file, args, {
-      cwd: cwd || os.homedir(),
-      env: { ...process.env, ...extraEnv(), ...(env || {}) },
-      windowsHide: true,
-      detached: !IS_WIN,
-    });
+    let child;
+    try {
+      child = spawn(file, args, {
+        cwd: cwd || os.homedir(),
+        env: { ...process.env, ...extraEnv(), ...(env || {}) },
+        windowsHide: true,
+        // POSIX: own session + process group. No controlling terminal means
+        // sudo always uses the askpass dialog, and a timeout or Cancel can
+        // stop the whole tree (brew -> installer -> pkgutil), not just bash.
+        detached: !IS_WIN,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+    } catch (err) {
+      onLine(`spawn failed: ${err.message}`, 'err');
+      resolve({ code: 127, timedOut: false, output: '' });
+      return;
+    }
+    live.add(child);
 
     const timer = setTimeout(() => {
       timedOut = true;
-      try {
-        if (!IS_WIN && child.pid) process.kill(-child.pid, 'SIGKILL');   // the whole group
-        else child.kill('SIGKILL');
-      } catch { try { child.kill('SIGKILL'); } catch { /* already gone */ } }
+      onLine(`timed out after ${Math.round(timeoutMs / 60000)} min - stopping`, 'err');
+      killTree(child);
     }, timeoutMs);
 
     const pump = (stream, tag) => {
@@ -110,6 +131,7 @@ function run(cmd, opts = {}) {
       stream.setEncoding('utf8');
       stream.on('data', (chunk) => {
         output += chunk;
+        if (output.length > OUTPUT_CAP * 2) output = output.slice(-OUTPUT_CAP);
         buf += chunk;
         const parts = buf.split(/\r?\n/);
         buf = parts.pop();
@@ -131,6 +153,7 @@ function run(cmd, opts = {}) {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      live.delete(child);
       resolve({ code: typeof code === 'number' ? code : 1, timedOut, output });
     };
 
@@ -142,8 +165,32 @@ function run(cmd, opts = {}) {
   });
 }
 
+/** Stop a child and everything it started. */
+function killTree(child) {
+  if (!child || child.exitCode !== null) return;
+  if (IS_WIN) {
+    try {
+      spawn('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' })
+        .on('error', () => { try { child.kill(); } catch { /* gone */ } });
+    } catch { try { child.kill(); } catch { /* gone */ } }
+    return;
+  }
+  try { process.kill(-child.pid, 'SIGTERM'); } catch { /* group gone */ }
+  setTimeout(() => {
+    try { process.kill(-child.pid, 'SIGKILL'); } catch { /* group gone */ }
+  }, 3000).unref?.();
+}
+
+/** Cancel: stop every running step. Returns how many were stopped. */
+function killAll() {
+  const n = live.size;
+  for (const c of [...live]) killTree(c);
+  return n;
+}
+
 /** True if a command exists on PATH. */
 async function has(bin) {
+  if (!/^[\w.+-]+$/.test(String(bin))) return false;
   const probe = IS_WIN
     ? `if (Get-Command ${bin} -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }`
     : `command -v ${bin} >/dev/null 2>&1`;
@@ -152,5 +199,5 @@ async function has(bin) {
 }
 
 module.exports = {
-  run, has, shellFor, hydratePath, setSessionEnv, EXTRA_PATH, IS_WIN,
+  run, has, shellFor, hydratePath, setSessionEnv, setBaseEnv: setSessionEnv, killAll, killTree, EXTRA_PATH, IS_WIN,
 };
